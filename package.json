@@ -1,0 +1,20 @@
+{
+  "name": "ads-ai-studio",
+  "version": "1.0.0",
+  "description": "Skill Ads AI → prompt → Google Flow (gflow-cli) → ghép → nháp Facebook Reel",
+  "main": "server.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "express": "^4.22.3",
+    "multer": "^1.4.4"
+  },
+  "type": "module",
+  "private": true
+}

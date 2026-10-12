@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ads AI Studio</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">Ads AI Studio</div>
+  <div class="steps"><span>① Kịch bản</span><span>② Tạo cảnh</span><span>③ Ghép</span><span>④ Nháp Facebook</span></div>
+  <div id="status-pills" class="pills"></div>
+</header>
+
+<div class="layout">
+  <aside class="side">
+    <button id="btn-new" class="primary block">+ Video mới</button>
+    <div class="side-title">Các video</div>
+    <ul id="job-list" class="job-list"></ul>
+  </aside>
+
+  <main id="main">
+    <!-- Form tạo mới -->
+    <section id="view-new" class="card" hidden>
+      <h1>Video quảng cáo mới</h1>
+      <p class="muted">Claude viết kịch bản theo skill Ads AI. Bạn duyệt và sửa prompt trước khi tốn credit Flow.</p>
+      <form id="form-new" class="grid-form">
+        <label class="full">Chủ đề / sản phẩm / dịch vụ *
+          <textarea name="topic" rows="3" required placeholder="VD: Khóa học AI cho chủ doanh nghiệp nhỏ, học 4 tuần, làm được trợ lý AI riêng"></textarea>
+        </label>
+        <label>Số cảnh (8 giây/cảnh)
+          <select name="sceneCount">
+            <option>4</option><option>6</option><option selected>8</option><option>10</option>
+          </select>
+          <small id="dur-hint" class="muted"></small>
+        </label>
+        <label>Model Veo
+          <select name="model" id="model-select"></select>
+          <small class="muted">veo-lite rẻ nhất</small>
+        </label>
+        <label>Đối tượng xem
+          <input name="audience" placeholder="VD: chủ shop online 25–40 tuổi">
+        </label>
+        <label>CTA
+          <input name="cta" placeholder="VD: comment &quot;AI&quot; để nhận lịch học">
+        </label>
+        <label class="full">Nhân vật / character DNA
+          <textarea name="character" rows="2" placeholder="VD: Nam 35 tuổi, kính gọng đen, áo sơ mi trắng, đồng hồ bạc, giọng miền Bắc ấm, tự nhiên"></textarea>
+        </label>
+        <label>Ảnh tham chiếu nhân vật
+          <input type="file" name="refImage" accept="image/*">
+          <small class="muted">Chỉ dùng để giữ khuôn mặt ở cảnh 1</small>
+        </label>
+        <label>Tông giọng
+          <input name="tone" placeholder="VD: chuyên gia gần gũi, không guru">
+        </label>
+        <label class="full">Thông tin bắt buộc phải nói
+          <textarea name="mustSay" rows="2"></textarea>
+        </label>
+        <label class="full">Điều cấm / không muốn xuất hiện
+          <textarea name="avoid" rows="2"></textarea>
+        </label>
+        <div class="full actions">
+          <button type="submit" class="primary">Viết kịch bản</button>
+          <span class="muted">Mất khoảng 1–3 phút.</span>
+        </div>
+      </form>
+    </section>
+
+    <!-- Chi tiết job -->
+    <section id="view-job" hidden></section>
+
+    <section id="view-empty" class="empty">
+      <p>Chọn một video bên trái hoặc bấm <b>+ Video mới</b>.</p>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

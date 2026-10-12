@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ads-ai-studio",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/home/taki/Downloads/ads-ai-studio/server.js"],
+      "port": 3200
+    }
+  ]
+}
