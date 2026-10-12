@@ -1,6 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { config } from './lib/config.js';
 import { toCleanJpg } from './lib/media.js';
@@ -121,6 +122,21 @@ app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
 app.post('/api/jobs/:id/facebook', action((job) => J.startFacebook(job)));
 app.post('/api/jobs/:id/facebook/refresh', action((job) => J.refreshFacebook(job)));
+
+// ---------- Cầu nối extension ----------
+app.post('/api/jobs/:id/bridge', action((job, b) => J.bridgeSend(job, Number(b.i))));
+app.get('/api/bridge', (_req, res) => res.json(J.bridgeState()));
+app.delete('/api/bridge', (_req, res) => { J.bridgeClear(); res.json({ ok: true }); });
+
+// Extension báo file vừa tải xong. Chỉ nhận mp4 nằm trong ~/Downloads để không thành lỗ đọc file tuỳ ý.
+const downloadsDir = fs.realpathSync(path.join(os.homedir(), 'Downloads'));
+app.post('/api/bridge/clip', wrap(async (req, res) => {
+  const p = String(req.body?.path || '');
+  if (!/\.(mp4|mov|webm)$/i.test(p)) throw new Error('Chỉ nhận file video .mp4/.mov/.webm');
+  const real = fs.realpathSync(p);
+  if (!real.startsWith(downloadsDir + path.sep)) throw new Error('File phải nằm trong thư mục Downloads');
+  res.json(await J.bridgeClip(real));
+}));
 
 app.listen(config.port, config.host, () => {
   console.log(`Ads AI Studio: http://${config.host}:${config.port}`);

@@ -8,6 +8,23 @@ Khâu ② có 2 chế độ (chọn theo từng video):
 - **Tự bấm trong Flow** (mặc định): web đưa prompt + ảnh khung đầu, bạn tạo trong Flow rồi kéo mp4 vào web. Không bị reCAPTCHA chặn vì người bấm thật.
 - **Tự động qua gflow**: Playwright lái Chrome. Flow hay chấm điểm là bot (`PUBLIC_ERROR_UNUSUAL_ACTIVITY`) và chặn profile vài giờ.
 
+## Extension "Ads AI → Flow" (khuyên dùng)
+
+Điền sẵn từng cảnh vào Flow trong Chrome thật của bạn; **bạn tự bấm nút tạo** nên không dính reCAPTCHA như gflow.
+
+Cài một lần:
+1. Mở `chrome://extensions`, bật **Developer mode** (góc phải trên).
+2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/ads-ai-studio/extension`.
+3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Ads AI**.
+
+Mỗi cảnh:
+1. Web: bấm **Gửi sang Flow (extension)** ở cảnh đó.
+2. Tab Flow (đang mở một dự án): bảng Ads AI → chọn model → **Điền cảnh N vào Flow**. Extension chọn Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
+3. Kiểm tra rồi **bấm nút → để tạo**.
+4. Video xong: ⋮ trên ô video → **Tải xuống → 720p**. Extension thấy file tải về, gửi đường dẫn cho web; web gắn vào cảnh N và tự chuẩn bị cảnh N+1.
+
+Giới hạn: extension dựa vào nhãn tiếng Việt của giao diện Flow (đo ngày 2026-10-12) — Flow đổi giao diện thì bảng sẽ báo "Không thấy …"; lúc đó vẫn dùng cách kéo thả mp4. Web chỉ nhận file mp4 nằm trong `~/Downloads`.
+
 ## Chạy
 
 ```bash

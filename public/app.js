@@ -5,6 +5,7 @@ let cfg = {};
 let currentId = null;
 let currentJob = null;
 let pollTimer = null;
+let bridgeNow = null; // cảnh đang chờ extension Flow
 const LIMIT = 4000; // Flow cắt prompt sau 4000 ký tự
 
 async function api(url, opts = {}) {
@@ -97,6 +98,10 @@ async function refresh(force = false) {
   if (!currentId) return;
   try {
     const job = await api(`/api/jobs/${currentId}`);
+    const b = (await api('/api/bridge').catch(() => ({}))).pending || null;
+    const bridgeChanged = JSON.stringify(b && [b.jobId, b.index]) !== JSON.stringify(bridgeNow && [bridgeNow.jobId, bridgeNow.index]);
+    bridgeNow = b;
+    if (bridgeChanged) force = true;
     const editing = document.activeElement?.matches?.('#view-job textarea, #view-job input');
     if (force || !editing) {
       if (force || !currentJob || job.updatedAt !== currentJob.updatedAt) {
@@ -181,6 +186,8 @@ function renderJob(job) {
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
         <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
       </ol>
+      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Gửi sang Flow</b> ở cảnh → trong tab Flow bấm <b>Điền</b> → bạn bấm tạo → Tải xuống 720p. Clip tự về web, cảnh sau tự sẵn sàng.
+      ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>
     </div>` : `
     <div class="card">
       <h2>② Tạo video trên Flow</h2>
@@ -294,7 +301,10 @@ function manualSteps(job, i) {
   }
   return `<div class="manual">
     <div>${how}</div>
-    <div class="row"><button class="small" data-act="copy" data-i="${i}">Copy prompt</button>
+    <div class="row">
+      <button class="small primary" data-act="bridge" data-i="${i}" ${i > 0 && !job.scenes[i - 1].lastFrame ? 'disabled' : ''}>
+        ${bridgeNow?.jobId === job.id && bridgeNow?.index === i ? '⏳ Đang chờ trong Flow' : 'Gửi sang Flow (extension)'}</button>
+      <button class="small" data-act="copy" data-i="${i}">Copy prompt</button>
       ${job.scenes[i].clip ? '' : `<button class="small" data-act="pick" data-i="${i}">Chọn file mp4…</button>`}</div>
   </div>`;
 }
@@ -367,6 +377,10 @@ $('#view-job').addEventListener('click', async (e) => {
       case 'gen-one':
         if (!confirm(`Tạo cảnh ${i + 1} bằng ${currentJob.model} (trừ credit Flow).${currentJob.scenes[i].clip && i < n - 1 ? ' Các cảnh sau sẽ bị lệch nối.' : ''} Tiếp tục?`)) return;
         await api(`/api/jobs/${id}/generate`, { method: 'POST', body: { only: i } });
+        break;
+      case 'bridge':
+        await api(`/api/jobs/${id}/bridge`, { method: 'POST', body: { i } });
+        toast(`Đã gửi cảnh ${i + 1} — sang tab Flow, bấm "Điền cảnh ${i + 1}" ở bảng Ads AI góc phải dưới`, 6000);
         break;
       case 'copy':
         await navigator.clipboard.writeText(currentJob.scenes[i].prompt);
