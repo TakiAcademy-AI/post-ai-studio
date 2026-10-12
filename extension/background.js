@@ -28,7 +28,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   (async () => {
     if (msg.type === 'getPending') {
       const { pending } = await api('/api/bridge');
-      if (pending?.imageUrl) {
+      if (msg.withImage && pending?.imageUrl) {
         const blob = await (await fetch(API + pending.imageUrl)).blob();
         pending.imageB64 = await toBase64(blob);
         pending.imageMime = blob.type || 'image/jpeg';

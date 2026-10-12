@@ -210,10 +210,13 @@ async function checkWatch() {
 }
 
 // ---------- tự điền khi web gửi cảnh mới ----------
-async function doFill(pending) {
+async function doFill(p) {
   busy = true;
   $('#fill').disabled = true;
   try {
+    // Lấy kèm ảnh khung đầu / ảnh nhân vật chỉ lúc điền (poll 3 giây/lần thì không cần ảnh).
+    const { pending, error } = await chrome.runtime.sendMessage({ type: 'getPending', withImage: true });
+    if (error || !pending || pending.jobId !== p.jobId || pending.index !== p.index) throw new Error(error || 'Cảnh không còn chờ');
     await fill(pending, $('#model').value);
     await chrome.runtime.sendMessage({ type: 'armed', jobId: pending.jobId, index: pending.index });
     startWatch(pending);
@@ -273,9 +276,7 @@ async function poll() {
 
 $('#fill').addEventListener('click', async () => {
   if (!current || busy) return;
-  const { pending, error } = await chrome.runtime.sendMessage({ type: 'getPending' });
-  if (error || !pending) return status(error || 'Cảnh không còn chờ', 'err');
-  doFill(pending);
+  doFill(current);
 });
 
 chrome.runtime.onMessage.addListener((msg) => {
