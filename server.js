@@ -128,6 +128,11 @@ app.post('/api/jobs/:id/bridge', action((job, b) => J.bridgeSend(job, Number(b.i
 app.get('/api/bridge', (_req, res) => res.json(J.bridgeState()));
 app.delete('/api/bridge', (_req, res) => { J.bridgeClear(); res.json({ ok: true }); });
 
+app.post('/api/bridge/event', (req, res) => {
+  J.bridgeEvent(req.body?.level, String(req.body?.text || '').slice(0, 500));
+  res.json({ ok: true });
+});
+
 // Extension báo file vừa tải xong. Chỉ nhận mp4 nằm trong ~/Downloads để không thành lỗ đọc file tuỳ ý.
 const downloadsDir = fs.realpathSync(path.join(os.homedir(), 'Downloads'));
 app.post('/api/bridge/clip', wrap(async (req, res) => {

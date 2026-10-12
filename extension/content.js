@@ -73,8 +73,13 @@ async function uploadAndSelect(p, openPicker) {
   press(up);
   // Đợi ảnh tải xong: mục trong danh sách (button[role=option]) có tên file và đã có ảnh thu nhỏ
   // (lúc đang tải chỉ có vòng xoay). Lưới phía sau hộp thoại cũng có ô cùng tên — không được bấm nhầm ô đó.
+  // Hộp thoại của nút + có thể kèm chữ khác trong mục (loại, ngày…) → so theo tiêu đề, hoặc "có chứa" tên file.
+  const matches = (b) => {
+    const title = b.querySelector('.asset-title')?.textContent.trim();
+    return title ? title === p.imageName : b.textContent.includes(p.imageName);
+  };
   const row = await waitFor(() => [...document.querySelectorAll('button[role="option"]')].find((b) =>
-    visible(b) && b.querySelector('img') && b.textContent.trim() === p.imageName), 'ảnh vừa tải lên trong danh sách', 60000);
+    visible(b) && b.querySelector('img') && matches(b)), 'ảnh vừa tải lên trong danh sách', 60000);
   press(row);
   await waitFor(() => row.getAttribute('aria-selected') === 'true', 'ảnh được chọn', 5000).catch(() => {});
   await sleep(400);
@@ -154,6 +159,8 @@ function status(text, cls = 'muted') {
   const st = $('#st');
   st.className = `st ${cls}`;
   st.textContent = text;
+  // Lỗi và kết quả chính được ghi vào nhật ký job trên web để dễ kiểm tra từ xa.
+  if (cls === 'err' || cls === 'ok') chrome.runtime.sendMessage({ type: 'report', level: cls, text }).catch(() => {});
 }
 
 chrome.storage.local.get('model').then(({ model }) => { if (model) $('#model').value = model; });

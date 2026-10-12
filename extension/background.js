@@ -39,6 +39,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
       await chrome.storage.session.set({ armed: { jobId: msg.jobId, index: msg.index, at: Date.now() } });
       return { ok: true };
     }
+    if (msg.type === 'report') {
+      await api('/api/bridge/event', { method: 'POST', body: JSON.stringify({ level: msg.level, text: String(msg.text).slice(0, 500) }) });
+      return { ok: true };
+    }
     if (msg.type === 'getArmed') {
       return { armed: await getArmed() };
     }
