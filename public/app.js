@@ -119,6 +119,7 @@ function sceneMode(i, job) {
 
 function renderJob(job) {
   const busy = Boolean(job.busy);
+  const manual = job.mode !== 'gflow';
   const doneCount = job.scenes.filter((s) => s.clip).length;
   const total = job.scenes.reduce((a, s) => a + (s.duration || 8) - (s.trimStart || 0) - (s.trimEnd || 0), 0);
   const nextIdx = job.scenes.findIndex((s) => !s.clip);
@@ -129,10 +130,14 @@ function renderJob(job) {
       <div class="job-head">
         <div class="grow">
           <h1>${esc(job.input.topic)}</h1>
-          <div class="muted">${job.input.sceneCount} cảnh · model
-            <select id="job-model" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
-              ${cfg.models.map((m) => `<option ${m === job.model ? 'selected' : ''}>${m}</option>`).join('')}
+          <div class="muted">${job.input.sceneCount} cảnh ·
+            <select id="job-mode" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
+              <option value="manual" ${manual ? 'selected' : ''}>Tự bấm trong Flow</option>
+              <option value="gflow" ${manual ? '' : 'selected'}>Tự động qua gflow</option>
             </select>
+            ${manual ? '' : `· model <select id="job-model" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
+              ${cfg.models.map((m) => `<option ${m === job.model ? 'selected' : ''}>${m}</option>`).join('')}
+            </select>`}
             · ${doneCount}/${job.scenes.length} cảnh có video · ${esc(STAGE[job.stage] || job.stage)}
           </div>
         </div>
@@ -168,7 +173,15 @@ function renderJob(job) {
       </div>
     </div>`;
 
-  const genBar = `
+  const genBar = manual ? `
+    <div class="card">
+      <h2>② Tạo video trong Flow (bán tự động)</h2>
+      <ol class="howto">
+        <li>Mở <a href="https://flow.google.com/" target="_blank" rel="noopener">Google Flow</a>, đặt khung <b>9:16</b>, chọn model (Veo 3.1 Fast/Lite…).</li>
+        <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
+        <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
+      </ol>
+    </div>` : `
     <div class="card">
       <h2>② Tạo video trên Flow</h2>
       <p class="muted" style="margin:0 0 8px">Tạo lần lượt từng cảnh, mỗi cảnh ~1,5–3 phút và <b>trừ credit Flow thật</b>. Cảnh 2 trở đi dùng khung cuối của cảnh trước làm khung đầu.</p>
@@ -203,7 +216,8 @@ function renderJob(job) {
             <span class="${sc.prompt.length > LIMIT ? 'over' : ''}" data-count="${i}">${sc.prompt.length}/${LIMIT} ký tự</span></summary>
             <textarea class="prompt" rows="14" data-field="prompt" data-i="${i}" ${locked ? 'disabled' : ''}>${esc(sc.prompt)}</textarea>
           </details>
-          <div class="row">
+          ${manual ? manualSteps(job, i) : ''}
+          <div class="row" ${manual ? 'hidden' : ''}>
             <button class="small" data-act="gen-one" data-i="${i}" ${locked || (i > 0 && !job.scenes[i - 1].lastFrame) ? 'disabled' : ''}>
               ${sc.clip ? 'Tạo lại chỉ cảnh này' : 'Tạo riêng cảnh này'}</button>
             ${sc.prompt.length > LIMIT - 300 ? `<button class="small" data-act="compress" data-i="${i}" ${locked ? 'disabled' : ''}>Rút gọn prompt</button>` : ''}
@@ -217,7 +231,10 @@ function renderJob(job) {
                  <label>Cắt đầu (s)<input type="number" min="0" max="4" step="0.1" value="${sc.trimStart}" data-field="trimStart" data-i="${i}" ${busy ? 'disabled' : ''}></label>
                  <label>Cắt cuối (s)<input type="number" min="0" max="4" step="0.1" value="${sc.trimEnd}" data-field="trimEnd" data-i="${i}" ${busy ? 'disabled' : ''}></label>
                </div>`
-            : `<div class="ph">${sc.status === 'running' ? '<span class="busy"><span class="spin"></span>Flow đang render</span>' : 'Chưa có video'}</div>`}
+            : `<div class="ph ${manual ? 'drop' : ''}" data-drop="${i}">${sc.status === 'running'
+                ? '<span class="busy"><span class="spin"></span>Flow đang render</span>'
+                : manual ? 'Kéo file mp4 từ Flow vào đây<br>hoặc bấm để chọn file' : 'Chưa có video'}</div>`}
+          ${manual && sc.clip ? `<button class="small block" style="margin-top:8px" data-act="pick" data-i="${i}" ${busy ? 'disabled' : ''}>Thay clip khác…</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -262,6 +279,69 @@ function renderJob(job) {
   $('#view-job').innerHTML = head + summary + genBar + scenes + final + logCard(job);
 }
 
+function manualSteps(job, i) {
+  const fileUrl = (rel) => `/files/${job.id}/${rel}`;
+  let how;
+  if (i === 0 && job.refImage) {
+    how = `Chế độ <b>Ingredients to Video</b> (Thành phần) · thêm <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a>`;
+  } else if (i === 0) {
+    how = 'Chế độ <b>Text to Video</b> (chỉ prompt)';
+  } else {
+    const prev = job.scenes[i - 1];
+    how = prev.lastFrame
+      ? `Chế độ <b>Frames to Video</b> · khung đầu: <a href="${fileUrl(prev.lastFrame)}" download="canh-${i + 1}-khung-dau.jpg">tải khung cuối cảnh ${i}</a>`
+      : `Chế độ <b>Frames to Video</b> · <span class="over">cần có clip cảnh ${i} trước để lấy khung đầu</span>`;
+  }
+  return `<div class="manual">
+    <div>${how}</div>
+    <div class="row"><button class="small" data-act="copy" data-i="${i}">Copy prompt</button>
+      ${job.scenes[i].clip ? '' : `<button class="small" data-act="pick" data-i="${i}">Chọn file mp4…</button>`}</div>
+  </div>`;
+}
+
+const filePicker = Object.assign(document.createElement('input'), { type: 'file', accept: 'video/mp4,video/*' });
+filePicker.addEventListener('change', () => {
+  if (filePicker.files[0]) uploadClip(Number(filePicker.dataset.i), filePicker.files[0]);
+  filePicker.value = '';
+});
+
+async function uploadClip(i, file) {
+  if (!currentJob) return;
+  const sc = currentJob.scenes[i];
+  if (sc.clip && i < currentJob.scenes.length - 1 && currentJob.scenes.slice(i + 1).some((s) => s.clip)
+      && !confirm(`Thay clip cảnh ${i + 1} sẽ làm các cảnh sau lệch nối. Tiếp tục?`)) return;
+  const fd = new FormData();
+  fd.append('clip', file);
+  toast(`Đang tải clip cảnh ${i + 1} lên…`, 60000);
+  try {
+    await api(`/api/jobs/${currentJob.id}/scenes/${i}/clip`, { method: 'POST', body: fd });
+    toast(`Đã nhận clip cảnh ${i + 1}`);
+    refresh(true);
+  } catch (e) {
+    toast(e.message);
+  }
+}
+
+$('#view-job').addEventListener('dragover', (e) => {
+  const d = e.target.closest('[data-drop]');
+  if (!d) return;
+  e.preventDefault();
+  d.classList.add('over-drop');
+});
+$('#view-job').addEventListener('dragleave', (e) => e.target.closest('[data-drop]')?.classList.remove('over-drop'));
+$('#view-job').addEventListener('drop', (e) => {
+  const d = e.target.closest('[data-drop]');
+  if (!d) return;
+  e.preventDefault();
+  d.classList.remove('over-drop');
+  const f = e.dataTransfer.files[0];
+  if (f) uploadClip(Number(d.dataset.drop), f);
+});
+$('#view-job').addEventListener('click', (e) => {
+  const d = e.target.closest('.ph[data-drop].drop');
+  if (d) { filePicker.dataset.i = d.dataset.drop; filePicker.click(); }
+});
+
 function logCard(job) {
   return `<div class="card"><details ${job.error ? 'open' : ''}><summary>Nhật ký</summary>
     <div class="log">${esc(job.log.join('\n'))}</div></details></div>`;
@@ -288,6 +368,14 @@ $('#view-job').addEventListener('click', async (e) => {
         if (!confirm(`Tạo cảnh ${i + 1} bằng ${currentJob.model} (trừ credit Flow).${currentJob.scenes[i].clip && i < n - 1 ? ' Các cảnh sau sẽ bị lệch nối.' : ''} Tiếp tục?`)) return;
         await api(`/api/jobs/${id}/generate`, { method: 'POST', body: { only: i } });
         break;
+      case 'copy':
+        await navigator.clipboard.writeText(currentJob.scenes[i].prompt);
+        toast(`Đã copy prompt cảnh ${i + 1} (${currentJob.scenes[i].prompt.length} ký tự)`);
+        return;
+      case 'pick':
+        filePicker.dataset.i = i;
+        filePicker.click();
+        return;
       case 'compress':
         await api(`/api/jobs/${id}/compress`, { method: 'POST', body: { i } });
         break;
@@ -323,8 +411,9 @@ $('#view-job').addEventListener('input', (e) => {
 $('#view-job').addEventListener('change', async (e) => {
   const el = e.target;
   if (!currentJob) return;
-  if (el.id === 'job-model') {
-    await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { model: el.value } }).catch((err) => toast(err.message));
+  if (el.id === 'job-model' || el.id === 'job-mode') {
+    const key = el.id === 'job-model' ? 'model' : 'mode';
+    await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));
     return refresh(true);
   }
   const field = el.dataset.field;

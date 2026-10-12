@@ -22,6 +22,13 @@ const upload = multer({
   fileFilter: (_req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
 });
 
+// Clip mp4 người dùng tải về từ Flow (thường 5–30MB / 8 giây).
+const uploadVideo = multer({
+  dest: path.join(config.dataDir, 'uploads'),
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => cb(null, /^video\//.test(file.mimetype) || /\.(mp4|mov|webm)$/i.test(file.originalname)),
+});
+
 const wrap = (fn) => async (req, res) => {
   try {
     await fn(req, res);
@@ -70,6 +77,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     avoid: b.avoid?.trim() || '',
     tone: b.tone?.trim() || '',
     model: config.gflowModels.includes(b.model) ? b.model : config.gflowModel,
+    mode: b.mode === 'gflow' ? 'gflow' : 'manual',
   };
   const job = await J.createJob(input, ref);
   res.json({ id: job.id });
@@ -102,6 +110,12 @@ const action = (fn) => wrap(async (req, res) => {
 
 app.post('/api/jobs/:id/script', action((job) => J.startScript(job)));
 app.post('/api/jobs/:id/generate', action((job, b) => J.startGenerate(job, { from: Number(b.from) || 0, only: b.only ?? null })));
+app.post('/api/jobs/:id/scenes/:i/clip', uploadVideo.single('clip'), wrap(async (req, res) => {
+  const job = jobOr404(req, res);
+  if (!job) { if (req.file) fs.rmSync(req.file.path, { force: true }); return; }
+  if (!req.file) throw new Error('Chưa chọn file video (mp4)');
+  res.json(await J.attachClip(job, Number(req.params.i), req.file.path));
+}));
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));

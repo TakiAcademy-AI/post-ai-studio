@@ -2,7 +2,11 @@
 
 Website chạy trên máy nhà, biến skill **Ads AI** thành dây chuyền:
 
-① Claude viết kịch bản + prompt từng cảnh → ② Google Flow (Veo) tạo từng cảnh qua `gflow-cli` → ③ ffmpeg ghép thành 1 Reel → ④ đăng **nháp** lên Page Facebook.
+① Claude viết kịch bản + prompt từng cảnh → ② tạo từng cảnh trong Google Flow → ③ ffmpeg ghép thành 1 Reel → ④ đăng **nháp** lên Page Facebook.
+
+Khâu ② có 2 chế độ (chọn theo từng video):
+- **Tự bấm trong Flow** (mặc định): web đưa prompt + ảnh khung đầu, bạn tạo trong Flow rồi kéo mp4 vào web. Không bị reCAPTCHA chặn vì người bấm thật.
+- **Tự động qua gflow**: Playwright lái Chrome. Flow hay chấm điểm là bot (`PUBLIC_ERROR_UNUSUAL_ACTIVITY`) và chặn profile vài giờ.
 
 ## Chạy
 
@@ -40,7 +44,8 @@ Khởi động lại server sau khi sửa `.env`. Ô "Facebook ✓" góc phải 
 
 1. **Video mới** → điền chủ đề, số cảnh, CTA, mô tả nhân vật, ảnh tham chiếu (tuỳ chọn) → *Viết kịch bản* (1–3 phút).
 2. Duyệt mạch video, bảng nối cảnh, sửa thoại/prompt từng cảnh. Prompt phải ≤ 4000 ký tự (Flow cắt phần thừa) — có bộ đếm và nút *Rút gọn prompt*.
-3. *Tạo cả N cảnh* → chạy lần lượt: cảnh 1 dùng ảnh nhân vật làm reference (`r2v`) hoặc chỉ prompt (`t2v`); cảnh 2+ dùng **khung cuối cảnh trước làm khung đầu** (`i2v`). Mỗi cảnh ~1,5–3 phút và **trừ credit Flow**.
+3. **Chế độ tự bấm trong Flow**: với từng cảnh, theo thứ tự từ cảnh 1 — *Copy prompt*, chọn đúng chế độ Flow ghi ở cảnh (cảnh 1: Text/Ingredients to Video; cảnh 2+: Frames to Video với ảnh *khung đầu* tải từ web), khung 9:16, tạo, tải mp4 về rồi kéo vào ô video của cảnh. Web tự cắt khung cuối làm khung đầu cảnh sau.
+   **Chế độ gflow**: *Tạo cả N cảnh* → chạy lần lượt: cảnh 1 dùng ảnh nhân vật làm reference (`r2v`) hoặc chỉ prompt (`t2v`); cảnh 2+ dùng **khung cuối cảnh trước làm khung đầu** (`i2v`). Mỗi cảnh ~1,5–3 phút và **trừ credit Flow**.
 4. Cảnh nào hỏng: *Tạo lại chỉ cảnh này* (các cảnh sau bị đánh dấu "lệch nối") hoặc *Tạo lại từ cảnh này trở đi*. Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
 5. *Ghép video* → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
 6. Sửa caption → *Đăng nháp lên Page* → vào Meta Business Suite → Nội dung → Bản nháp để duyệt và đăng.

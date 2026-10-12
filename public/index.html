@@ -35,9 +35,12 @@
           </select>
           <small id="dur-hint" class="muted"></small>
         </label>
-        <label>Model Veo
-          <select name="model" id="model-select"></select>
-          <small class="muted">veo-lite rẻ nhất</small>
+        <label>Cách tạo video
+          <select name="mode">
+            <option value="manual" selected>Tự bấm trong Flow, kéo mp4 vào web</option>
+            <option value="gflow">Tự động qua gflow (hay bị reCAPTCHA chặn)</option>
+          </select>
+          <small class="muted">Model chỉ áp dụng cho chế độ tự động: <select name="model" id="model-select" style="width:auto;padding:1px 4px"></select></small>
         </label>
         <label>Đối tượng xem
           <input name="audience" placeholder="VD: chủ shop online 25–40 tuổi">
