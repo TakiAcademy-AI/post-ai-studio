@@ -140,7 +140,7 @@ root.innerHTML = `
   <div class="body">
     <div id="info" class="muted">Đang kết nối Ads AI Studio…</div>
     <select id="model">${MODELS.map((m) => `<option>${m}</option>`).join('')}</select>
-    <button id="fill" class="act" disabled>Điền vào Flow</button>
+    <button id="fill" class="act" disabled>Điền lại (chỉ khi cần)</button>
     <div id="st" class="st muted"></div>
   </div>
 </div>`;
@@ -248,7 +248,7 @@ async function poll() {
   if (key === (current && `${current.jobId}:${current.index}`)) return;
   current = p;
   if (!p) {
-    $('#info').textContent = 'Chưa có cảnh nào. Trên web bấm "Gửi sang Flow" ở một cảnh.';
+    $('#info').textContent = 'Chưa có cảnh nào. Trên web bấm "Điền cảnh … vào Flow" — tab này sẽ tự điền.';
     $('#fill').disabled = true;
     return;
   }
@@ -257,7 +257,7 @@ async function poll() {
   const sub = Object.assign(document.createElement('div'), { className: 'muted', textContent: `${MODE_TEXT[p.mode]} · ${p.prompt.length} ký tự` });
   $('#info').append(b, ` · ${p.title}`, sub);
   $('#fill').disabled = false;
-  $('#fill').textContent = `Điền lại cảnh ${p.index + 1}`;
+  $('#fill').textContent = `Điền lại cảnh ${p.index + 1} (chỉ khi cần)`;
 
   // Cảnh này đã điền rồi (vd. vừa tải lại trang) → không điền lần nữa, chỉ theo dõi video mới.
   const { armed } = await chrome.runtime.sendMessage({ type: 'getArmed' });

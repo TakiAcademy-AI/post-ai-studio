@@ -186,7 +186,7 @@ function renderJob(job) {
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
         <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
       </ol>
-      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Gửi sang Flow</b> ở cảnh → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
+      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Điền cảnh vào Flow</b> → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
       ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>
     </div>` : `
     <div class="card">
@@ -303,7 +303,7 @@ function manualSteps(job, i) {
     <div>${how}</div>
     <div class="row">
       <button class="small primary" data-act="bridge" data-i="${i}" ${i > 0 && !job.scenes[i - 1].lastFrame ? 'disabled' : ''}>
-        ${bridgeNow?.jobId === job.id && bridgeNow?.index === i ? '⏳ Đang chờ trong Flow' : 'Gửi sang Flow (extension)'}</button>
+        ${bridgeNow?.jobId === job.id && bridgeNow?.index === i ? '⏳ Đã điền — chờ bấm tạo trong Flow' : `Điền cảnh ${i + 1} vào Flow`}</button>
       <button class="small" data-act="copy" data-i="${i}">Copy prompt</button>
       ${job.scenes[i].clip ? '' : `<button class="small" data-act="pick" data-i="${i}">Chọn file mp4…</button>`}</div>
   </div>`;
@@ -380,7 +380,7 @@ $('#view-job').addEventListener('click', async (e) => {
         break;
       case 'bridge':
         await api(`/api/jobs/${id}/bridge`, { method: 'POST', body: { i } });
-        toast(`Đã gửi cảnh ${i + 1} — tab Flow sẽ tự điền, bạn chỉ cần bấm nút tạo →`, 6000);
+        toast(`Cảnh ${i + 1} đang được điền vào tab Flow (cần mở sẵn một dự án) — bạn chỉ bấm nút tạo →`, 6000);
         break;
       case 'copy':
         await navigator.clipboard.writeText(currentJob.scenes[i].prompt);

@@ -18,7 +18,7 @@ Cài một lần:
 3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Ads AI**.
 
 Quy trình (mỗi cảnh bạn chỉ bấm 1 nút — nút tạo):
-1. Web: bấm **Gửi sang Flow (extension)** ở cảnh 1. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Ads AI (lưu cho lần sau).
+1. Web: bấm **Điền cảnh 1 vào Flow**. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Ads AI (lưu cho lần sau).
 2. Extension **tự điền**: Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
 3. **Bạn bấm nút → để tạo** (nút duy nhất phải bấm tay — cú bấm này reCAPTCHA chấm điểm, để người thật bấm thì an toàn cho tài khoản).
 4. Video xong extension **tự Tải xuống → 720p**, gửi về web; web gắn vào cảnh, cắt khung cuối, và đẩy cảnh kế tiếp sang Flow — extension tự điền tiếp. Lặp lại bước 3.
