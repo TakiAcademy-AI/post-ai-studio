@@ -104,3 +104,4 @@ details summary { cursor: pointer; font-size: 13px; color: var(--muted); margin:
 .manual { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin-top: 8px; font-size: 13px; }
 .ph.drop { cursor: pointer; border-color: var(--accent); }
 .ph.over-drop { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+[hidden] { display: none !important; }
