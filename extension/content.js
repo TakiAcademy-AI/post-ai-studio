@@ -83,8 +83,14 @@ async function uploadAndSelect(p, openPicker) {
   press(row);
   await waitFor(() => row.getAttribute('aria-selected') === 'true', 'ảnh được chọn', 5000).catch(() => {});
   await sleep(400);
-  const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh'), 'nút "Thêm vào câu lệnh"');
-  press(add);
+  // Hộp thoại khung hình cần bấm "Thêm vào câu lệnh"; hộp thoại của nút + có thể thêm ngay khi chọn và tự đóng.
+  const pickerOpen = () => Boolean(byText('button', 'Tải nội dung nghe nhìn'));
+  const next = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!pickerOpen() && 'closed'), 'nút "Thêm vào câu lệnh"', 6000)
+    .catch(() => {
+      const btns = [...document.querySelectorAll('button')].filter(visible).map((b) => (b.getAttribute('aria-label') || b.innerText).replace(/\s+/g, ' ').trim()).filter(Boolean).slice(0, 25);
+      throw new Error(`Đã chọn ảnh nhưng không thấy cách thêm vào câu lệnh. Nút đang hiện: ${btns.join(' | ')}`);
+    });
+  if (next !== 'closed') press(next);
   await sleep(1200);
 }
 
