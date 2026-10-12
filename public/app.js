@@ -241,7 +241,8 @@ function renderJob(job) {
             : `<div class="ph ${manual ? 'drop' : ''}" data-drop="${i}">${sc.status === 'running'
                 ? '<span class="busy"><span class="spin"></span>Flow đang render</span>'
                 : manual ? 'Kéo file mp4 từ Flow vào đây<br>hoặc bấm để chọn file' : 'Chưa có video'}</div>`}
-          ${manual && sc.clip ? `<button class="small block" style="margin-top:8px" data-act="pick" data-i="${i}" ${busy ? 'disabled' : ''}>Thay clip khác…</button>` : ''}
+          ${manual && sc.clip ? `<button class="small block" style="margin-top:8px" data-act="pick" data-i="${i}" ${busy ? 'disabled' : ''}>Thay clip khác…</button>
+             <button class="small block danger" style="margin-top:6px" data-act="unclip" data-i="${i}" ${busy ? 'disabled' : ''}>Bỏ clip cảnh này</button>` : ''}
         </div>
       </div>
     </div>`;
@@ -315,19 +316,22 @@ filePicker.addEventListener('change', () => {
   filePicker.value = '';
 });
 
-async function uploadClip(i, file) {
+async function uploadClip(i, file, force = false) {
   if (!currentJob) return;
   const sc = currentJob.scenes[i];
   if (sc.clip && i < currentJob.scenes.length - 1 && currentJob.scenes.slice(i + 1).some((s) => s.clip)
       && !confirm(`Thay clip cảnh ${i + 1} sẽ làm các cảnh sau lệch nối. Tiếp tục?`)) return;
   const fd = new FormData();
   fd.append('clip', file);
+  if (force) fd.append('force', '1');
   toast(`Đang tải clip cảnh ${i + 1} lên…`, 60000);
   try {
     await api(`/api/jobs/${currentJob.id}/scenes/${i}/clip`, { method: 'POST', body: fd });
     toast(`Đã nhận clip cảnh ${i + 1}`);
     refresh(true);
   } catch (e) {
+    // Người dùng tự chọn file: cho phép gắn dù khung đầu lệch (vd. cố ý không nối).
+    if (!force && e.message.includes('không khớp khung cuối') && confirm(`${e.message}\n\nVẫn gắn clip này vào cảnh ${i + 1}?`)) return uploadClip(i, file, true);
     toast(e.message);
   }
 }
@@ -390,6 +394,10 @@ $('#view-job').addEventListener('click', async (e) => {
         filePicker.dataset.i = i;
         filePicker.click();
         return;
+      case 'unclip':
+        if (!confirm(`Bỏ clip cảnh ${i + 1}? Các cảnh sau (nếu có) sẽ bị đánh dấu lệch nối.`)) return;
+        await api(`/api/jobs/${id}/scenes/${i}/clip`, { method: 'DELETE' });
+        break;
       case 'compress':
         await api(`/api/jobs/${id}/compress`, { method: 'POST', body: { i } });
         break;

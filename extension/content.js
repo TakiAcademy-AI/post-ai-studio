@@ -176,24 +176,40 @@ $('#tog').addEventListener('click', () => $('.box').classList.toggle('min'));
 const MODE_TEXT = { frames: 'Khung hình (khung đầu = khung cuối cảnh trước)', ingredients: 'Thành phần (ảnh nhân vật)', text: 'Chỉ prompt' };
 
 // ---------- tự tải clip khi Flow tạo xong ----------
-// Ô video đã xong có ảnh thu nhỏ alt="Hình thu nhỏ của video đã tạo" và nút ⋮ "Tuỳ chọn khác".
+// Video được gắn với ĐÚNG lần người dùng bấm nút tạo cho cảnh đã điền:
+//  - chỉ bắt đầu theo dõi sau cú bấm thật (isTrusted) vào "Bắt đầu tạo" / Enter trong ô prompt;
+//  - ô video mới = ô đã xong (có nút ⋮) chưa từng có lúc bấm, nằm ở đầu lưới;
+//  - mỗi ô video chỉ gồm ĐÚNG MỘT ảnh thu nhỏ (trước đây leo quá xa lên khung lưới → bấm nhầm ⋮ của video khác).
+const THUMB = 'img[alt="Hình thu nhỏ của video đã tạo"]';
+
 function videoTiles() {
-  return [...document.querySelectorAll('img[alt="Hình thu nhỏ của video đã tạo"]')].map((img) => {
+  return [...document.querySelectorAll(THUMB)].map((img) => {
     let t = img;
-    while (t && !t.querySelector?.('button[aria-label="Tuỳ chọn khác"]')) t = t.parentElement;
-    return t ? { root: t, key: img.getAttribute('src') } : null;
+    while (t.parentElement && t.parentElement.querySelectorAll(THUMB).length === 1) t = t.parentElement;
+    const menu = t.querySelector('button[aria-label="Tuỳ chọn khác"]');
+    return menu ? { root: t, menu, src: img.getAttribute('src') } : null;
   }).filter(Boolean);
 }
 
-let watch = null; // { key, before:Set, t0, downloading }
+let armedScene = null; // cảnh đã điền, chờ người bấm tạo
+let gen = null;        // { scene, beforeEls:Set, beforeSrc:Set, t0, skip:Set }
 
-function startWatch(p) {
+function onSubmit() {
+  if (!armedScene || gen) return; // bấm tạo lần 2 cho cùng cảnh → vẫn dùng video của lần bấm đầu
   const tiles = videoTiles();
-  watch = { key: `${p.jobId}:${p.index}`, scene: p.index, before: new Set(tiles.map((t) => t.key)), count: tiles.length, t0: Date.now(), downloading: false };
+  gen = { scene: armedScene, beforeEls: new Set(tiles.map((t) => t.root)), beforeSrc: new Set(tiles.map((t) => t.src)), t0: Date.now(), skip: new Set(), downloading: false };
+  status(`Đang tạo cảnh ${armedScene.index + 1}… video xong extension tự tải về web.`);
 }
 
+document.addEventListener('click', (e) => {
+  if (e.isTrusted && e.target.closest?.('button[aria-label="Bắt đầu tạo"]')) onSubmit();
+}, true);
+document.addEventListener('keydown', (e) => {
+  if (e.isTrusted && e.key === 'Enter' && !e.shiftKey && e.target.closest?.('.ProseMirror')) onSubmit();
+}, true);
+
 async function downloadTile(tile) {
-  press(tile.root.querySelector('button[aria-label="Tuỳ chọn khác"]'));
+  press(tile.menu);
   const dl = await waitFor(() => byText('[role="menuitem"]', 'Tải xuống'), 'mục "Tải xuống"', 5000);
   for (const n of ['pointerover', 'pointerenter', 'mouseover', 'mouseenter']) dl.dispatchEvent(new MouseEvent(n, { bubbles: true }));
   press(dl);
@@ -201,24 +217,27 @@ async function downloadTile(tile) {
   press(q);
 }
 
-async function checkWatch() {
-  if (!watch || watch.downloading) return;
-  if (Date.now() - watch.t0 > 25 * 60 * 1000) { status('Quá 25 phút chưa thấy video mới. Nếu đã tạo xong, tự Tải xuống → 720p là clip vẫn về web.', 'err'); watch = null; return; }
-  // Chỉ nhận là video mới khi: số ô video tăng, ô đó có ảnh chưa từng thấy, và nằm ở đầu lưới (Flow xếp mới nhất trước).
-  const tiles = videoTiles();
-  if (tiles.length <= watch.count) return;
-  const fresh = tiles.slice(0, 3).find((t) => t.key && !watch.before.has(t.key));
+async function checkGen() {
+  if (!gen || gen.downloading) return;
+  if (Date.now() - gen.t0 > 25 * 60 * 1000) {
+    status('Quá 25 phút chưa thấy video mới. Nếu đã xong, tự bấm ⋮ → Tải xuống → 720p là clip vẫn về web.', 'err');
+    gen = null;
+    return;
+  }
+  const fresh = videoTiles().slice(0, 4).find((t) => !gen.beforeEls.has(t.root) && !gen.beforeSrc.has(t.src) && !gen.skip.has(t.src));
   if (!fresh) return;
-  watch.downloading = true;
-  status(`Video cảnh ${watch.scene + 1} đã xong — đang tải xuống 720p…`);
+  gen.downloading = true;
+  gen.current = fresh.src;
+  status(`Video cảnh ${gen.scene.index + 1} đã xong — đang tải 720p…`);
   try {
-    await sleep(1500); // để Flow ghi xong metadata
+    await sleep(1500);
+    await chrome.runtime.sendMessage({ type: 'expectDownload', jobId: gen.scene.jobId, index: gen.scene.index });
     await downloadTile(fresh);
-    status(`Đang tải clip cảnh ${watch.scene + 1} về và gửi sang web…`);
+    status(`Đang gửi clip cảnh ${gen.scene.index + 1} về web…`);
   } catch (e) {
     status(`Không tự tải được (${e.message}). Bấm ⋮ → Tải xuống → 720p là clip vẫn về web.`, 'err');
-  } finally {
-    watch = null;
+    gen.downloading = false;
+    gen.skip.add(fresh.src);
   }
 }
 
@@ -232,7 +251,8 @@ async function doFill(p) {
     if (error || !pending || pending.jobId !== p.jobId || pending.index !== p.index) throw new Error(error || 'Cảnh không còn chờ');
     await fill(pending, $('#model').value);
     await chrome.runtime.sendMessage({ type: 'armed', jobId: pending.jobId, index: pending.index });
-    startWatch(pending);
+    armedScene = { jobId: pending.jobId, index: pending.index };
+    gen = null;
     status(`Đã điền cảnh ${pending.index + 1}. Kiểm tra rồi BẤM NÚT → ĐỂ TẠO.\nVideo xong extension tự tải 720p và gửi về web.`, 'ok');
   } catch (e) {
     status(e.message, 'err');
@@ -275,7 +295,7 @@ async function poll() {
   // Cảnh này đã điền rồi (vd. vừa tải lại trang) → không điền lần nữa, chỉ theo dõi video mới.
   const { armed } = await chrome.runtime.sendMessage({ type: 'getArmed' });
   if (armed && `${armed.jobId}:${armed.index}` === key) {
-    if (!watch) startWatch(p);
+    armedScene = { jobId: p.jobId, index: p.index };
     status(`Cảnh ${p.index + 1} đã được điền. Bấm → để tạo; video xong sẽ tự tải về web.`, 'ok');
     return;
   }
@@ -296,13 +316,18 @@ chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type !== 'clipResult') return;
   if (msg.ok) {
     status(`✓ Clip cảnh ${msg.scene + 1} đã về web.${msg.next != null ? ` Đang chuẩn bị cảnh ${msg.next + 1}…` : ' Đã đủ cảnh — sang web bấm Ghép video.'}`, 'ok');
+    gen = null;
+    armedScene = null;
     current = null;
     setTimeout(poll, 1500);
   } else {
-    status(`Gửi clip về web lỗi: ${msg.error}`, 'err');
+    // Web từ chối (trùng / khung đầu không khớp) → bỏ qua ô đó, tiếp tục chờ đúng video.
+    status(`Web không nhận clip: ${msg.error}
+Đang chờ video đúng của cảnh này…`, 'err');
+    if (gen) { gen.skip.add(gen.current); gen.downloading = false; }
   }
 });
 
 poll();
 setInterval(poll, 3000);
-setInterval(checkWatch, 3000);
+setInterval(checkGen, 2000);

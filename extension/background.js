@@ -43,6 +43,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
       await api('/api/bridge/event', { method: 'POST', body: JSON.stringify({ level: msg.level, text: String(msg.text).slice(0, 500) }) });
       return { ok: true };
     }
+    if (msg.type === 'expectDownload') {
+      await chrome.storage.session.set({ expect: { jobId: msg.jobId, index: msg.index, at: Date.now() } });
+      return { ok: true };
+    }
     if (msg.type === 'getArmed') {
       return { armed: await getArmed() };
     }
@@ -69,8 +73,12 @@ chrome.downloads.onChanged.addListener(async (delta) => {
   if (!item || !/\.(mp4|mov|webm)$/i.test(item.filename)) return;
   const armed = await getArmed();
   if (!armed || new Date(item.startTime).getTime() < armed.at) return;
+  // Nếu extension vừa tự bấm tải cho một cảnh cụ thể thì báo kèm cảnh đó; người dùng tự tải thì gắn vào cảnh đang chờ.
+  const { expect } = await chrome.storage.session.get('expect');
+  const want = expect && Date.now() - expect.at < 120000 ? { jobId: expect.jobId, index: expect.index } : {};
+  await chrome.storage.session.remove('expect');
   try {
-    const r = await api('/api/bridge/clip', { method: 'POST', body: JSON.stringify({ path: item.filename }) });
+    const r = await api('/api/bridge/clip', { method: 'POST', body: JSON.stringify({ path: item.filename, ...want }) });
     await chrome.storage.session.remove('armed');
     notifyFlowTabs({ type: 'clipResult', ok: true, scene: r.scene, next: r.next });
   } catch (e) {

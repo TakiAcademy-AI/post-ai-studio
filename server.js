@@ -115,7 +115,11 @@ app.post('/api/jobs/:id/scenes/:i/clip', uploadVideo.single('clip'), wrap(async 
   const job = jobOr404(req, res);
   if (!job) { if (req.file) fs.rmSync(req.file.path, { force: true }); return; }
   if (!req.file) throw new Error('Chưa chọn file video (mp4)');
-  res.json(await J.attachClip(job, Number(req.params.i), req.file.path));
+  res.json(await J.attachClip(job, Number(req.params.i), req.file.path, { force: req.body?.force === '1' }));
+}));
+app.delete('/api/jobs/:id/scenes/:i/clip', wrap(async (req, res) => {
+  const job = jobOr404(req, res);
+  if (job) res.json(J.removeClip(job, Number(req.params.i)));
 }));
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
@@ -140,7 +144,7 @@ app.post('/api/bridge/clip', wrap(async (req, res) => {
   if (!/\.(mp4|mov|webm)$/i.test(p)) throw new Error('Chỉ nhận file video .mp4/.mov/.webm');
   const real = fs.realpathSync(p);
   if (!real.startsWith(downloadsDir + path.sep)) throw new Error('File phải nằm trong thư mục Downloads');
-  res.json(await J.bridgeClip(real));
+  res.json(await J.bridgeClip(real, { jobId: req.body?.jobId, index: req.body?.index }));
 }));
 
 app.listen(config.port, config.host, () => {
