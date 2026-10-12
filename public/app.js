@@ -186,7 +186,7 @@ function renderJob(job) {
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
         <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
       </ol>
-      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Gửi sang Flow</b> ở cảnh → trong tab Flow bấm <b>Điền</b> → bạn bấm tạo → Tải xuống 720p. Clip tự về web, cảnh sau tự sẵn sàng.
+      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Gửi sang Flow</b> ở cảnh → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
       ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>
     </div>` : `
     <div class="card">
@@ -380,7 +380,7 @@ $('#view-job').addEventListener('click', async (e) => {
         break;
       case 'bridge':
         await api(`/api/jobs/${id}/bridge`, { method: 'POST', body: { i } });
-        toast(`Đã gửi cảnh ${i + 1} — sang tab Flow, bấm "Điền cảnh ${i + 1}" ở bảng Ads AI góc phải dưới`, 6000);
+        toast(`Đã gửi cảnh ${i + 1} — tab Flow sẽ tự điền, bạn chỉ cần bấm nút tạo →`, 6000);
         break;
       case 'copy':
         await navigator.clipboard.writeText(currentJob.scenes[i].prompt);

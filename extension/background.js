@@ -39,6 +39,9 @@ chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
       await chrome.storage.session.set({ armed: { jobId: msg.jobId, index: msg.index, at: Date.now() } });
       return { ok: true };
     }
+    if (msg.type === 'getArmed') {
+      return { armed: await getArmed() };
+    }
     if (msg.type === 'clear') {
       await chrome.storage.session.remove('armed');
       await api('/api/bridge', { method: 'DELETE' });

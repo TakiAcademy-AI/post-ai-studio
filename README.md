@@ -17,11 +17,13 @@ Cài một lần:
 2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/ads-ai-studio/extension`.
 3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Ads AI**.
 
-Mỗi cảnh:
-1. Web: bấm **Gửi sang Flow (extension)** ở cảnh đó.
-2. Tab Flow (đang mở một dự án): bảng Ads AI → chọn model → **Điền cảnh N vào Flow**. Extension chọn Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
-3. Kiểm tra rồi **bấm nút → để tạo**.
-4. Video xong: ⋮ trên ô video → **Tải xuống → 720p**. Extension thấy file tải về, gửi đường dẫn cho web; web gắn vào cảnh N và tự chuẩn bị cảnh N+1.
+Quy trình (mỗi cảnh bạn chỉ bấm 1 nút — nút tạo):
+1. Web: bấm **Gửi sang Flow (extension)** ở cảnh 1. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Ads AI (lưu cho lần sau).
+2. Extension **tự điền**: Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
+3. **Bạn bấm nút → để tạo** (nút duy nhất phải bấm tay — cú bấm này reCAPTCHA chấm điểm, để người thật bấm thì an toàn cho tài khoản).
+4. Video xong extension **tự Tải xuống → 720p**, gửi về web; web gắn vào cảnh, cắt khung cuối, và đẩy cảnh kế tiếp sang Flow — extension tự điền tiếp. Lặp lại bước 3.
+
+Nếu tự tải không chạy (bảng báo lỗi), tự bấm ⋮ → Tải xuống → 720p là clip vẫn về web. Đừng tạo video khác trong cùng dự án lúc đang chờ — extension lấy video mới nhất xuất hiện ở đầu lưới. Chrome phải để chế độ tải về không hỏi vị trí lưu.
 
 Giới hạn: extension dựa vào nhãn tiếng Việt của giao diện Flow (đo ngày 2026-10-12) — Flow đổi giao diện thì bảng sẽ báo "Không thấy …"; lúc đó vẫn dùng cách kéo thả mp4. Web chỉ nhận file mp4 nằm trong `~/Downloads`.
 

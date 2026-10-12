@@ -162,6 +162,70 @@ $('#tog').addEventListener('click', () => $('.box').classList.toggle('min'));
 
 const MODE_TEXT = { frames: 'Khung hình (khung đầu = khung cuối cảnh trước)', ingredients: 'Thành phần (ảnh nhân vật)', text: 'Chỉ prompt' };
 
+// ---------- tự tải clip khi Flow tạo xong ----------
+// Ô video đã xong có ảnh thu nhỏ alt="Hình thu nhỏ của video đã tạo" và nút ⋮ "Tuỳ chọn khác".
+function videoTiles() {
+  return [...document.querySelectorAll('img[alt="Hình thu nhỏ của video đã tạo"]')].map((img) => {
+    let t = img;
+    while (t && !t.querySelector?.('button[aria-label="Tuỳ chọn khác"]')) t = t.parentElement;
+    return t ? { root: t, key: img.getAttribute('src') } : null;
+  }).filter(Boolean);
+}
+
+let watch = null; // { key, before:Set, t0, downloading }
+
+function startWatch(p) {
+  const tiles = videoTiles();
+  watch = { key: `${p.jobId}:${p.index}`, scene: p.index, before: new Set(tiles.map((t) => t.key)), count: tiles.length, t0: Date.now(), downloading: false };
+}
+
+async function downloadTile(tile) {
+  press(tile.root.querySelector('button[aria-label="Tuỳ chọn khác"]'));
+  const dl = await waitFor(() => byText('[role="menuitem"]', 'Tải xuống'), 'mục "Tải xuống"', 5000);
+  for (const n of ['pointerover', 'pointerenter', 'mouseover', 'mouseenter']) dl.dispatchEvent(new MouseEvent(n, { bubbles: true }));
+  press(dl);
+  const q = await waitFor(() => byText('[role="menuitem"]', '720p'), 'mục "720p"', 5000);
+  press(q);
+}
+
+async function checkWatch() {
+  if (!watch || watch.downloading) return;
+  if (Date.now() - watch.t0 > 25 * 60 * 1000) { status('Quá 25 phút chưa thấy video mới. Nếu đã tạo xong, tự Tải xuống → 720p là clip vẫn về web.', 'err'); watch = null; return; }
+  // Chỉ nhận là video mới khi: số ô video tăng, ô đó có ảnh chưa từng thấy, và nằm ở đầu lưới (Flow xếp mới nhất trước).
+  const tiles = videoTiles();
+  if (tiles.length <= watch.count) return;
+  const fresh = tiles.slice(0, 3).find((t) => t.key && !watch.before.has(t.key));
+  if (!fresh) return;
+  watch.downloading = true;
+  status(`Video cảnh ${watch.scene + 1} đã xong — đang tải xuống 720p…`);
+  try {
+    await sleep(1500); // để Flow ghi xong metadata
+    await downloadTile(fresh);
+    status(`Đang tải clip cảnh ${watch.scene + 1} về và gửi sang web…`);
+  } catch (e) {
+    status(`Không tự tải được (${e.message}). Bấm ⋮ → Tải xuống → 720p là clip vẫn về web.`, 'err');
+  } finally {
+    watch = null;
+  }
+}
+
+// ---------- tự điền khi web gửi cảnh mới ----------
+async function doFill(pending) {
+  busy = true;
+  $('#fill').disabled = true;
+  try {
+    await fill(pending, $('#model').value);
+    await chrome.runtime.sendMessage({ type: 'armed', jobId: pending.jobId, index: pending.index });
+    startWatch(pending);
+    status(`Đã điền cảnh ${pending.index + 1}. Kiểm tra rồi BẤM NÚT → ĐỂ TẠO.\nVideo xong extension tự tải 720p và gửi về web.`, 'ok');
+  } catch (e) {
+    status(e.message, 'err');
+  } finally {
+    busy = false;
+    $('#fill').disabled = !current;
+  }
+}
+
 async function poll() {
   if (busy) return;
   let r;
@@ -190,33 +254,36 @@ async function poll() {
   const sub = Object.assign(document.createElement('div'), { className: 'muted', textContent: `${MODE_TEXT[p.mode]} · ${p.prompt.length} ký tự` });
   $('#info').append(b, ` · ${p.title}`, sub);
   $('#fill').disabled = false;
-  $('#fill').textContent = `Điền cảnh ${p.index + 1} vào Flow`;
+  $('#fill').textContent = `Điền lại cảnh ${p.index + 1}`;
+
+  // Cảnh này đã điền rồi (vd. vừa tải lại trang) → không điền lần nữa, chỉ theo dõi video mới.
+  const { armed } = await chrome.runtime.sendMessage({ type: 'getArmed' });
+  if (armed && `${armed.jobId}:${armed.index}` === key) {
+    if (!watch) startWatch(p);
+    status(`Cảnh ${p.index + 1} đã được điền. Bấm → để tạo; video xong sẽ tự tải về web.`, 'ok');
+    return;
+  }
+  if (!location.pathname.startsWith('/project/')) {
+    status('Mở một dự án Flow (Dự án mới hoặc dự án có sẵn) — extension sẽ tự điền.', 'muted');
+    current = null; // để lần poll sau thử lại khi đã vào dự án
+    return;
+  }
+  doFill(p);
 }
 
 $('#fill').addEventListener('click', async () => {
   if (!current || busy) return;
-  busy = true;
-  $('#fill').disabled = true;
-  try {
-    const { pending, error } = await chrome.runtime.sendMessage({ type: 'getPending' });
-    if (error || !pending) throw new Error(error || 'Cảnh không còn chờ');
-    await fill(pending, $('#model').value);
-    await chrome.runtime.sendMessage({ type: 'armed', jobId: pending.jobId, index: pending.index });
-    status(`Đã điền cảnh ${pending.index + 1}. Kiểm tra lại rồi BẤM NÚT → ĐỂ TẠO.\nVideo xong: ⋮ trên ô video → Tải xuống → 720p. Extension tự gửi về web.`, 'ok');
-  } catch (e) {
-    status(e.message, 'err');
-  } finally {
-    busy = false;
-    $('#fill').disabled = !current;
-  }
+  const { pending, error } = await chrome.runtime.sendMessage({ type: 'getPending' });
+  if (error || !pending) return status(error || 'Cảnh không còn chờ', 'err');
+  doFill(pending);
 });
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.type !== 'clipResult') return;
   if (msg.ok) {
-    status(`✓ Clip cảnh ${msg.scene + 1} đã về web.${msg.next != null ? ` Cảnh ${msg.next + 1} sẵn sàng.` : ' Đã đủ cảnh — sang web bấm Ghép video.'}`, 'ok');
+    status(`✓ Clip cảnh ${msg.scene + 1} đã về web.${msg.next != null ? ` Đang chuẩn bị cảnh ${msg.next + 1}…` : ' Đã đủ cảnh — sang web bấm Ghép video.'}`, 'ok');
     current = null;
-    poll();
+    setTimeout(poll, 1500);
   } else {
     status(`Gửi clip về web lỗi: ${msg.error}`, 'err');
   }
@@ -224,3 +291,4 @@ chrome.runtime.onMessage.addListener((msg) => {
 
 poll();
 setInterval(poll, 3000);
+setInterval(checkWatch, 3000);
