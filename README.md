@@ -42,22 +42,23 @@ Yêu cầu trên máy:
 
 Cấu hình nằm trong `.env` (xem `.env.example`).
 
-## Cấu hình Facebook
+## Kết nối Facebook
 
-Điền vào `.env`:
+Cách chính — **Đăng nhập Facebook** (giống Ads OS, dùng chung app Facebook của Ads OS):
+1. `.env` cần `FB_APP_ID`, `FB_APP_SECRET`, `ENCRYPTION_KEY` (đã điền sẵn).
+2. Cột trái → **Đăng nhập Facebook** → popup Facebook → chọn các Page và cấp quyền → popup tự đóng.
+3. Chọn **Page để đăng** trong ô chọn ở cột trái.
 
-```
-FB_PAGE_ID=<id của Page>
-FB_PAGE_TOKEN=<Page access token>
-```
+Quyền xin: `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, `business_management`.
+Token dài hạn ~60 ngày (cột trái hiện số ngày còn lại) — hết hạn thì bấm **Đăng nhập lại**. Token user và token
+từng Page lưu mã hoá AES-256-GCM trong `data/facebook.json` (quyền 600); đổi `ENCRYPTION_KEY` là phải đăng nhập lại.
 
-Nên dùng **token System User** (Business Settings → System Users) vì không hết hạn và không dính khoá "xác thực tài khoản" như token người thật:
-1. Tạo System User trong Business sở hữu app.
-2. Gán **Page** cho System User (thiếu bước này thì API trả danh sách rỗng, không báo lỗi).
-3. Tạo token với quyền `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`.
-4. Lấy Page token: `GET /me/accounts` bằng token System User → trường `access_token` của Page.
+Nếu popup báo "URL bị chặn" / redirect không hợp lệ: vào App Dashboard → Facebook Login → Settings → thêm
+`http://localhost:3200/api/fb/callback` vào **Valid OAuth Redirect URIs** (mở web bằng `127.0.0.1` thì thêm cả
+`http://127.0.0.1:3200/api/fb/callback`).
 
-Khởi động lại server sau khi sửa `.env`. Ô "Facebook ✓" góc phải trên sẽ chuyển xanh.
+Cách dự phòng — dán token tay: khai `FB_PAGE_ID` + `FB_PAGE_TOKEN` (nên là token System User) trong `.env`.
+Chỉ dùng khi chưa đăng nhập/chưa chọn Page.
 
 ## Quy trình
 
@@ -67,7 +68,7 @@ Khởi động lại server sau khi sửa `.env`. Ô "Facebook ✓" góc phải 
    **Chế độ gflow**: *Tạo cả N cảnh* → chạy lần lượt: cảnh 1 dùng ảnh nhân vật làm reference (`r2v`) hoặc chỉ prompt (`t2v`); cảnh 2+ dùng **khung cuối cảnh trước làm khung đầu** (`i2v`). Mỗi cảnh ~1,5–3 phút và **trừ credit Flow**.
 4. Cảnh nào hỏng: *Tạo lại chỉ cảnh này* (các cảnh sau bị đánh dấu "lệch nối") hoặc *Tạo lại từ cảnh này trở đi*. Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
 5. *Ghép video* → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
-6. Sửa caption → *Đăng nháp lên Page* → vào Meta Business Suite → Nội dung → Bản nháp để duyệt và đăng.
+6. Sửa caption → chọn **Lưu nháp** (mặc định, duyệt trong Meta Business Suite → Nội dung → Bản nháp) hoặc **Đăng ngay** → bấm **Đăng lên <Page>**.
 
 ## Ghi chú
 

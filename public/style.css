@@ -105,3 +105,8 @@ details summary { cursor: pointer; font-size: 13px; color: var(--muted); margin:
 .ph.drop { cursor: pointer; border-color: var(--accent); }
 .ph.over-drop { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 [hidden] { display: none !important; }
+
+.fb-box { font-size: 13px; display: grid; gap: 6px; }
+.fb-box select { font-size: 13px; padding: 5px 6px; }
+.fb-box .who { color: var(--ink); font-weight: 600; }
+.btn-fb { background: #1877f2; border-color: #1877f2; color: #fff; font-weight: 600; }

@@ -5,7 +5,8 @@ let cfg = {};
 let currentId = null;
 let currentJob = null;
 let pollTimer = null;
-let bridgeNow = null; // cảnh đang chờ extension Flow
+let bridgeNow = null;
+let fb = { connected: false }; // trạng thái đăng nhập Facebook // cảnh đang chờ extension Flow
 const LIMIT = 4000; // Flow cắt prompt sau 4000 ký tự
 
 async function api(url, opts = {}) {
@@ -33,7 +34,7 @@ function show(view) {
 
 const STAGE = {
   scripting: 'Đang viết kịch bản', script_failed: 'Lỗi kịch bản', script_ready: 'Chờ tạo cảnh',
-  generating: 'Đang tạo cảnh', clips_ready: 'Đủ cảnh — chờ ghép', stitched: 'Đã ghép', posted_draft: 'Đã gửi nháp FB',
+  generating: 'Đang tạo cảnh', clips_ready: 'Đủ cảnh — chờ ghép', stitched: 'Đã ghép', posted_draft: 'Đã gửi nháp FB', posted: 'Đã đăng FB',
 };
 
 // ---------- danh sách ----------
@@ -268,13 +269,17 @@ function renderJob(job) {
           <label style="margin-top:16px">Caption Facebook
             <textarea rows="4" data-field="caption" ${busy ? 'disabled' : ''}>${esc(job.caption)}</textarea>
           </label>
-          <div class="row">
-            <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbConfigured ? 'disabled' : ''}>Đăng nháp lên Page</button>
-            ${!cfg.fbConfigured ? '<span class="muted">Chưa cấu hình FB_PAGE_ID / FB_PAGE_TOKEN trong .env</span>' : ''}
+          <div class="row" style="align-items:center">
+            <select id="fb-mode" style="width:auto">
+              <option value="draft">Lưu nháp (duyệt trong Business Suite)</option>
+              <option value="publish">Đăng ngay (công khai)</option>
+            </select>
+            <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbConfigured ? 'disabled' : ''}>Đăng lên ${esc(fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page')}</button>
           </div>
+          ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — bấm <b>Đăng nhập Facebook</b> ở cột trái rồi chọn Page.</div>' : ''}
           ${job.facebook ? `
             <div class="dialogue" style="margin-top:12px">
-              Đã gửi nháp · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
+              ${job.facebook.published ? 'Đã đăng công khai' : 'Đã gửi nháp'}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''} · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
               ${job.facebook.file !== job.final?.file ? '<br><b>Lưu ý:</b> bản nháp là video ghép trước đó, không phải bản hiện tại.' : ''}
               ${job.facebook.status ? `<br>Trạng thái: <code>${esc(JSON.stringify(job.facebook.status.status || job.facebook.status))}</code>` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
@@ -361,6 +366,62 @@ function logCard(job) {
     <div class="log">${esc(job.log.join('\n'))}</div></details></div>`;
 }
 
+// ---------- Facebook ----------
+async function loadFb() {
+  fb = await api('/api/fb/status').catch(() => ({ connected: false }));
+  const box = $('#fb-box');
+  const sel = fb.pages?.find((p) => p.id === fb.selectedPageId);
+  if (!fb.oauthReady && !fb.envPage) {
+    box.innerHTML = '<span>Chưa cấu hình FB_APP_ID / FB_APP_SECRET trong .env</span>';
+  } else if (!fb.connected) {
+    box.innerHTML = `<span>${fb.envPage ? 'Đang dùng Page khai trong .env.' : 'Chưa kết nối.'}</span>
+      ${fb.oauthReady ? '<button class="btn-fb block" id="fb-login">Đăng nhập Facebook</button>' : ''}`;
+  } else {
+    const days = fb.expiresAt ? Math.round((new Date(fb.expiresAt) - Date.now()) / 86400000) : null;
+    box.innerHTML = `<span>Đã kết nối: <span class="who">${esc(fb.user.name)}</span>${days != null ? ` · còn ${days} ngày` : ''}</span>
+      <label style="font-weight:400">Page để đăng
+        <select id="fb-page">${fb.pages.length ? '' : '<option value="">(không có Page nào)</option>'}
+          ${fb.pages.map((p) => `<option value="${esc(p.id)}" ${p.id === fb.selectedPageId ? 'selected' : ''} ${p.hasToken ? '' : 'disabled'}>${esc(p.name)}${p.canPost ? '' : ' (không có quyền đăng)'}</option>`).join('')}
+        </select></label>
+      <div class="row" style="margin-top:0"><button class="small" id="fb-login">Đăng nhập lại</button><button class="small danger" id="fb-out">Ngắt</button></div>`;
+  }
+  const pill = $('#pill-fb');
+  if (pill) {
+    const ok = Boolean(sel || fb.envPage);
+    pill.className = `pill ${ok ? 'ok' : 'bad'}`;
+    pill.textContent = ok ? `Facebook: ${sel ? sel.name : 'Page .env'}` : 'Facebook chưa kết nối';
+  }
+  cfg.fbConfigured = Boolean(sel || fb.envPage);
+}
+
+$('#fb-box').addEventListener('click', async (e) => {
+  if (e.target.id === 'fb-login') {
+    const w = 600, h = 720;
+    window.open('/api/fb/start', 'fb-login', `width=${w},height=${h},left=${(screen.width - w) / 2},top=${(screen.height - h) / 2}`);
+  }
+  if (e.target.id === 'fb-out' && confirm('Ngắt kết nối Facebook? Token đã lưu sẽ bị xoá.')) {
+    await api('/api/fb/disconnect', { method: 'POST' });
+    await loadFb();
+    if (currentJob) renderJob(currentJob);
+  }
+});
+$('#fb-box').addEventListener('change', async (e) => {
+  if (e.target.id !== 'fb-page') return;
+  try {
+    await api('/api/fb/page', { method: 'POST', body: { pageId: e.target.value } });
+    await loadFb();
+    toast('Đã chọn Page');
+    if (currentJob) renderJob(currentJob);
+  } catch (err) { toast(err.message); }
+});
+// Popup đăng nhập báo kết quả về đây (chỉ nhận từ chính origin của web).
+window.addEventListener('message', async (e) => {
+  if (e.origin !== location.origin || e.data?.type !== 'fb-login') return;
+  toast(e.data.ok ? `Đã kết nối ${e.data.user} · ${e.data.pages} Page` : `Đăng nhập Facebook lỗi: ${e.data.error}`, 6000);
+  await loadFb();
+  if (currentJob) renderJob(currentJob);
+});
+
 // ---------- thao tác ----------
 $('#view-job').addEventListener('click', async (e) => {
   const b = e.target.closest('button[data-act]');
@@ -407,10 +468,13 @@ $('#view-job').addEventListener('click', async (e) => {
       case 'stitch':
         await api(`/api/jobs/${id}/stitch`, { method: 'POST', body: { removeWatermark: $('#wm').checked } });
         break;
-      case 'facebook':
-        if (!confirm('Tải video này lên Page ở dạng NHÁP (chưa công khai)?')) return;
-        await api(`/api/jobs/${id}/facebook`, { method: 'POST' });
+      case 'facebook': {
+        const publish = $('#fb-mode').value === 'publish';
+        const page = fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page';
+        if (!confirm(publish ? `ĐĂNG CÔNG KHAI Reel này lên "${page}" ngay bây giờ?` : `Lưu Reel này thành NHÁP trên "${page}" (chưa công khai)?`)) return;
+        await api(`/api/jobs/${id}/facebook`, { method: 'POST', body: { publish } });
         break;
+      }
       case 'fb-refresh':
         await api(`/api/jobs/${id}/facebook/refresh`, { method: 'POST' });
         break;
@@ -458,7 +522,8 @@ $('#view-job').addEventListener('change', async (e) => {
   $('#model-select').innerHTML = cfg.models.map((m) => `<option ${m === cfg.defaultModel ? 'selected' : ''}>${m}</option>`).join('');
   $('#status-pills').innerHTML = `
     <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>
-    <span class="pill ${cfg.fbConfigured ? 'ok' : 'bad'}">Facebook ${cfg.fbConfigured ? '✓' : 'chưa cấu hình'}</span>`;
+    <span class="pill" id="pill-fb">Facebook…</span>`;
+  await loadFb();
   durHint();
   await loadList();
   const first = $('#job-list li[data-id]');

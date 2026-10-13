@@ -6,6 +6,8 @@ import path from 'node:path';
 import { config } from './lib/config.js';
 import { toCleanJpg } from './lib/media.js';
 import { fbConfigured, checkPage } from './lib/facebook.js';
+import crypto from 'node:crypto';
+import * as FB from './lib/fb-auth.js';
 import * as J from './lib/jobs.js';
 
 fs.mkdirSync(path.join(config.dataDir, 'uploads'), { recursive: true });
@@ -54,6 +56,42 @@ app.get('/api/config', (_req, res) => {
 });
 
 app.get('/api/fb/check', wrap(async (_req, res) => res.json(await checkPage())));
+
+// ---------- Đăng nhập Facebook (OAuth popup, giống Ads OS) ----------
+// Origin lấy theo Host người dùng đang mở (localhost hay 127.0.0.1) để cookie state và redirect_uri khớp nhau.
+const originOf = (req) => `${req.protocol}://${req.get('host')}`;
+const readCookie = (req, name) => (req.headers.cookie || '').split(/;\s*/).map((c) => c.split('=')).find(([k]) => k === name)?.[1];
+
+app.get('/api/fb/status', (_req, res) => res.json({ oauthReady: FB.oauthReady(), ...FB.status(), envPage: Boolean(config.fbPageId && config.fbPageToken) }));
+
+app.get('/api/fb/start', (req, res) => {
+  if (!FB.oauthReady()) return res.status(503).send('Chưa cấu hình FB_APP_ID / FB_APP_SECRET / ENCRYPTION_KEY trong .env');
+  const state = crypto.randomBytes(24).toString('base64url');
+  res.setHeader('Set-Cookie', `fb_state=${state}; HttpOnly; SameSite=Lax; Path=/api/fb; Max-Age=600`);
+  res.redirect(FB.authorizeUrl(originOf(req), state));
+});
+
+app.get('/api/fb/callback', async (req, res) => {
+  const origin = originOf(req);
+  const send = (payload, code = 200) => res.status(code).type('html').send(FB.closePopupHtml(origin, payload));
+  res.setHeader('Set-Cookie', 'fb_state=; HttpOnly; SameSite=Lax; Path=/api/fb; Max-Age=0');
+  if (req.query.error) return send({ type: 'fb-login', ok: false, error: req.query.error_description || req.query.error });
+  const expected = readCookie(req, 'fb_state');
+  const state = String(req.query.state || '');
+  // State phải khớp cookie — chặn trang khác ép nối tài khoản Facebook lạ vào web này.
+  if (!expected || expected.length !== state.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(state))) {
+    return send({ type: 'fb-login', ok: false, error: 'State không khớp — thử đăng nhập lại' }, 400);
+  }
+  try {
+    const r = await FB.completeLogin(origin, String(req.query.code || ''));
+    send({ type: 'fb-login', ok: true, user: r.user.name, pages: r.pages });
+  } catch (e) {
+    send({ type: 'fb-login', ok: false, error: e.message });
+  }
+});
+
+app.post('/api/fb/page', wrap(async (req, res) => { FB.selectPage(String(req.body?.pageId || '')); res.json(FB.status()); }));
+app.post('/api/fb/disconnect', (_req, res) => { FB.disconnect(); res.json({ ok: true }); });
 
 app.get('/api/jobs', (_req, res) => res.json(J.listJobs()));
 
@@ -124,7 +162,7 @@ app.delete('/api/jobs/:id/scenes/:i/clip', wrap(async (req, res) => {
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
-app.post('/api/jobs/:id/facebook', action((job) => J.startFacebook(job)));
+app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { publish: b.publish === true })));
 app.post('/api/jobs/:id/facebook/refresh', action((job) => J.refreshFacebook(job)));
 
 // ---------- Cầu nối extension ----------
