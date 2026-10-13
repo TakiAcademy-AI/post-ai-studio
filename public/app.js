@@ -203,7 +203,8 @@ function renderJob(job) {
           <select id="job-voice" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
             <option value="">Không cố định — mỗi cảnh một giọng</option>${window.voiceOpts ? window.voiceOpts(job.voice) : ''}
           </select></label>
-        ${job.voice && job.refImage && (job.consistency || 'identity') === 'frames' ? '<span class="over" style="font-size:12px">Chế độ "Nối cảnh liền khung" không gắn được giọng cho cảnh 2+</span>' : ''}
+        ${job.voice === 'me' ? '<span class="muted" style="font-size:12px">@me: mặt + giọng lấy từ hình đại diện "Tôi"; không dùng ảnh nhân vật hay khung cuối cảnh trước (Flow chặn ảnh mặt người thật)</span>'
+          : job.voice && job.refImage && (job.consistency || 'identity') === 'frames' ? '<span class="over" style="font-size:12px">Chế độ "Nối cảnh liền khung" không gắn được giọng cho cảnh 2+</span>' : ''}
       </div>
       ${job.refImage ? `<div class="row" style="margin:0 0 10px">
         <label style="display:flex;gap:8px;align-items:center;font-weight:600">Cảnh 2 trở đi:
@@ -384,7 +385,9 @@ function manualSteps(job, i) {
   const fileUrl = (rel) => `/files/${job.id}/${rel}`;
   let how;
   const identity = job.refImage && (job.consistency || 'identity') === 'identity';
-  if (i > 0 && identity) {
+  if (job.voice === 'me') {
+    how = 'Chế độ <b>Thành phần</b> · hình đại diện <b>@me (Tôi)</b> — mặt + giọng của bạn';
+  } else if (i > 0 && identity) {
     const prev = job.scenes[i - 1];
     how = `Chế độ <b>Thành phần</b>${job.voice ? ` · giọng <b>${job.voice === 'me' ? '@me' : esc(job.voice)}</b>` : ''} · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
       ? `<a href="${fileUrl(prev.lastFrame)}" download="canh-${i}-cuoi.jpg">khung cuối cảnh ${i}</a>`
