@@ -1,6 +1,6 @@
 # Post AI Studio
 
-Website chạy trên máy nhà, biến skill **Ads AI** thành dây chuyền:
+Website chạy trên máy nhà, biến skill **Video AI** thành dây chuyền:
 
 ① Claude viết kịch bản + prompt từng cảnh → ② tạo từng cảnh trong Google Flow → ③ ffmpeg ghép thành 1 Reel → ④ đăng **nháp** lên Page Facebook.
 
