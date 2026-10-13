@@ -301,3 +301,4 @@ details[open] summary::before { transform: rotate(90deg); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chips button { padding: 4px 12px; border-radius: 99px; font-size: 13px; }
 .chips button.on { background: var(--grad); color: #fff; border-color: transparent; }
+.auto-box { border: 1px solid rgba(109, 93, 252, 0.3); background: var(--grad-soft); border-radius: 12px; padding: 12px 14px; }

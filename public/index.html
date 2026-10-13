@@ -52,10 +52,12 @@
         </div>
         <label>Cách tạo video
           <select name="mode">
-            <option value="manual" selected>Tự bấm trong Flow, kéo mp4 vào web</option>
-            <option value="gflow">Tự động qua gflow (hay bị reCAPTCHA chặn)</option>
+            <option value="manual" selected>Bán tự động — extension điền, bạn bấm tạo</option>
+            <option value="auto">Tự động hoàn toàn — Chrome Flow tự bấm tạo</option>
+            <option value="gflow">gflow-cli (cũ, hay bị reCAPTCHA chặn)</option>
           </select>
-          <small class="muted">Model chỉ áp dụng cho chế độ tự động: <select name="model" id="model-select" style="width:auto;padding:1px 4px"></select></small>
+          <small class="muted">Model Flow (tự động hoàn toàn): <select name="flowModel" id="flow-model-select" style="width:auto;padding:1px 4px"></select>
+            · gflow: <select name="model" id="model-select" style="width:auto;padding:1px 4px"></select></small>
         </label>
         <label>Đối tượng xem
           <input name="audience" placeholder="VD: chủ shop online 25–40 tuổi">
@@ -138,6 +140,11 @@
               <li>Mở một dự án Flow; trên trang video bấm <b>Điền cảnh vào Flow</b> — mỗi cảnh chỉ bấm → trong Flow.</li>
             </ol>
             <div id="flow-status" class="muted" style="font-size:13px"></div>
+            <div class="manual" style="margin-top:4px">
+              <b>Chrome Flow — cho chế độ "Tự động hoàn toàn"</b>
+              <div class="muted" style="font-size:12px;margin:2px 0 8px">Chrome riêng mang đăng nhập Google chép từ profile bạn chọn; server tự điền và tự bấm tạo. Chrome hằng ngày không bị đụng tới. Tự động hoá Flow có rủi ro bị Google chặn — nên thử bằng tài khoản phụ trước.</div>
+              <div id="chromeflow-box" class="acc-body" style="font-size:13px">Đang kiểm tra…</div>
+            </div>
           </div>
         </div>
       </div>

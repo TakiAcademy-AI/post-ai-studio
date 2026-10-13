@@ -27,6 +27,16 @@ Nếu tự tải không chạy (bảng báo lỗi), tự bấm ⋮ → Tải xu�
 
 Giới hạn: extension dựa vào nhãn tiếng Việt của giao diện Flow (đo ngày 2026-10-12) — Flow đổi giao diện thì bảng sẽ báo "Không thấy …"; lúc đó vẫn dùng cách kéo thả mp4. Web chỉ nhận file mp4 nằm trong `~/Downloads`.
 
+## Tự động hoàn toàn (Chrome Flow) — không cần bấm tạo
+
+Cách nhập giữ nguyên; chỉ khác chế độ **"Tự động hoàn toàn — Chrome Flow tự bấm tạo"** (chọn khi tạo video, hoặc đổi ở trang video). Làm theo cách của taki-agentic-ai:
+
+1. Tab **Tài khoản → Chrome Flow**: chọn profile Chrome đã đăng nhập Google Flow → **Chép lại & mở** (chép cookie sang `data/flow-chrome`, Chrome hằng ngày không bị đụng) → **Kiểm tra đăng nhập Flow**. Chưa đăng nhập: **Hiện cửa sổ** rồi tự đăng nhập trong cửa sổ đó.
+2. Trang video: chọn **Model Flow** → **▶ Tự tạo cả N cảnh**. Server mở Chrome Flow (cổng DevTools `9334`, đổi bằng `FLOW_CDP_PORT`), tạo một dự án Flow riêng cho video, điền từng cảnh bằng đúng code điền của extension, bấm tạo (Playwright), chờ, tải 720p và gắn vào cảnh. Mỗi cảnh có nút **↻ Tự tạo lại cảnh này**.
+3. Flow báo "hết thời gian tạo" → tự thử lại 2 lần; vi phạm chính sách / hết credit → dừng và báo lỗi ở cảnh đó.
+
+Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản (không dùng mẹo né phát hiện) — nên thử bằng tài khoản phụ trước. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ).
+
 ## Chạy
 
 ```bash

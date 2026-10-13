@@ -11,6 +11,8 @@ import * as FB from './lib/fb-auth.js';
 import * as P from './lib/posts.js';
 import * as CA from './lib/claude-accounts.js';
 import { VOICES, isVoice } from './lib/voices.js';
+import * as FC from './lib/flow-chrome.js';
+import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
 fs.mkdirSync(path.join(config.dataDir, 'uploads'), { recursive: true });
@@ -55,6 +57,7 @@ app.get('/api/config', (_req, res) => {
     defaultModel: config.gflowModel,
     fbConfigured: fbConfigured(),
     voices: VOICES,
+    flowModels: FLOW_MODELS,
     gflowFound: fs.existsSync(config.gflowBin),
   });
 });
@@ -125,7 +128,8 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     avoid: b.avoid?.trim() || '',
     tone: b.tone?.trim() || '',
     model: config.gflowModels.includes(b.model) ? b.model : config.gflowModel,
-    mode: b.mode === 'gflow' ? 'gflow' : 'manual',
+    mode: ['gflow', 'auto'].includes(b.mode) ? b.mode : 'manual',
+    flowModel: FLOW_MODELS.includes(b.flowModel) ? b.flowModel : 'Veo 3.1 - Fast',
     consistency: b.consistency === 'frames' ? 'frames' : 'identity',
     voice: isVoice(b.voice) ? b.voice : null,
   };
@@ -174,6 +178,15 @@ app.delete('/api/jobs/:id/scenes/:i/clip', wrap(async (req, res) => {
   if (job) res.json(J.removeClip(job, Number(req.params.i)));
 }));
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
+app.post('/api/jobs/:id/auto', action((job, b) => J.startAutoFlow(job, { from: b.from ?? null })));
+
+// ---------- Chrome Flow (tự động hoàn toàn) ----------
+app.get('/api/flow/status', wrap(async (_req, res) => res.json({ up: await FC.isUp(), source: FC.source(), profiles: FC.listProfiles(), port: FC.CDP_PORT })));
+app.post('/api/flow/sync', wrap(async (req, res) => { const s = await FC.syncProfile(String(req.body?.dir || '')); await FC.ensure({ show: true }); res.json(s); }));
+app.post('/api/flow/show', wrap(async (req, res) => { await FC.ensure({ show: req.body?.show !== false }); res.json({ ok: true }); }));
+app.post('/api/flow/check', wrap(async (_req, res) => res.json(await FC.checkLogin())));
+app.post('/api/flow/close', wrap(async (_req, res) => { await FC.close(); res.json({ ok: true }); }));
+
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
 app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt })));
