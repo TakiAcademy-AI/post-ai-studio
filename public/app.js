@@ -282,8 +282,10 @@ function renderJob(job) {
               ${job.facebook.published ? 'Đã đăng công khai' : 'Đã gửi nháp'}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''} · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
               ${job.facebook.file !== job.final?.file ? '<br><b>Lưu ý:</b> bản nháp là video ghép trước đó, không phải bản hiện tại.' : ''}
               ${job.facebook.status ? `<br>Trạng thái: <code>${esc(JSON.stringify(job.facebook.status.status || job.facebook.status))}</code>` : ''}
+              ${job.facebook.status?.status?.publishing_phase?.publish_status ? `<br>Facebook: <b>${esc(job.facebook.status.status.video_status)}</b> · ${esc(job.facebook.status.status.publishing_phase.publish_status)}` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
-              <a href="https://business.facebook.com/latest/content_calendar" target="_blank" rel="noopener">Mở Meta Business Suite</a></div>
+              ${job.facebook.pageId ? `<a href="https://business.facebook.com/latest/posts/drafts?asset_id=${encodeURIComponent(job.facebook.pageId)}" target="_blank" rel="noopener">Mở bản nháp của Page</a>` : ''}
+              <a href="https://www.facebook.com/reel/${encodeURIComponent(job.facebook.videoId)}" target="_blank" rel="noopener">Mở reel</a></div>
             </div>` : ''}
         </div>
       </div>
