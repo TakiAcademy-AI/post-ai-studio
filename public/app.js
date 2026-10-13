@@ -510,6 +510,75 @@ $('#posts-list').addEventListener('click', async (e) => {
   }
 });
 
+// ---------- Tài khoản Claude ----------
+let clLogin = null; // phiên đăng nhập đang chờ dán mã
+
+async function loadClaude() {
+  const box = $('#cl-box');
+  let accs;
+  try { accs = await api('/api/claude/accounts'); } catch (e) { box.textContent = e.message; return; }
+  const act = accs.find((a) => a.active) || accs[0];
+  const label = (a) => `${a.email || '(chưa đăng nhập)'}${a.plan ? ` · ${a.plan}` : ''}${a.builtin ? ' · mặc định' : ''}`;
+  box.innerHTML = `
+    <span>Đang dùng: <span class="who">${esc(act?.email || 'chưa đăng nhập')}</span>${act?.plan ? ` <span class="badge">${esc(act.plan)}</span>` : ''}</span>
+    ${accs.length > 1 ? `<select id="cl-active">${accs.map((a) => `<option value="${esc(a.id)}" ${a.active ? 'selected' : ''} ${a.loggedIn ? '' : 'disabled'}>${esc(label(a))}</option>`).join('')}</select>` : ''}
+    ${clLogin ? `
+      <div class="manual" style="margin-top:0">
+        <b>Thêm tài khoản Claude</b>
+        <ol class="howto" style="font-size:13px">
+          <li><a href="${esc(clLogin.url)}" target="_blank" rel="noopener">Mở trang đăng nhập Claude</a> — đăng nhập đúng tài khoản muốn thêm (mở cửa sổ ẩn danh nếu trình duyệt đang đăng nhập tài khoản khác).</li>
+          <li>Chép mã trang hiện ra, dán vào đây:</li>
+        </ol>
+        <input id="cl-code" placeholder="Dán mã vào đây" autocomplete="off">
+        <div class="row" style="margin-top:6px"><button class="small primary" id="cl-submit">Xác nhận</button><button class="small" id="cl-cancel">Huỷ</button></div>
+      </div>` : `
+      <div class="row" style="margin-top:0">
+        <button class="small" id="cl-add">＋ Thêm tài khoản</button>
+        ${act && !act.builtin ? `<button class="small danger" id="cl-logout" data-id="${esc(act.id)}">Đăng xuất</button>` : ''}
+      </div>`}`;
+}
+
+$('#cl-box').addEventListener('click', async (e) => {
+  const id = e.target.id;
+  try {
+    if (id === 'cl-add') {
+      e.target.disabled = true;
+      e.target.textContent = 'Đang mở…';
+      clLogin = await api('/api/claude/login/start', { method: 'POST' });
+      await loadClaude();
+      window.open(clLogin.url, '_blank', 'noopener');
+    } else if (id === 'cl-submit') {
+      e.target.disabled = true;
+      e.target.textContent = 'Đang xác nhận…';
+      const r = await api('/api/claude/login/code', { method: 'POST', body: { sessionId: clLogin.sessionId, code: $('#cl-code').value } });
+      clLogin = null;
+      toast(`Đã thêm và chuyển sang ${r.email}${r.plan ? ` (${r.plan})` : ''}`, 6000);
+      await loadClaude();
+    } else if (id === 'cl-cancel') {
+      await api('/api/claude/login/cancel', { method: 'POST', body: { sessionId: clLogin?.sessionId } });
+      clLogin = null;
+      await loadClaude();
+    } else if (id === 'cl-logout') {
+      if (!confirm('Đăng xuất tài khoản Claude này khỏi web?')) return;
+      await api('/api/claude/logout', { method: 'POST', body: { id: e.target.dataset.id } });
+      toast('Đã đăng xuất, chuyển về tài khoản mặc định');
+      await loadClaude();
+    }
+  } catch (err) {
+    toast(err.message, 7000);
+    if (id === 'cl-add') clLogin = null;
+    await loadClaude();
+  }
+});
+$('#cl-box').addEventListener('change', async (e) => {
+  if (e.target.id !== 'cl-active') return;
+  try {
+    await api('/api/claude/active', { method: 'POST', body: { id: e.target.value } });
+    toast('Đã đổi tài khoản Claude');
+    await loadClaude();
+  } catch (err) { toast(err.message); }
+});
+
 // ---------- Facebook ----------
 async function loadFb() {
   fb = await api('/api/fb/status').catch(() => ({ connected: false }));
@@ -679,6 +748,7 @@ $('#view-job').addEventListener('change', async (e) => {
     <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>
     <span class="pill" id="pill-fb">Facebook…</span>`;
   await loadFb();
+  loadClaude(); // không chờ: kiểm tra tài khoản Claude mất vài giây
   durHint();
   await loadList();
   const first = $('#job-list li[data-id]');

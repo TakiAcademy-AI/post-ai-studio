@@ -42,6 +42,16 @@ Yêu cầu trên máy:
 
 Cấu hình nằm trong `.env` (xem `.env.example`).
 
+## Tài khoản Claude (viết kịch bản)
+
+Cột trái → khung **Claude**:
+- Mặc định dùng tài khoản đang đăng nhập trên máy (`~/.claude`, cũng là tài khoản của Claude Code) — web không đăng xuất tài khoản này.
+- **＋ Thêm tài khoản** → mở link đăng nhập Claude (nên dùng cửa sổ ẩn danh nếu trình duyệt đang đăng nhập tài khoản khác)
+  → chép mã trang hiện ra → dán vào web → **Xác nhận**. Tài khoản mới được dùng ngay.
+- Ô chọn để đổi qua lại giữa các tài khoản; **Đăng xuất** gỡ tài khoản đã thêm.
+- Mỗi tài khoản thêm từ web lưu ở `data/claude/<id>/` (thư mục cấu hình riêng, `CLAUDE_CONFIG_DIR`).
+- Khi Claude báo hết hạn mức, lỗi trên web gợi ý đổi tài khoản.
+
 ## Kết nối Facebook
 
 Cách chính — **Đăng nhập Facebook** (giống Ads OS, dùng chung app Facebook của Ads OS):

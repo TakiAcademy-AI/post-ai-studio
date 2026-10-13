@@ -9,6 +9,7 @@ import { fbConfigured, checkPage } from './lib/facebook.js';
 import crypto from 'node:crypto';
 import * as FB from './lib/fb-auth.js';
 import * as P from './lib/posts.js';
+import * as CA from './lib/claude-accounts.js';
 import * as J from './lib/jobs.js';
 
 fs.mkdirSync(path.join(config.dataDir, 'uploads'), { recursive: true });
@@ -165,6 +166,14 @@ app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Numbe
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
 app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt })));
+
+// ---------- Tài khoản Claude ----------
+app.get('/api/claude/accounts', wrap(async (_req, res) => res.json(await CA.list())));
+app.post('/api/claude/active', wrap(async (req, res) => { CA.setActive(String(req.body?.id || '')); res.json({ ok: true }); }));
+app.post('/api/claude/login/start', wrap(async (_req, res) => res.json(await CA.startLogin())));
+app.post('/api/claude/login/code', wrap(async (req, res) => res.json(await CA.submitCode(String(req.body?.sessionId || ''), req.body?.code))));
+app.post('/api/claude/login/cancel', (req, res) => { CA.cancelLogin(String(req.body?.sessionId || '')); res.json({ ok: true }); });
+app.post('/api/claude/logout', wrap(async (req, res) => { await CA.logout(String(req.body?.id || '')); res.json({ ok: true }); }));
 
 // ---------- Lịch đăng ----------
 app.get('/api/posts', (_req, res) => res.json(P.listPosts()));
