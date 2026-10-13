@@ -64,7 +64,14 @@
         </label>
         <label>Ảnh tham chiếu nhân vật
           <input type="file" name="refImage" accept="image/*">
-          <small class="muted">Chỉ dùng để giữ khuôn mặt ở cảnh 1</small>
+          <small class="muted">Để trống ô mô tả nhân vật thì Claude tự đọc ảnh để mô tả</small>
+        </label>
+        <label>Ưu tiên khi có ảnh nhân vật
+          <select name="consistency">
+            <option value="identity" selected>Giữ đúng mặt nhân vật (khuyên dùng)</option>
+            <option value="frames">Nối cảnh liền khung (mặt dễ trôi)</option>
+          </select>
+          <small class="muted">Flow không cho dùng cùng lúc khung đầu và ảnh nhân vật</small>
         </label>
         <label>Tông giọng
           <input name="tone" placeholder="VD: chuyên gia gần gũi, không guru">

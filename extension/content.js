@@ -65,9 +65,10 @@ async function applySettings(mode, model) {
   await sleep(400);
 }
 
-async function uploadAndSelect(p, openPicker) {
-  const bytes = Uint8Array.from(atob(p.imageB64), (c) => c.charCodeAt(0));
-  window.postMessage({ source: 'adsai', type: 'arm-file', name: p.imageName, mime: p.imageMime, buffer: bytes.buffer }, '*');
+async function uploadAndSelect(img, openPicker) {
+  const p = { imageName: img.name };
+  const bytes = Uint8Array.from(atob(img.b64), (c) => c.charCodeAt(0));
+  window.postMessage({ source: 'adsai', type: 'arm-file', name: img.name, mime: img.mime, buffer: bytes.buffer }, '*');
   await openPicker();
   const up = await waitFor(() => byText('button', 'Tải nội dung nghe nhìn'), 'nút "Tải nội dung nghe nhìn lên"');
   press(up);
@@ -94,15 +95,15 @@ async function uploadAndSelect(p, openPicker) {
   await sleep(1200);
 }
 
-async function setStartFrame(p) {
-  await uploadAndSelect(p, async () => {
+async function setStartFrame(img) {
+  await uploadAndSelect(img, async () => {
     const slotLeaf = await waitFor(() => leaf('Bắt đầu'), 'ô khung "Bắt đầu"');
     press(clickable(slotLeaf));
   });
 }
 
-async function addIngredient(p) {
-  await uploadAndSelect(p, async () => {
+async function addIngredient(img) {
+  await uploadAndSelect(img, async () => {
     const plus = await waitFor(() => document.querySelector('button[aria-label="Thêm thành phần vào ô nhập câu lệnh"]'), 'nút + thêm thành phần');
     press(plus);
     await sleep(600);
@@ -119,12 +120,36 @@ async function setPrompt(text) {
   if (!ed.innerText.includes(text.slice(0, 40))) throw new Error('Không điền được prompt vào ô nhập');
 }
 
+// Ảnh/khung còn sót trong ô nhập (Flow giữ lại sau lần tạo trước) → gỡ hết trước khi điền cảnh mới.
+// Ô nhập = vùng chứa ô prompt và nút cài đặt; mỗi ảnh trong đó là một nút có <img>, bấm vào thì gỡ.
+async function clearComposerMedia() {
+  const ed = document.querySelector('.ProseMirror[contenteditable="true"]');
+  const settings = document.querySelector('button[aria-label="Điều kiện kích hoạt cài đặt"]');
+  if (!ed || !settings) return;
+  let box = ed;
+  while (box && !box.contains(settings)) box = box.parentElement;
+  if (!box) return;
+  for (let k = 0; k < 8; k++) {
+    const chip = [...box.querySelectorAll('button')].find((b) => visible(b) && b.querySelector('img'));
+    if (!chip) return;
+    press(chip);
+    await sleep(500);
+  }
+}
+
 async function fill(p, model) {
   if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow (bấm "Dự án mới" hoặc một dự án có sẵn) rồi bấm lại');
   status('Đang chỉnh cài đặt…');
   await applySettings(p.mode, model);
-  if (p.mode === 'frames') { status('Đang tải khung đầu lên…'); await setStartFrame(p); }
-  if (p.mode === 'ingredients') { status('Đang tải ảnh nhân vật lên…'); await addIngredient(p); }
+  await clearComposerMedia();
+  const imgs = p.images || [];
+  if (p.mode === 'frames' && imgs[0]) { status('Đang tải khung đầu lên…'); await setStartFrame(imgs[0]); }
+  if (p.mode === 'ingredients') {
+    for (const [k, img] of imgs.entries()) {
+      status(`Đang thêm ảnh tham chiếu ${k + 1}/${imgs.length}…`);
+      await addIngredient(img);
+    }
+  }
   status('Đang điền prompt…');
   await setPrompt(p.prompt);
 }
@@ -173,7 +198,7 @@ chrome.storage.local.get('model').then(({ model }) => { if (model) $('#model').v
 $('#model').addEventListener('change', () => chrome.storage.local.set({ model: $('#model').value }));
 $('#tog').addEventListener('click', () => $('.box').classList.toggle('min'));
 
-const MODE_TEXT = { frames: 'Khung hình (khung đầu = khung cuối cảnh trước)', ingredients: 'Thành phần (ảnh nhân vật)', text: 'Chỉ prompt' };
+const MODE_TEXT = { frames: 'Khung hình (khung đầu = khung cuối cảnh trước)', ingredients: 'Thành phần (ảnh nhân vật + bối cảnh)', text: 'Chỉ prompt' };
 
 // ---------- tự tải clip khi Flow tạo xong ----------
 // Video được gắn với ĐÚNG lần người dùng bấm nút tạo cho cảnh đã điền:

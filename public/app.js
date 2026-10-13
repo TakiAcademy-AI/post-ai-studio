@@ -185,6 +185,12 @@ function renderJob(job) {
   const genBar = manual ? `
     <div class="card">
       <h2>Tạo video trong Flow</h2>
+      ${job.refImage ? `<div class="row" style="margin:0 0 10px">
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600">Cảnh 2 trở đi:
+          <select id="job-consistency" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
+            <option value="identity" ${(job.consistency || 'identity') === 'identity' ? 'selected' : ''}>Giữ đúng mặt nhân vật (ảnh nhân vật + khung cuối cảnh trước)</option>
+            <option value="frames" ${job.consistency === 'frames' ? 'selected' : ''}>Nối cảnh liền khung (chỉ khung đầu — mặt dễ trôi)</option>
+          </select></label></div>` : ''}
       <ol class="howto">
         <li>Mở <a href="https://flow.google.com/" target="_blank" rel="noopener">Google Flow</a>, đặt khung <b>9:16</b>, chọn model (Veo 3.1 Fast/Lite…).</li>
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
@@ -301,7 +307,13 @@ function renderJob(job) {
 function manualSteps(job, i) {
   const fileUrl = (rel) => `/files/${job.id}/${rel}`;
   let how;
-  if (i === 0 && job.refImage) {
+  const identity = job.refImage && (job.consistency || 'identity') === 'identity';
+  if (i > 0 && identity) {
+    const prev = job.scenes[i - 1];
+    how = `Chế độ <b>Thành phần</b> · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
+      ? `<a href="${fileUrl(prev.lastFrame)}" download="canh-${i}-cuoi.jpg">khung cuối cảnh ${i}</a>`
+      : `<span class="over">cần clip cảnh ${i} trước</span>`}`;
+  } else if (i === 0 && job.refImage) {
     how = `Chế độ <b>Ingredients to Video</b> (Thành phần) · thêm <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a>`;
   } else if (i === 0) {
     how = 'Chế độ <b>Text to Video</b> (chỉ prompt)';
@@ -640,8 +652,8 @@ $('#view-job').addEventListener('input', (e) => {
 $('#view-job').addEventListener('change', async (e) => {
   const el = e.target;
   if (!currentJob) return;
-  if (el.id === 'job-model' || el.id === 'job-mode') {
-    const key = el.id === 'job-model' ? 'model' : 'mode';
+  if (el.id === 'job-model' || el.id === 'job-mode' || el.id === 'job-consistency') {
+    const key = { 'job-model': 'model', 'job-mode': 'mode', 'job-consistency': 'consistency' }[el.id];
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));
     return refresh(true);
   }

@@ -73,6 +73,17 @@ Chỉ dùng khi chưa đăng nhập/chưa chọn Page.
    Lưu ý: nháp tạo qua API không hiện trong danh sách Reel của Page và khó tìm trong Business Suite → nên dùng hẹn giờ.
    Đổi giờ/huỷ dùng cập nhật Video node chung của Graph API (tài liệu Reels không mô tả) — nếu Facebook từ chối, sửa trong Business Suite.
 
+## Giữ nhân vật đồng nhất
+
+Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ảnh nhân vật (chế độ Thành phần). Mỗi video chọn một:
+- **Giữ đúng mặt nhân vật** (mặc định khi có ảnh nhân vật): cảnh 2+ dùng *Thành phần* với 2 ảnh — ảnh nhân vật gốc +
+  khung cuối cảnh trước (giữ bối cảnh, trang phục, tư thế). Chỗ nối là match cut, không liền khung tuyệt đối.
+- **Nối cảnh liền khung**: cảnh 2+ dùng *Khung hình* với khung đầu = khung cuối cảnh trước. Nối mượt nhưng mặt trôi dần
+  qua từng cảnh (đã thấy rõ ở video 4 cảnh ngày 13/10).
+
+Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
+dấu trên màn hình (Veo vẽ sai dấu).
+
 ## Ghi chú
 
 - Web chỉ nghe `127.0.0.1`, không có đăng nhập. Đừng mở ra Internet.

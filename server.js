@@ -118,6 +118,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     tone: b.tone?.trim() || '',
     model: config.gflowModels.includes(b.model) ? b.model : config.gflowModel,
     mode: b.mode === 'gflow' ? 'gflow' : 'manual',
+    consistency: b.consistency === 'frames' ? 'frames' : 'identity',
   };
   const job = await J.createJob(input, ref);
   res.json({ id: job.id });
