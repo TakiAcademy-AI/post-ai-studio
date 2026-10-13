@@ -120,21 +120,55 @@ async function setPrompt(text) {
   if (!ed.innerText.includes(text.slice(0, 40))) throw new Error('Không điền được prompt vào ô nhập');
 }
 
-// Ảnh/khung còn sót trong ô nhập (Flow giữ lại sau lần tạo trước) → gỡ hết trước khi điền cảnh mới.
-// Ô nhập = vùng chứa ô prompt và nút cài đặt; mỗi ảnh trong đó là một nút có <img>, bấm vào thì gỡ.
-async function clearComposerMedia() {
+// Ảnh/khung/giọng còn sót trong ô nhập (Flow giữ lại sau lần tạo trước) → gỡ hết trước khi điền cảnh mới.
+// Thành phần nằm phía trên ô prompt: nút aria-label "Thành phần" (ảnh, giọng) hoặc nút có <img> (khung đầu).
+// Không đụng nút "Xoá câu lệnh" cùng hàng — bấm nó là xoá cả ô nhập.
+function composerChips() {
   const ed = document.querySelector('.ProseMirror[contenteditable="true"]');
   const settings = document.querySelector('button[aria-label="Điều kiện kích hoạt cài đặt"]');
-  if (!ed || !settings) return;
+  if (!ed || !settings) return [];
   let box = ed;
   while (box && !box.contains(settings)) box = box.parentElement;
-  if (!box) return;
+  if (!box) return [];
+  const top = ed.getBoundingClientRect().top;
+  return [...box.querySelectorAll('button')].filter((b) => visible(b) && b.getBoundingClientRect().bottom <= top + 4
+    && b.getAttribute('aria-label') !== 'Xoá câu lệnh'
+    && (b.getAttribute('aria-label') === 'Thành phần' || b.querySelector('img')));
+}
+
+async function clearComposerMedia() {
   for (let k = 0; k < 8; k++) {
-    const chip = [...box.querySelectorAll('button')].find((b) => visible(b) && b.querySelector('img'));
+    const chip = composerChips()[0];
     if (!chip) return;
     press(chip);
     await sleep(500);
   }
+}
+
+// Giọng đọc cố định: + → tab "Giọng nói" → chọn đúng tên → "Thêm vào câu lệnh".
+async function addVoice(name) {
+  const plus = await waitFor(() => document.querySelector('button[aria-label="Thêm thành phần vào ô nhập câu lệnh"]'), 'nút + thêm thành phần');
+  press(plus);
+  const tab = await waitFor(() => [...document.querySelectorAll('[role="tab"]')].find((t) => visible(t) && t.innerText.includes('Giọng nói')), 'mục "Giọng nói"');
+  press(tab);
+  await sleep(800);
+  const findOpt = () => [...document.querySelectorAll('button[role="option"]')].find((b) => visible(b) && b.innerText.replace(/voice_selection/, '').trim().startsWith(name));
+  let opt = findOpt();
+  // Danh sách dài → cuộn để tìm.
+  for (let k = 0; !opt && k < 10; k++) {
+    let sc = document.querySelector('button[role="option"]')?.parentElement;
+    while (sc && sc.scrollHeight <= sc.clientHeight) sc = sc.parentElement;
+    if (sc) sc.scrollTop += 400;
+    await sleep(300);
+    opt = findOpt();
+  }
+  if (!opt) throw new Error(`Không thấy giọng "${name}" trong Flow`);
+  opt.scrollIntoView({ block: 'center' });
+  press(opt);
+  await sleep(600);
+  const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!byText('[role="tab"]', 'Giọng nói') && 'closed'), 'nút "Thêm vào câu lệnh"', 6000);
+  if (add !== 'closed') press(add);
+  await sleep(1000);
 }
 
 async function fill(p, model) {
@@ -150,6 +184,7 @@ async function fill(p, model) {
       await addIngredient(img);
     }
   }
+  if (p.voice && p.mode !== 'frames') { status(`Đang gắn giọng ${p.voice}…`); await addVoice(p.voice); }
   status('Đang điền prompt…');
   await setPrompt(p.prompt);
 }

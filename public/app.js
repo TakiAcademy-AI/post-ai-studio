@@ -198,6 +198,13 @@ function renderJob(job) {
   const genBar = manual ? `
     <div class="card">
       <h2>Tạo video trong Flow</h2>
+      <div class="row" style="margin:0 0 10px">
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600">Giọng đọc:
+          <select id="job-voice" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
+            <option value="">Không cố định — mỗi cảnh một giọng</option>${window.voiceOpts ? window.voiceOpts(job.voice) : ''}
+          </select></label>
+        ${job.voice && job.refImage && (job.consistency || 'identity') === 'frames' ? '<span class="over" style="font-size:12px">Chế độ "Nối cảnh liền khung" không gắn được giọng cho cảnh 2+</span>' : ''}
+      </div>
       ${job.refImage ? `<div class="row" style="margin:0 0 10px">
         <label style="display:flex;gap:8px;align-items:center;font-weight:600">Cảnh 2 trở đi:
           <select id="job-consistency" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
@@ -379,7 +386,7 @@ function manualSteps(job, i) {
   const identity = job.refImage && (job.consistency || 'identity') === 'identity';
   if (i > 0 && identity) {
     const prev = job.scenes[i - 1];
-    how = `Chế độ <b>Thành phần</b> · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
+    how = `Chế độ <b>Thành phần</b>${job.voice ? ` · giọng <b>${esc(job.voice)}</b>` : ''} · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
       ? `<a href="${fileUrl(prev.lastFrame)}" download="canh-${i}-cuoi.jpg">khung cuối cảnh ${i}</a>`
       : `<span class="over">cần clip cảnh ${i} trước</span>`}`;
   } else if (i === 0 && job.refImage) {
@@ -817,6 +824,11 @@ $('#view-job').addEventListener('change', async (e) => {
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { text: el.id === 'txt-on' ? { enabled: el.checked } : { style: el.value } } }).catch((err) => toast(err.message));
     return refresh(true);
   }
+  if (el.id === 'job-voice') {
+    await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { voice: el.value || null } }).catch((err) => toast(err.message));
+    toast(el.value ? `Các cảnh điền từ giờ sẽ dùng giọng ${el.value}` : 'Bỏ giọng cố định');
+    return refresh(true);
+  }
   if (el.id === 'job-model' || el.id === 'job-mode' || el.id === 'job-consistency') {
     const key = { 'job-model': 'model', 'job-mode': 'mode', 'job-consistency': 'consistency' }[el.id];
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));
@@ -839,6 +851,9 @@ $('#view-job').addEventListener('change', async (e) => {
 // ---------- khởi động ----------
 (async () => {
   cfg = await api('/api/config');
+  const voiceOpts = (sel) => (cfg.voices || []).map((v) => `<option value="${esc(v.name)}" ${v.name === sel ? 'selected' : ''}>${esc(v.name)} — ${esc(v.gender)}, ${esc(v.desc)}</option>`).join('');
+  window.voiceOpts = voiceOpts;
+  $('#voice-select').insertAdjacentHTML('beforeend', voiceOpts('Achird'));
   $('#model-select').innerHTML = cfg.models.map((m) => `<option ${m === cfg.defaultModel ? 'selected' : ''}>${m}</option>`).join('');
   $('#status-pills').innerHTML = `
     <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>

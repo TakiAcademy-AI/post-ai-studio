@@ -10,6 +10,7 @@ import crypto from 'node:crypto';
 import * as FB from './lib/fb-auth.js';
 import * as P from './lib/posts.js';
 import * as CA from './lib/claude-accounts.js';
+import { VOICES, isVoice } from './lib/voices.js';
 import * as J from './lib/jobs.js';
 
 fs.mkdirSync(path.join(config.dataDir, 'uploads'), { recursive: true });
@@ -53,6 +54,7 @@ app.get('/api/config', (_req, res) => {
     models: config.gflowModels,
     defaultModel: config.gflowModel,
     fbConfigured: fbConfigured(),
+    voices: VOICES,
     gflowFound: fs.existsSync(config.gflowBin),
   });
 });
@@ -120,6 +122,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     model: config.gflowModels.includes(b.model) ? b.model : config.gflowModel,
     mode: b.mode === 'gflow' ? 'gflow' : 'manual',
     consistency: b.consistency === 'frames' ? 'frames' : 'identity',
+    voice: isVoice(b.voice) ? b.voice : null,
   };
   const job = await J.createJob(input, ref);
   res.json({ id: job.id });

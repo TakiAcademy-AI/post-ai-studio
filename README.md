@@ -94,6 +94,13 @@ Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ản
 Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
 dấu trên màn hình (Veo vẽ sai dấu).
 
+## Giọng đọc đồng nhất
+
+Veo tự tạo giọng mới cho từng clip nên mỗi cảnh một giọng. Flow có thư viện giọng (Thành phần → **Giọng nói**:
+Achird, Charon, Iapetus, Aoede…). Chọn **Giọng đọc cố định** khi tạo video (hoặc trên trang video) → extension gắn
+cùng giọng đó vào mọi cảnh; prompt ghi cùng một câu VOICE. Giọng chỉ gắn được ở chế độ Thành phần (Khung hình không có
+nút +). Cảnh 2+ ở chế độ "Giữ đúng mặt nhân vật" dùng đủ 3 thành phần: ảnh nhân vật + khung cuối cảnh trước + giọng.
+
 ## Chữ trên màn hình (web vẽ)
 
 Veo vẽ chữ tiếng Việt có dấu sai và hay tự thêm chữ lạ, nên:
