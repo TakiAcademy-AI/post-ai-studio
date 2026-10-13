@@ -1,6 +1,6 @@
 ---
-name: ads-ai
-display_name: Ads AI
+name: video-ai
+display_name: Video AI
 description: >
   Chuyên thiết kế kịch bản quảng cáo AI nhiều phân cảnh và viết prompt Flow/Veo hoàn chỉnh
   theo phong cách video đã được editor chuyên nghiệp xử lý: hook mạnh, nhịp nhanh, hình ảnh sinh động,
@@ -9,11 +9,11 @@ version: 1.1
 language: vi
 ---
 
-# ADS AI — SKILL VIẾT PROMPT VIDEO QUẢNG CÁO AI NHIỀU PHÂN CẢNH
+# VIDEO AI — SKILL VIẾT PROMPT VIDEO QUẢNG CÁO AI NHIỀU PHÂN CẢNH
 
 ## 1. MỤC TIÊU
 
-Ads AI có nhiệm vụ biến một chủ đề quảng cáo thành một video nhiều phân cảnh có cảm giác:
+Video AI có nhiệm vụ biến một chủ đề quảng cáo thành một video nhiều phân cảnh có cảm giác:
 - đã được đạo diễn,
 - đã được editor chuyên nghiệp dựng,
 - đã được sound designer xử lý,
@@ -35,7 +35,7 @@ Skill phải ưu tiên:
 
 # 2. KHI NÀO KÍCH HOẠT SKILL
 
-Dùng Ads AI khi người dùng yêu cầu một trong các dạng:
+Dùng Video AI khi người dùng yêu cầu một trong các dạng:
 - “Viết prompt Flow cho video quảng cáo.”
 - “Chia thành X phân cảnh.”
 - “Tạo video viral bằng AI.”
@@ -49,7 +49,7 @@ Dùng Ads AI khi người dùng yêu cầu một trong các dạng:
 
 # 3. INPUT CẦN NHẬN
 
-Ads AI cố gắng làm ngay với thông tin đang có. Chỉ hỏi thêm khi thật sự thiếu dữ liệu quan trọng.
+Video AI cố gắng làm ngay với thông tin đang có. Chỉ hỏi thêm khi thật sự thiếu dữ liệu quan trọng.
 
 Các input có thể gồm:
 - Chủ đề / sản phẩm / dịch vụ.
@@ -67,7 +67,7 @@ Các input có thể gồm:
 
 Nếu người dùng chỉ nói:
 “Làm 8 cảnh quảng cáo lớp học AI”
-thì Ads AI tự xây cấu trúc hợp lý mà không hỏi lan man.
+thì Video AI tự xây cấu trúc hợp lý mà không hỏi lan man.
 
 ---
 
@@ -438,7 +438,7 @@ Không dùng:
 
 # 13. CẤU TRÚC VIDEO THEO SỐ PHÂN CẢNH
 
-Ads AI phải tự co giãn cấu trúc theo số scene người dùng yêu cầu.
+Video AI phải tự co giãn cấu trúc theo số scene người dùng yêu cầu.
 
 ## 4 SCENE
 1. Hook
@@ -623,7 +623,7 @@ Do not add any extra outro, pause, smile-to-camera, freeze, neutral reset or unu
 
 # 16. CONTINUITY CHECK TRƯỚC KHI TRẢ KẾT QUẢ
 
-Trước khi xuất prompt, Ads AI phải tự kiểm tra:
+Trước khi xuất prompt, Video AI phải tự kiểm tra:
 
 ### CHECK 1 — POSE
 Cuối scene A và đầu scene B có cùng tư thế logic không?
@@ -714,7 +714,7 @@ Nếu có character DNA:
   - cử chỉ,
   - giới hạn hình ảnh.
 
-Nhưng Ads AI được phép thiết kế:
+Nhưng Video AI được phép thiết kế:
 - môi trường,
 - chuyển động,
 - camera,
@@ -764,14 +764,14 @@ Voice:
 
 Người dùng có thể gọi skill bằng các câu như:
 
-- “Ads AI: làm cho tôi video 8 phân cảnh quảng cáo khóa học AI.”
-- “Ads AI: 6 cảnh, mỗi cảnh 8 giây, CTA comment AI.”
-- “Ads AI: giữ nhân vật này, làm 10 cảnh quảng cáo sản phẩm.”
-- “Ads AI: viết lại 8 cảnh theo video mẫu này.”
-- “Ads AI: chỉ sửa continuity của scene 3–4.”
-- “Ads AI: tăng hook, giữ nguyên body.”
-- “Ads AI: scene 5 đang bị thừa 1 giây cuối, tối ưu lại.”
-- “Ads AI: ép thoại bắt đầu ngay frame đầu và kéo sát cut, không có 1 giây chờ.”
+- “Video AI: làm cho tôi video 8 phân cảnh quảng cáo khóa học AI.”
+- “Video AI: 6 cảnh, mỗi cảnh 8 giây, CTA comment AI.”
+- “Video AI: giữ nhân vật này, làm 10 cảnh quảng cáo sản phẩm.”
+- “Video AI: viết lại 8 cảnh theo video mẫu này.”
+- “Video AI: chỉ sửa continuity của scene 3–4.”
+- “Video AI: tăng hook, giữ nguyên body.”
+- “Video AI: scene 5 đang bị thừa 1 giây cuối, tối ưu lại.”
+- “Video AI: ép thoại bắt đầu ngay frame đầu và kéo sát cut, không có 1 giây chờ.”
 
 ---
 

@@ -19,7 +19,7 @@ LINE_GAP = 10
 POS_Y = {"top": 0.17, "middle": 0.5, "bottom": 0.70}
 
 STYLES = {
-    # gradient tím → xanh như giao diện Ads AI Studio
+    # gradient tím → xanh như giao diện Post AI Studio
     "brand": {"grad": ((124, 92, 255), (59, 155, 246)), "fg": (255, 255, 255), "alpha": 240},
     "dark": {"fill": (20, 26, 51), "fg": (255, 255, 255), "alpha": 205},
     "light": {"fill": (255, 255, 255), "fg": (20, 26, 51), "alpha": 235},
