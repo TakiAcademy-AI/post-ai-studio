@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Ads AI → Flow",
-  "version": "0.1.0",
-  "description": "Điền sẵn từng cảnh từ Ads AI Studio vào Google Flow; bạn bấm tạo; clip tải về được gửi lại web.",
+  "name": "Post AI → Flow",
+  "version": "0.2.0",
+  "description": "Điền sẵn từng cảnh từ Post AI Studio vào Google Flow; bạn bấm tạo; clip tải về được gửi lại web.",
   "permissions": ["downloads", "storage"],
   "host_permissions": ["http://127.0.0.1:3200/*", "http://localhost:3200/*"],
   "background": { "service_worker": "background.js" },

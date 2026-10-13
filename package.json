@@ -1,7 +1,7 @@
 {
   "name": "post-ai-studio",
   "version": "1.0.0",
-  "description": "Skill Ads AI → prompt → Google Flow (gflow-cli) → ghép → nháp Facebook Reel",
+  "description": "Post AI Studio — skill Ads AI → kịch bản Claude → Google Flow (extension) → ghép + chữ → đăng Reel Facebook",
   "main": "server.js",
   "directories": {
     "lib": "lib"

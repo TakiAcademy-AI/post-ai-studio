@@ -1,4 +1,4 @@
-// Bảng "Ads AI" góc phải dưới trang Flow: lấy cảnh đang chờ từ Ads AI Studio, điền sẵn cài đặt + ảnh + prompt.
+// Bảng "Post AI" góc phải dưới trang Flow: lấy cảnh đang chờ từ Post AI Studio, điền sẵn cài đặt + ảnh + prompt.
 // KHÔNG bấm nút tạo — người dùng tự bấm. Selector dựa trên nhãn tiếng Việt của Flow (đo ngày 2026-10-12).
 
 const MODELS = ['Veo 3.1 - Fast', 'Veo 3.1 - Lite', 'Veo 3.1 - Quality', 'Omni 1.1 Flash'];
@@ -234,9 +234,9 @@ root.innerHTML = `
   .min .body{display:none}
 </style>
 <div class="box">
-  <div class="h"><span>Ads AI</span><button id="tog" title="Thu gọn">–</button></div>
+  <div class="h"><span>Post AI</span><button id="tog" title="Thu gọn">–</button></div>
   <div class="body">
-    <div id="info" class="muted">Đang kết nối Ads AI Studio…</div>
+    <div id="info" class="muted">Đang kết nối Post AI Studio…</div>
     <select id="model">${MODELS.map((m) => `<option>${m}</option>`).join('')}</select>
     <button id="fill" class="act" disabled>Điền lại (chỉ khi cần)</button>
     <div id="st" class="st muted"></div>
@@ -377,7 +377,7 @@ async function poll() {
     return; // extension vừa reload
   }
   if (r?.error) {
-    $('#info').textContent = 'Không kết nối được Ads AI Studio (http://127.0.0.1:3200). Web có đang chạy không?';
+    $('#info').textContent = 'Không kết nối được Post AI Studio (http://127.0.0.1:3200). Web có đang chạy không?';
     $('#fill').disabled = true;
     current = null;
     return;

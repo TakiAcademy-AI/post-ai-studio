@@ -210,5 +210,5 @@ app.post('/api/bridge/clip', wrap(async (req, res) => {
 }));
 
 app.listen(config.port, config.host, () => {
-  console.log(`Ads AI Studio: http://${config.host}:${config.port}`);
+  console.log(`Post AI Studio: http://${config.host}:${config.port}`);
 });

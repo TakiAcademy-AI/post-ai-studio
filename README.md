@@ -1,4 +1,4 @@
-# Ads AI Studio
+# Post AI Studio
 
 Website chạy trên máy nhà, biến skill **Ads AI** thành dây chuyền:
 
@@ -8,17 +8,17 @@ Khâu ② có 2 chế độ (chọn theo từng video):
 - **Tự bấm trong Flow** (mặc định): web đưa prompt + ảnh khung đầu, bạn tạo trong Flow rồi kéo mp4 vào web. Không bị reCAPTCHA chặn vì người bấm thật.
 - **Tự động qua gflow**: Playwright lái Chrome. Flow hay chấm điểm là bot (`PUBLIC_ERROR_UNUSUAL_ACTIVITY`) và chặn profile vài giờ.
 
-## Extension "Ads AI → Flow" (khuyên dùng)
+## Extension "Post AI → Flow" (khuyên dùng)
 
 Điền sẵn từng cảnh vào Flow trong Chrome thật của bạn; **bạn tự bấm nút tạo** nên không dính reCAPTCHA như gflow.
 
 Cài một lần:
 1. Mở `chrome://extensions`, bật **Developer mode** (góc phải trên).
 2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/post-ai-studio/extension`.
-3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Ads AI**.
+3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Post AI**.
 
 Quy trình (mỗi cảnh bạn chỉ bấm 1 nút — nút tạo):
-1. Web: bấm **Điền cảnh 1 vào Flow**. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Ads AI (lưu cho lần sau).
+1. Web: bấm **Điền cảnh 1 vào Flow**. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Post AI (lưu cho lần sau).
 2. Extension **tự điền**: Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
 3. **Bạn bấm nút → để tạo** (nút duy nhất phải bấm tay — cú bấm này reCAPTCHA chấm điểm, để người thật bấm thì an toàn cho tài khoản).
 4. Video xong extension **tự Tải xuống → 720p**, gửi về web; web gắn vào cảnh, cắt khung cuối, và đẩy cảnh kế tiếp sang Flow — extension tự điền tiếp. Lặp lại bước 3.

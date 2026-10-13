@@ -1,4 +1,4 @@
-// Service worker: nói chuyện với Ads AI Studio (localhost) và theo dõi file tải về.
+// Service worker: nói chuyện với Post AI Studio (localhost) và theo dõi file tải về.
 // Fetch từ đây không dính CORS vì localhost nằm trong host_permissions.
 const API = 'http://127.0.0.1:3200';
 

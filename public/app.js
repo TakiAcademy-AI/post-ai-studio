@@ -217,7 +217,7 @@ function renderJob(job) {
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
         <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
       </ol>
-      <p class="muted" style="margin:8px 0 0">Có extension <b>Ads AI → Flow</b>: bấm <b>Điền cảnh vào Flow</b> → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
+      <p class="muted" style="margin:8px 0 0">Có extension <b>Post AI → Flow</b>: bấm <b>Điền cảnh vào Flow</b> → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
       ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>
     </div>` : `
     <div class="card">
