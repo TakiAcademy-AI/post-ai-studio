@@ -1,5 +1,5 @@
 {
-  "name": "ads-ai-studio",
+  "name": "post-ai-studio",
   "version": "1.0.0",
   "description": "Skill Ads AI → prompt → Google Flow (gflow-cli) → ghép → nháp Facebook Reel",
   "main": "server.js",
