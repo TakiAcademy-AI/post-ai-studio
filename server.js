@@ -101,7 +101,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
   const b = req.body;
   const sceneCount = Math.round(Number(b.sceneCount));
   if (!b.topic?.trim()) throw new Error('Thiếu chủ đề');
-  if (!(sceneCount >= 2 && sceneCount <= 12)) throw new Error('Số cảnh phải từ 2 đến 12');
+  if (!(sceneCount >= 2 && sceneCount <= 11)) throw new Error('Số cảnh phải từ 2 đến 11 (Reel tối đa 90 giây)');
   let ref = null;
   if (req.file) {
     ref = req.file.path + '.jpg';

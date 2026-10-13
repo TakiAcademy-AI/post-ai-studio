@@ -288,3 +288,16 @@ details[open] summary::before { transform: rotate(90deg); }
 .acc-body select { font-size: 14px; }
 .acc-body .who { color: var(--ink); font-weight: 700; }
 .pill { cursor: pointer; }
+
+/* Chọn số cảnh */
+.field { display: grid; gap: 6px; align-content: start; }
+.field-label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.count { display: inline-grid; grid-template-columns: 44px 72px 44px; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; background: #fff; width: max-content; }
+.count input { border: 0; border-radius: 0; text-align: center; font-size: 20px; font-weight: 800; padding: 6px 0; -moz-appearance: textfield; }
+.count input::-webkit-outer-spin-button, .count input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.count input:focus { box-shadow: none; background: #fafbff; }
+.count-btn { border: 0; border-radius: 0; font-size: 20px; font-weight: 700; color: var(--accent); background: var(--soft); padding: 0; }
+.count-btn:hover:not(:disabled) { background: #eceeff; box-shadow: none; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { padding: 4px 12px; border-radius: 99px; font-size: 13px; }
+.chips button.on { background: var(--grad); color: #fff; border-color: transparent; }

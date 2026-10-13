@@ -38,12 +38,18 @@
         <label class="full">Chủ đề / sản phẩm / dịch vụ *
           <textarea name="topic" rows="3" required placeholder="VD: Khóa học AI cho chủ doanh nghiệp nhỏ, học 4 tuần, làm được trợ lý AI riêng"></textarea>
         </label>
-        <label>Số cảnh (8 giây/cảnh)
-          <select name="sceneCount">
-            <option>4</option><option>6</option><option selected>8</option><option>10</option>
-          </select>
+        <div class="field">
+          <span class="field-label">Số cảnh <small class="muted" style="display:inline">· 8 giây/cảnh</small></span>
+          <div class="count">
+            <button type="button" class="count-btn" data-step="-1" aria-label="Bớt 1 cảnh">−</button>
+            <input type="number" name="sceneCount" min="2" max="11" value="8" inputmode="numeric" aria-label="Số cảnh">
+            <button type="button" class="count-btn" data-step="1" aria-label="Thêm 1 cảnh">+</button>
+          </div>
+          <div class="chips" id="scene-chips">
+            <button type="button" data-n="4">4</button><button type="button" data-n="5">5</button><button type="button" data-n="6">6</button><button type="button" data-n="8">8</button><button type="button" data-n="10">10</button>
+          </div>
           <small id="dur-hint" class="muted"></small>
-        </label>
+        </div>
         <label>Cách tạo video
           <select name="mode">
             <option value="manual" selected>Tự bấm trong Flow, kéo mp4 vào web</option>

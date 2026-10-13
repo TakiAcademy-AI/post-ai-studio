@@ -63,12 +63,24 @@ $('#btn-new').addEventListener('click', () => {
   show('new');
 });
 
+// Số cảnh: nhập tự do 2–11 (11 × 8s = 88s, vừa giới hạn 90s của Reel), có nút −/+ và chọn nhanh.
 const sceneSel = $('#form-new [name=sceneCount]');
-const durHint = () => {
-  const s = Number(sceneSel.value) * 8;
-  $('#dur-hint').textContent = `≈ ${s} giây${s > 90 ? ' — vượt 90s, không đăng Reel được' : ''}`;
+const MIN_SCENES = 2, MAX_SCENES = 11;
+const setScenes = (n) => {
+  sceneSel.value = Math.min(MAX_SCENES, Math.max(MIN_SCENES, Math.round(Number(n) || 8)));
+  durHint();
 };
-sceneSel.addEventListener('change', durHint);
+const durHint = () => {
+  const n = Number(sceneSel.value) || 0;
+  $('#dur-hint').textContent = `${n} cảnh ≈ ${n * 8} giây${n * 8 > 90 ? ' — vượt 90s, không đăng Reel được' : ''}`;
+  for (const b of document.querySelectorAll('#scene-chips button')) b.classList.toggle('on', Number(b.dataset.n) === n);
+  document.querySelector('.count-btn[data-step="-1"]').disabled = n <= MIN_SCENES;
+  document.querySelector('.count-btn[data-step="1"]').disabled = n >= MAX_SCENES;
+};
+sceneSel.addEventListener('input', durHint);
+sceneSel.addEventListener('change', () => setScenes(sceneSel.value));
+document.querySelectorAll('.count-btn').forEach((b) => b.addEventListener('click', () => setScenes(Number(sceneSel.value) + Number(b.dataset.step))));
+$('#scene-chips').addEventListener('click', (e) => { const b = e.target.closest('[data-n]'); if (b) setScenes(b.dataset.n); });
 
 $('#form-new').addEventListener('submit', async (e) => {
   e.preventDefault();
