@@ -6,7 +6,8 @@ let currentId = null;
 let currentJob = null;
 let pollTimer = null;
 let bridgeNow = null;
-let fb = { connected: false }; // trạng thái đăng nhập Facebook // cảnh đang chờ extension Flow
+let fb = { connected: false }; // trạng thái đăng nhập Facebook
+let fbEditingApp = false;      // đang mở form đổi App ID/Secret // cảnh đang chờ extension Flow
 const LIMIT = 4000; // Flow cắt prompt sau 4000 ký tự
 
 async function api(url, opts = {}) {
@@ -686,11 +687,26 @@ async function loadFb() {
   fb = await api('/api/fb/status').catch(() => ({ connected: false }));
   const box = $('#fb-box');
   const sel = fb.pages?.find((p) => p.id === fb.selectedPageId);
-  if (!fb.oauthReady && !fb.envPage) {
-    box.innerHTML = '<span>Chưa cấu hình FB_APP_ID / FB_APP_SECRET trong .env</span>';
+  const appForm = (editing) => `
+    <div class="manual" style="margin-top:0">
+      <b>${editing ? 'Đổi app Facebook' : 'Cài app Facebook (làm 1 lần)'}</b>
+      <ol class="howto" style="font-size:13px">
+        <li>Vào <a href="https://developers.facebook.com/apps" target="_blank" rel="noopener">developers.facebook.com/apps</a> → <b>Tạo ứng dụng</b> (loại Doanh nghiệp), thêm trường hợp sử dụng <b>Quản lý mọi thứ trên Trang</b> và <b>Đăng nhập bằng Facebook</b>.</li>
+        <li>Facebook Login → Cài đặt → <b>URI chuyển hướng OAuth hợp lệ</b>, thêm:
+          <div class="row" style="margin-top:4px"><code id="fb-redirect">${esc(fb.app?.redirectUri || '')}</code><button type="button" class="small" id="fb-copy">Copy</button></div></li>
+        <li>Cài đặt ứng dụng → Thông tin cơ bản: chép <b>App ID</b> và <b>App Secret</b> vào đây.</li>
+      </ol>
+      <input id="fb-app-id" placeholder="App ID (dãy số)" value="${esc(fb.app?.appId || '')}" inputmode="numeric" autocomplete="off">
+      <input id="fb-app-secret" type="password" placeholder="App Secret (32 ký tự)" autocomplete="new-password" style="margin-top:6px">
+      <div class="row" style="margin-top:8px"><button class="small primary" id="fb-app-save">Kiểm tra & lưu</button>${editing ? '<button class="small" id="fb-app-cancel">Huỷ</button>' : ''}</div>
+      <small class="muted">App Secret được mã hoá, chỉ lưu trên máy này (data/settings.json).</small>
+    </div>`;
+  const appLine = () => fb.app?.appId ? `<small class="muted">App: ${esc(fb.app.name || fb.app.appId)} · ${fb.app.source === 'env' ? 'từ .env' : `<a href="#" id="fb-app-edit">đổi app</a>`}</small>` : '';
+  if (fbEditingApp || (!fb.oauthReady && !fb.envPage)) {
+    box.innerHTML = appForm(fbEditingApp && fb.oauthReady);
   } else if (!fb.connected) {
     box.innerHTML = `<span>${fb.envPage ? 'Đang dùng Page khai trong .env.' : 'Chưa kết nối.'}</span>
-      ${fb.oauthReady ? '<button class="btn-fb block" id="fb-login">Đăng nhập Facebook</button>' : ''}`;
+      ${fb.oauthReady ? '<button class="btn-fb block" id="fb-login">Đăng nhập Facebook</button>' : ''}${appLine()}`;
   } else {
     const days = fb.expiresAt ? Math.round((new Date(fb.expiresAt) - Date.now()) / 86400000) : null;
     box.innerHTML = `<span>Đã kết nối: <span class="who">${esc(fb.user.name)}</span>${days != null ? ` · còn ${days} ngày` : ''}</span>
@@ -698,7 +714,7 @@ async function loadFb() {
         <select id="fb-page">${fb.pages.length ? '' : '<option value="">(không có Page nào)</option>'}
           ${fb.pages.map((p) => `<option value="${esc(p.id)}" ${p.id === fb.selectedPageId ? 'selected' : ''} ${p.hasToken ? '' : 'disabled'}>${esc(p.name)}${p.canPost ? '' : ' (không có quyền đăng)'}</option>`).join('')}
         </select></label>
-      <div class="row" style="margin-top:0"><button class="small" id="fb-login">Đăng nhập lại</button><button class="small danger" id="fb-out">Ngắt</button></div>`;
+      <div class="row" style="margin-top:0"><button class="small" id="fb-login">Đăng nhập lại</button><button class="small danger" id="fb-out">Ngắt</button></div>${appLine()}`;
   }
   const pill = $('#pill-fb');
   if (pill) {
@@ -710,6 +726,26 @@ async function loadFb() {
 }
 
 $('#fb-box').addEventListener('click', async (e) => {
+  const id = e.target.id;
+  if (id === 'fb-copy') { navigator.clipboard.writeText($('#fb-redirect').textContent); toast('Đã copy URI chuyển hướng'); return; }
+  if (id === 'fb-app-edit') { e.preventDefault(); fbEditingApp = true; return loadFb(); }
+  if (id === 'fb-app-cancel') { fbEditingApp = false; return loadFb(); }
+  if (id === 'fb-app-save') {
+    e.target.disabled = true;
+    e.target.textContent = 'Đang kiểm tra với Facebook…';
+    try {
+      const r = await api('/api/fb/app', { method: 'POST', body: { appId: $('#fb-app-id').value, appSecret: $('#fb-app-secret').value } });
+      fbEditingApp = false;
+      toast(`Đã lưu app "${r.name || r.appId}" — giờ bấm Đăng nhập Facebook`, 6000);
+      return loadFb();
+    } catch (err) {
+      // Giữ nguyên những gì đã nhập để sửa lại.
+      toast(err.message, 8000);
+      e.target.disabled = false;
+      e.target.textContent = 'Kiểm tra & lưu';
+      return;
+    }
+  }
   if (e.target.id === 'fb-login') {
     const w = 600, h = 720;
     window.open('/api/fb/start', 'fb-login', `width=${w},height=${h},left=${(screen.width - w) / 2},top=${(screen.height - h) / 2}`);

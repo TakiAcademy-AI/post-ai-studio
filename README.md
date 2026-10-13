@@ -55,7 +55,9 @@ Cột trái → khung **Claude**:
 ## Kết nối Facebook
 
 Cách chính — **Đăng nhập Facebook** (giống Ads OS, dùng chung app Facebook của Ads OS):
-1. `.env` cần `FB_APP_ID`, `FB_APP_SECRET`, `ENCRYPTION_KEY` (đã điền sẵn).
+1. Cần App ID + App Secret của một app Facebook. Máy mới: tab **Tài khoản** → thẻ Facebook → nhập App ID/Secret
+   → **Kiểm tra & lưu** (web xác nhận với Facebook, Secret mã hoá trong `data/settings.json`). Hoặc khai
+   `FB_APP_ID` / `FB_APP_SECRET` trong `.env` (được ưu tiên). `ENCRYPTION_KEY` để trống thì web tự tạo `data/secret.key`.
 2. Cột trái → **Đăng nhập Facebook** → popup Facebook → chọn các Page và cấp quyền → popup tự đóng.
 3. Chọn **Page để đăng** trong ô chọn ở cột trái.
 

@@ -3,7 +3,7 @@ import multer from 'multer';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { config } from './lib/config.js';
+import { config, readSettings } from './lib/config.js';
 import { toCleanJpg } from './lib/media.js';
 import { fbConfigured, checkPage } from './lib/facebook.js';
 import crypto from 'node:crypto';
@@ -66,7 +66,12 @@ app.get('/api/fb/check', wrap(async (_req, res) => res.json(await checkPage())))
 const originOf = (req) => `${req.protocol}://${req.get('host')}`;
 const readCookie = (req, name) => (req.headers.cookie || '').split(/;\s*/).map((c) => c.split('=')).find(([k]) => k === name)?.[1];
 
-app.get('/api/fb/status', (_req, res) => res.json({ oauthReady: FB.oauthReady(), ...FB.status(), envPage: Boolean(config.fbPageId && config.fbPageToken) }));
+app.get('/api/fb/status', (req, res) => res.json({
+  oauthReady: FB.oauthReady(), app: { ...FB.appInfo(originOf(req)), name: readSettings().fbAppName || null },
+  ...FB.status(), envPage: Boolean(config.fbPageId && config.fbPageToken),
+}));
+app.post('/api/fb/app', wrap(async (req, res) => res.json(await FB.saveApp(req.body?.appId, req.body?.appSecret))));
+app.delete('/api/fb/app', wrap(async (_req, res) => { FB.clearApp(); res.json({ ok: true }); }));
 
 app.get('/api/fb/start', (req, res) => {
   if (!FB.oauthReady()) return res.status(503).send('Chưa cấu hình FB_APP_ID / FB_APP_SECRET / ENCRYPTION_KEY trong .env');
