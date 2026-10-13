@@ -311,7 +311,7 @@ function renderJob(job) {
               ${job.facebook.file !== job.final?.file ? '<br><b>Lưu ý:</b> bản nháp là video ghép trước đó, không phải bản hiện tại.' : ''}
               ${job.facebook.status?.status?.publishing_phase?.publish_status ? `<br>Facebook: <b>${esc(job.facebook.status.status.video_status)}</b> · ${esc(job.facebook.status.status.publishing_phase.publish_status)}` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
-              <a href="https://www.facebook.com/reel/${encodeURIComponent(job.facebook.videoId)}" target="_blank" rel="noopener">Mở reel</a>
+              ${postLinks({ id: job.facebook.videoId, state: job.facebook.state || (job.facebook.published ? 'published' : 'draft'), jobId: job.id, file: job.facebook.file })}
               <a href="#" data-goto-posts>Quản lý ở tab Lịch đăng</a></div>
             </div>` : ''}
         </div>
@@ -484,6 +484,15 @@ function defaultWhen() {
   return toLocalInput(d);
 }
 
+// Link reel chỉ mở được khi bài đã đăng công khai; nháp/hẹn giờ chưa có trang trên Facebook → xem file đã gửi.
+function postLinks(p) {
+  if (p.state === 'deleted') return '';
+  if (p.state === 'published') return `<a href="https://www.facebook.com/reel/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Mở reel</a>`;
+  const local = p.jobId && p.file ? `<a href="/files/${encodeURIComponent(p.jobId)}/${encodeURIComponent(p.file)}" target="_blank" rel="noopener">Xem video</a>` : '';
+  const bs = p.state === 'scheduled' ? ' <a href="https://business.facebook.com/latest/content_calendar" target="_blank" rel="noopener">Mở Business Suite</a>' : '';
+  return local + bs + `<span class="muted" style="font-size:12px;display:block">${p.state === 'scheduled' ? 'Chưa tới giờ đăng — link reel có sau khi đăng.' : 'Nháp chưa có link công khai trên Facebook.'}</span>`;
+}
+
 const POST_STATE = { scheduled: 'Hẹn giờ', published: 'Đã đăng', draft: 'Nháp', deleted: 'Đã huỷ' };
 
 async function openPosts(sync = false) {
@@ -530,7 +539,7 @@ function renderPosts(posts) {
           <button class="small" data-post-act="soon">Đăng sớm (sau ~11 phút)</button>
           <button class="small danger" data-post-act="cancel">Huỷ / xoá khỏi Facebook</button>` : ''}
         <button class="small" data-post-act="sync">Kiểm tra trạng thái</button>
-        ${p.state !== 'deleted' ? `<a href="https://www.facebook.com/reel/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Mở reel</a>` : ''}
+        ${postLinks(p)}
       </div>
     </div>`;
   }).join('');
