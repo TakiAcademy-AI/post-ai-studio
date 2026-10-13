@@ -141,7 +141,6 @@ function sceneMode(i, job) {
 
 function renderJob(job) {
   const busy = Boolean(job.busy);
-  const manual = job.mode !== 'gflow';   // tự bấm (extension) hoặc tự động hoàn toàn — đều trên Flow
   const auto = job.mode === 'auto';
   const doneCount = job.scenes.filter((s) => s.clip).length;
   const total = job.scenes.reduce((a, s) => a + (s.duration || 8) - (s.trimStart || 0) - (s.trimEnd || 0), 0);
@@ -157,11 +156,7 @@ function renderJob(job) {
             <select id="job-mode" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
               <option value="manual" ${job.mode === 'manual' || !job.mode ? 'selected' : ''}>Bán tự động (extension, tự bấm tạo)</option>
               <option value="auto" ${auto ? 'selected' : ''}>Tự động hoàn toàn (Chrome Flow)</option>
-              <option value="gflow" ${job.mode === 'gflow' ? 'selected' : ''}>gflow-cli (cũ)</option>
             </select>
-            ${manual ? '' : `· model <select id="job-model" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
-              ${cfg.models.map((m) => `<option ${m === job.model ? 'selected' : ''}>${m}</option>`).join('')}
-            </select>`}
             · ${doneCount}/${job.scenes.length} cảnh có video · ${esc(STAGE[job.stage] || job.stage)}
           </div>
         </div>
@@ -198,7 +193,7 @@ function renderJob(job) {
       </div>
     </div>`;
 
-  const genBar = manual ? `
+  const genBar = `
     <div class="card">
       <h2>Tạo video trong Flow</h2>
       <div class="row" style="margin:0 0 10px">
@@ -234,18 +229,6 @@ function renderJob(job) {
       </ol>
       <p class="muted" style="margin:8px 0 0">Có extension <b>Post AI → Flow</b>: bấm <b>Điền cảnh vào Flow</b> → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
       ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>`}
-    </div>` : `
-    <div class="card">
-      <h2>Tạo video trên Flow (tự động)</h2>
-      <p class="muted" style="margin:0 0 8px">Tạo lần lượt từng cảnh, mỗi cảnh ~1,5–3 phút và <b>trừ credit Flow thật</b>. Cảnh 2 trở đi dùng khung cuối của cảnh trước làm khung đầu.</p>
-      <div class="row">
-        ${nextIdx >= 0
-          ? `<button class="primary" data-act="gen-from" data-i="${nextIdx}" ${busy ? 'disabled' : ''}>
-               ${nextIdx === 0 ? `Tạo cả ${job.scenes.length} cảnh` : `Tạo tiếp từ cảnh ${nextIdx + 1} (${job.scenes.length - nextIdx} cảnh)`}
-             </button>`
-          : ''}
-        ${busy && job.stage === 'generating' ? `<button class="danger" data-act="cancel">Dừng sau cảnh này</button>` : ''}
-      </div>
     </div>`;
 
   const scenes = job.scenes.map((sc, i) => {
@@ -269,13 +252,8 @@ function renderJob(job) {
             <span class="${sc.prompt.length > LIMIT ? 'over' : ''}" data-count="${i}">${sc.prompt.length}/${LIMIT} ký tự</span></summary>
             <textarea class="prompt" rows="14" data-field="prompt" data-i="${i}" ${locked ? 'disabled' : ''}>${esc(sc.prompt)}</textarea>
           </details>
-          ${manual ? manualSteps(job, i) : ''}
-          <div class="row" ${manual ? 'hidden' : ''}>
-            <button class="small" data-act="gen-one" data-i="${i}" ${locked || (i > 0 && !job.scenes[i - 1].lastFrame) ? 'disabled' : ''}>
-              ${sc.clip ? 'Tạo lại chỉ cảnh này' : 'Tạo riêng cảnh này'}</button>
-            ${sc.prompt.length > LIMIT - 300 ? `<button class="small" data-act="compress" data-i="${i}" ${locked ? 'disabled' : ''}>Rút gọn prompt</button>` : ''}
-            ${sc.clip && i < job.scenes.length - 1 ? `<button class="small" data-act="gen-from" data-i="${i}" ${locked ? 'disabled' : ''}>Tạo lại từ cảnh này trở đi</button>` : ''}
-          </div>
+          ${manualSteps(job, i)}
+          ${sc.prompt.length > LIMIT - 300 ? `<div class="row"><button class="small" data-act="compress" data-i="${i}" ${locked ? 'disabled' : ''}>Rút gọn prompt</button></div>` : ''}
         </div>
         <div class="player">
           ${sc.clip
@@ -284,10 +262,10 @@ function renderJob(job) {
                  <label>Cắt đầu (s)<input type="number" min="0" max="4" step="0.1" value="${sc.trimStart}" data-field="trimStart" data-i="${i}" ${busy ? 'disabled' : ''}></label>
                  <label>Cắt cuối (s)<input type="number" min="0" max="4" step="0.1" value="${sc.trimEnd}" data-field="trimEnd" data-i="${i}" ${busy ? 'disabled' : ''}></label>
                </div>`
-            : `<div class="ph ${manual ? 'drop' : ''}" data-drop="${i}">${sc.status === 'running'
+            : `<div class="ph drop" data-drop="${i}">${sc.status === 'running'
                 ? '<span class="busy"><span class="spin"></span>Flow đang render</span>'
-                : manual ? 'Kéo file mp4 từ Flow vào đây<br>hoặc bấm để chọn file' : 'Chưa có video'}</div>`}
-          ${manual && sc.clip ? `<button class="small block" style="margin-top:8px" data-act="pick" data-i="${i}" ${busy ? 'disabled' : ''}>Thay clip khác…</button>
+                : 'Kéo file mp4 từ Flow vào đây<br>hoặc bấm để chọn file'}</div>`}
+          ${sc.clip ? `<button class="small block" style="margin-top:8px" data-act="pick" data-i="${i}" ${busy ? 'disabled' : ''}>Thay clip khác…</button>
              <button class="small block danger" style="margin-top:6px" data-act="unclip" data-i="${i}" ${busy ? 'disabled' : ''}>Bỏ clip cảnh này</button>` : ''}
         </div>
       </div>
@@ -586,7 +564,7 @@ function openAccounts() {
   loadClaude();
   loadFb();
   loadChromeFlow();
-  $('#flow-status').innerHTML = `gflow (chế độ tự động): ${cfg.gflowFound ? '<b style="color:var(--ok)">có</b>' : 'không có'} · Cảnh đang chờ extension: ${bridgeNow ? `cảnh ${bridgeNow.index + 1}` : 'không'}`;
+  $('#flow-status').innerHTML = `Cảnh đang chờ extension: ${bridgeNow ? `cảnh ${bridgeNow.index + 1}` : 'không'}`;
 }
 $('#tab-accounts').addEventListener('click', openAccounts);
 
@@ -855,14 +833,6 @@ $('#view-job').addEventListener('click', async (e) => {
         if (currentJob.scenes.some((s) => s.clip) && !confirm('Viết lại kịch bản sẽ bỏ hết video các cảnh đã tạo. Tiếp tục?')) return;
         await api(`/api/jobs/${id}/script`, { method: 'POST' });
         break;
-      case 'gen-from':
-        if (!confirm(`Tạo ${n - i} cảnh (từ cảnh ${i + 1}) bằng ${currentJob.model}. Mỗi cảnh trừ credit Flow. Tiếp tục?`)) return;
-        await api(`/api/jobs/${id}/generate`, { method: 'POST', body: { from: i } });
-        break;
-      case 'gen-one':
-        if (!confirm(`Tạo cảnh ${i + 1} bằng ${currentJob.model} (trừ credit Flow).${currentJob.scenes[i].clip && i < n - 1 ? ' Các cảnh sau sẽ bị lệch nối.' : ''} Tiếp tục?`)) return;
-        await api(`/api/jobs/${id}/generate`, { method: 'POST', body: { only: i } });
-        break;
       case 'bridge':
         await api(`/api/jobs/${id}/bridge`, { method: 'POST', body: { i } });
         toast(`Cảnh ${i + 1} đang được điền vào tab Flow (cần mở sẵn một dự án) — bạn chỉ bấm nút tạo →`, 6000);
@@ -944,8 +914,8 @@ $('#view-job').addEventListener('change', async (e) => {
     toast(el.value ? `Các cảnh điền từ giờ sẽ dùng giọng ${el.value === 'me' ? '@me (giọng của bạn)' : el.value}` : 'Bỏ giọng cố định');
     return refresh(true);
   }
-  if (el.id === 'job-model' || el.id === 'job-mode' || el.id === 'job-consistency' || el.id === 'job-flow-model') {
-    const key = { 'job-model': 'model', 'job-mode': 'mode', 'job-consistency': 'consistency', 'job-flow-model': 'flowModel' }[el.id];
+  if (el.id === 'job-mode' || el.id === 'job-consistency' || el.id === 'job-flow-model') {
+    const key = { 'job-mode': 'mode', 'job-consistency': 'consistency', 'job-flow-model': 'flowModel' }[el.id];
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));
     return refresh(true);
   }
@@ -970,9 +940,7 @@ $('#view-job').addEventListener('change', async (e) => {
   window.voiceOpts = voiceOpts;
   $('#voice-select').insertAdjacentHTML('beforeend', voiceOpts('me'));
   $('#flow-model-select').innerHTML = (cfg.flowModels || []).map((m) => `<option>${esc(m)}</option>`).join('');
-  $('#model-select').innerHTML = cfg.models.map((m) => `<option ${m === cfg.defaultModel ? 'selected' : ''}>${m}</option>`).join('');
   $('#status-pills').innerHTML = `
-    <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>
     <span class="pill" id="pill-cl">Claude…</span>
     <span class="pill" id="pill-fb">Facebook…</span>`;
   await loadFb();

@@ -53,12 +53,9 @@ function jobOr404(req, res) {
 
 app.get('/api/config', (_req, res) => {
   res.json({
-    models: config.gflowModels,
-    defaultModel: config.gflowModel,
     fbConfigured: fbConfigured(),
     voices: VOICES,
     flowModels: FLOW_MODELS,
-    gflowFound: fs.existsSync(config.gflowBin),
   });
 });
 
@@ -127,8 +124,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     mustSay: b.mustSay?.trim() || '',
     avoid: b.avoid?.trim() || '',
     tone: b.tone?.trim() || '',
-    model: config.gflowModels.includes(b.model) ? b.model : config.gflowModel,
-    mode: ['gflow', 'auto'].includes(b.mode) ? b.mode : 'manual',
+    mode: b.mode === 'auto' ? b.mode : 'manual',
     flowModel: FLOW_MODELS.includes(b.flowModel) ? b.flowModel : 'Veo 3.1 - Fast',
     consistency: b.consistency === 'frames' ? 'frames' : 'identity',
     voice: isVoice(b.voice) ? b.voice : null,
@@ -166,7 +162,6 @@ const action = (fn) => wrap(async (req, res) => {
 });
 
 app.post('/api/jobs/:id/script', action((job) => J.startScript(job)));
-app.post('/api/jobs/:id/generate', action((job, b) => J.startGenerate(job, { from: Number(b.from) || 0, only: b.only ?? null })));
 app.post('/api/jobs/:id/scenes/:i/clip', uploadVideo.single('clip'), wrap(async (req, res) => {
   const job = jobOr404(req, res);
   if (!job) { if (req.file) fs.rmSync(req.file.path, { force: true }); return; }

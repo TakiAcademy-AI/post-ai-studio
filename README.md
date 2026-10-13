@@ -6,11 +6,11 @@ Website chạy trên máy nhà, biến skill **Video AI** thành dây chuyền:
 
 Khâu ② có 2 chế độ (chọn theo từng video):
 - **Tự bấm trong Flow** (mặc định): web đưa prompt + ảnh khung đầu, bạn tạo trong Flow rồi kéo mp4 vào web. Không bị reCAPTCHA chặn vì người bấm thật.
-- **Tự động qua gflow**: Playwright lái Chrome. Flow hay chấm điểm là bot (`PUBLIC_ERROR_UNUSUAL_ACTIVITY`) và chặn profile vài giờ.
+- **Tự động hoàn toàn (Chrome Flow)**: server tự điền và tự bấm tạo trong một Chrome riêng — xem mục bên dưới.
 
 ## Extension "Post AI → Flow" (khuyên dùng)
 
-Điền sẵn từng cảnh vào Flow trong Chrome thật của bạn; **bạn tự bấm nút tạo** nên không dính reCAPTCHA như gflow.
+Điền sẵn từng cảnh vào Flow trong Chrome thật của bạn; **bạn tự bấm nút tạo** nên không dính reCAPTCHA.
 
 Cài một lần:
 1. Mở `chrome://extensions`, bật **Developer mode** (góc phải trên).
@@ -47,7 +47,7 @@ npm start          # mở http://127.0.0.1:3200
 
 Yêu cầu trên máy:
 - `claude` CLI đã đăng nhập (dùng gói đăng ký, không cần API key).
-- `gflow-cli` ở `~/Downloads/gflow-cli`, profile Google đã login (`gflow auth status`).
+- Google Chrome (`/usr/bin/google-chrome`) cho extension và chế độ Chrome Flow.
 - `ffmpeg` / `ffprobe`.
 
 Cấu hình nằm trong `.env` (xem `.env.example`).
@@ -87,8 +87,8 @@ Chỉ dùng khi chưa đăng nhập/chưa chọn Page.
 1. **Video mới** → điền chủ đề, số cảnh, CTA, mô tả nhân vật, ảnh tham chiếu (tuỳ chọn) → *Viết kịch bản* (1–3 phút).
 2. Duyệt mạch video, bảng nối cảnh, sửa thoại/prompt từng cảnh. Prompt phải ≤ 4000 ký tự (Flow cắt phần thừa) — có bộ đếm và nút *Rút gọn prompt*.
 3. **Chế độ tự bấm trong Flow**: với từng cảnh, theo thứ tự từ cảnh 1 — *Copy prompt*, chọn đúng chế độ Flow ghi ở cảnh (cảnh 1: Text/Ingredients to Video; cảnh 2+: Frames to Video với ảnh *khung đầu* tải từ web), khung 9:16, tạo, tải mp4 về rồi kéo vào ô video của cảnh. Web tự cắt khung cuối làm khung đầu cảnh sau.
-   **Chế độ gflow**: *Tạo cả N cảnh* → chạy lần lượt: cảnh 1 dùng ảnh nhân vật làm reference (`r2v`) hoặc chỉ prompt (`t2v`); cảnh 2+ dùng **khung cuối cảnh trước làm khung đầu** (`i2v`). Mỗi cảnh ~1,5–3 phút và **trừ credit Flow**.
-4. Cảnh nào hỏng: *Tạo lại chỉ cảnh này* (các cảnh sau bị đánh dấu "lệch nối") hoặc *Tạo lại từ cảnh này trở đi*. Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
+   **Chế độ tự động hoàn toàn**: *▶ Tự tạo cả N cảnh* — Chrome Flow làm lần lượt từng cảnh, mỗi cảnh **trừ credit Flow**.
+4. Cảnh nào hỏng: *Bỏ clip cảnh này* rồi tạo lại (bằng extension hoặc *↻ Tự tạo lại cảnh này*). Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
 5. *Ghép video* → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
 6. Sửa caption → chọn **Hẹn giờ đăng** (mặc định; > 10 phút và ≤ 29 ngày tới), **Đăng ngay**, hoặc **Lưu nháp** → bấm **Đăng lên <Page>**.
 7. Tab **Lịch đăng** (đầu trang): mọi Reel đã gửi lên Facebook, mọi Page. Làm mới trạng thái từ Facebook, đổi giờ, đăng sớm (~11 phút), huỷ (xoá video khỏi Facebook), mở reel.
