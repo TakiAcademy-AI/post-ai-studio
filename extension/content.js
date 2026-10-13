@@ -219,10 +219,19 @@ function videoTiles() {
 let armedScene = null; // cảnh đã điền, chờ người bấm tạo
 let gen = null;        // { scene, beforeEls:Set, beforeSrc:Set, t0, skip:Set }
 
+// Ô video tạo thất bại hiện chữ "Không thành công" (vd. "Đã hết thời gian tạo. Hãy thử lại." — Flow hoàn credit).
+const FAIL_TEXT = 'Không thành công';
+function failNodes() {
+  return [...document.querySelectorAll('body *')].filter((e) => e.children.length === 0 && e.textContent.trim() === FAIL_TEXT && visible(e));
+}
+
 function onSubmit() {
   if (!armedScene || gen) return; // bấm tạo lần 2 cho cùng cảnh → vẫn dùng video của lần bấm đầu
   const tiles = videoTiles();
-  gen = { scene: armedScene, beforeEls: new Set(tiles.map((t) => t.root)), beforeSrc: new Set(tiles.map((t) => t.src)), t0: Date.now(), skip: new Set(), downloading: false };
+  gen = {
+    scene: armedScene, beforeEls: new Set(tiles.map((t) => t.root)), beforeSrc: new Set(tiles.map((t) => t.src)),
+    beforeFails: new Set(failNodes()), t0: Date.now(), skip: new Set(), downloading: false,
+  };
   status(`Đang tạo cảnh ${armedScene.index + 1}… video xong extension tự tải về web.`);
 }
 
@@ -246,6 +255,16 @@ async function checkGen() {
   if (!gen || gen.downloading) return;
   if (Date.now() - gen.t0 > 25 * 60 * 1000) {
     status('Quá 25 phút chưa thấy video mới. Nếu đã xong, tự bấm ⋮ → Tải xuống → 720p là clip vẫn về web.', 'err');
+    gen = null;
+    return;
+  }
+  // Flow báo tạo thất bại → báo ngay, bỏ theo dõi lần bấm này để lần bấm → tiếp theo được tính là lần tạo mới.
+  const failed = failNodes().find((n) => !gen.beforeFails.has(n));
+  if (failed) {
+    let box = failed;
+    for (let k = 0; k < 4 && box.parentElement && box.innerText.length < 40; k++) box = box.parentElement;
+    const why = box.innerText.replace(/\s+/g, ' ').replace(/Theo dõi trạng thái.*$/i, '').trim().slice(0, 180);
+    status(`Flow tạo cảnh ${gen.scene.index + 1} thất bại: ${why}\nCredit được hoàn. Bấm → để tạo lại (ô nhập trống thì bấm "Điền lại" trước).`, 'err');
     gen = null;
     return;
   }

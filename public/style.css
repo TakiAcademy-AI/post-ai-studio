@@ -275,3 +275,16 @@ details[open] summary::before { transform: rotate(90deg); }
 .ov-row .ov-text { grid-column: 1 / -1; font-weight: 600; }
 .ov-row input, .ov-row select { padding: 6px 8px; font-size: 13px; }
 .ov-row .ov-del { padding: 4px 0; }
+
+/* Tab Tài khoản */
+.acc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; align-items: start; }
+.acc-card { margin-bottom: 0; }
+.acc-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.acc-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 18px; flex: none; }
+.acc-icon.cl { background: var(--grad); box-shadow: 0 6px 16px rgba(91, 108, 255, 0.3); }
+.acc-icon.fb { background: #1877f2; box-shadow: 0 6px 16px rgba(24, 119, 242, 0.3); font-family: Georgia, serif; font-size: 22px; }
+.acc-icon.flow { background: linear-gradient(135deg, #34d399, #06b6d4); box-shadow: 0 6px 16px rgba(6, 182, 212, 0.3); }
+.acc-body { display: grid; gap: 10px; font-size: 14px; }
+.acc-body select { font-size: 14px; }
+.acc-body .who { color: var(--ink); font-weight: 700; }
+.pill { cursor: pointer; }

@@ -29,9 +29,10 @@ function toast(msg, ms = 4000) {
 }
 
 function show(view) {
-  for (const v of ['new', 'job', 'empty', 'posts']) $(`#view-${v}`).hidden = v !== view;
+  for (const v of ['new', 'job', 'empty', 'posts', 'accounts']) $(`#view-${v}`).hidden = v !== view;
   $('#tab-posts').classList.toggle('active', view === 'posts');
-  $('#tab-videos').classList.toggle('active', view !== 'posts');
+  $('#tab-accounts').classList.toggle('active', view === 'accounts');
+  $('#tab-videos').classList.toggle('active', !['posts', 'accounts'].includes(view));
 }
 
 const STAGE = {
@@ -291,7 +292,7 @@ function renderJob(job) {
             <input type="datetime-local" id="fb-when" style="width:auto" value="${defaultWhen()}">
             <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbConfigured ? 'disabled' : ''}>Đăng lên ${esc(fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page')}</button>
           </div>
-          ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — bấm <b>Đăng nhập Facebook</b> ở cột trái rồi chọn Page.</div>' : ''}
+          ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — vào tab <a href="#" data-goto-accounts>Tài khoản</a> để đăng nhập và chọn Page.</div>' : ''}
           ${job.facebook ? `
             <div class="dialogue" style="margin-top:12px">
               ${{ published: 'Đã đăng công khai', scheduled: `Đã hẹn đăng lúc ${job.facebook.scheduledAt ? new Date(job.facebook.scheduledAt).toLocaleString('vi-VN') : ''}`, draft: 'Đã gửi nháp' }[job.facebook.state || (job.facebook.published ? 'published' : 'draft')]}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''} · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
@@ -524,6 +525,17 @@ function renderPosts(posts) {
 }
 
 $('#tab-posts').addEventListener('click', () => openPosts(false));
+function openAccounts() {
+  currentId = null;
+  stopPoll();
+  loadList();
+  show('accounts');
+  loadClaude();
+  loadFb();
+  $('#flow-status').innerHTML = `gflow (chế độ tự động): ${cfg.gflowFound ? '<b style="color:var(--ok)">có</b>' : 'không có'} · Cảnh đang chờ extension: ${bridgeNow ? `cảnh ${bridgeNow.index + 1}` : 'không'}`;
+}
+$('#tab-accounts').addEventListener('click', openAccounts);
+$('#status-pills').addEventListener('click', (e) => { if (e.target.closest('.pill')) openAccounts(); });
 $('#tab-videos').addEventListener('click', () => {
   const first = $('#job-list li[data-id]');
   if (first) openJob(first.dataset.id); else show('new');
@@ -532,6 +544,7 @@ $('#posts-sync').addEventListener('click', () => openPosts(true));
 $('#posts-hide-done').addEventListener('change', async () => renderPosts(await api('/api/posts')));
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-goto-posts]')) { e.preventDefault(); openPosts(true); }
+  if (e.target.closest('[data-goto-accounts]')) { e.preventDefault(); openAccounts(); }
   const j = e.target.closest('[data-open-job]');
   if (j) { e.preventDefault(); openJob(j.dataset.openJob); }
 });
@@ -574,6 +587,8 @@ async function loadClaude() {
   let accs;
   try { accs = await api('/api/claude/accounts'); } catch (e) { box.textContent = e.message; return; }
   const act = accs.find((a) => a.active) || accs[0];
+  const pill = $('#pill-cl');
+  if (pill) { pill.className = `pill ${act?.loggedIn ? 'ok' : 'bad'}`; pill.textContent = `Claude: ${act?.email || 'chưa đăng nhập'}`; }
   const label = (a) => `${a.email || '(chưa đăng nhập)'}${a.plan ? ` · ${a.plan}` : ''}${a.builtin ? ' · mặc định' : ''}`;
   box.innerHTML = `
     <span>Đang dùng: <span class="who">${esc(act?.email || 'chưa đăng nhập')}</span>${act?.plan ? ` <span class="badge">${esc(act.plan)}</span>` : ''}</span>
@@ -806,11 +821,14 @@ $('#view-job').addEventListener('change', async (e) => {
   $('#model-select').innerHTML = cfg.models.map((m) => `<option ${m === cfg.defaultModel ? 'selected' : ''}>${m}</option>`).join('');
   $('#status-pills').innerHTML = `
     <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>
+    <span class="pill" id="pill-cl">Claude…</span>
     <span class="pill" id="pill-fb">Facebook…</span>`;
   await loadFb();
   loadClaude(); // không chờ: kiểm tra tài khoản Claude mất vài giây
   durHint();
   await loadList();
+  // Người dùng đã tự chuyển tab trong lúc trang đang tải → không tự mở video đầu tiên đè lên.
+  if (!$('#view-posts').hidden || !$('#view-accounts').hidden || currentId) return;
   const first = $('#job-list li[data-id]');
   if (first) openJob(first.dataset.id);
   else show('new');
