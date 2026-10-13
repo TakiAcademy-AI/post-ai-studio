@@ -68,7 +68,10 @@ Chỉ dùng khi chưa đăng nhập/chưa chọn Page.
    **Chế độ gflow**: *Tạo cả N cảnh* → chạy lần lượt: cảnh 1 dùng ảnh nhân vật làm reference (`r2v`) hoặc chỉ prompt (`t2v`); cảnh 2+ dùng **khung cuối cảnh trước làm khung đầu** (`i2v`). Mỗi cảnh ~1,5–3 phút và **trừ credit Flow**.
 4. Cảnh nào hỏng: *Tạo lại chỉ cảnh này* (các cảnh sau bị đánh dấu "lệch nối") hoặc *Tạo lại từ cảnh này trở đi*. Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
 5. *Ghép video* → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
-6. Sửa caption → chọn **Lưu nháp** (mặc định, duyệt trong Meta Business Suite → Nội dung → Bản nháp) hoặc **Đăng ngay** → bấm **Đăng lên <Page>**.
+6. Sửa caption → chọn **Hẹn giờ đăng** (mặc định; > 10 phút và ≤ 29 ngày tới), **Đăng ngay**, hoặc **Lưu nháp** → bấm **Đăng lên <Page>**.
+7. Tab **Lịch đăng** (đầu trang): mọi Reel đã gửi lên Facebook, mọi Page. Làm mới trạng thái từ Facebook, đổi giờ, đăng sớm (~11 phút), huỷ (xoá video khỏi Facebook), mở reel.
+   Lưu ý: nháp tạo qua API không hiện trong danh sách Reel của Page và khó tìm trong Business Suite → nên dùng hẹn giờ.
+   Đổi giờ/huỷ dùng cập nhật Video node chung của Graph API (tài liệu Reels không mô tả) — nếu Facebook từ chối, sửa trong Business Suite.
 
 ## Ghi chú
 
