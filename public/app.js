@@ -43,7 +43,7 @@ const STAGE = {
 async function loadList() {
   const jobs = await api('/api/jobs');
   $('#job-list').innerHTML = jobs.map((j) => `
-    <li data-id="${j.id}" class="${j.id === currentId ? 'active' : ''}">
+    <li data-id="${j.id}" class="${j.id === currentId ? 'active' : ''} ${j.busy ? 'st-busy' : ({ posted: 'st-done', posted_draft: 'st-done', scheduled: 'st-scheduled', stitched: 'st-done' }[j.stage] || '')}">
       ${esc(j.topic.slice(0, 60))}
       <div class="meta">${j.sceneCount} cảnh · ${esc(STAGE[j.stage] || j.stage)}${j.busy ? ' · ⏳' : ''}</div>
     </li>`).join('') || '<li class="muted">Chưa có video nào</li>';
@@ -151,6 +151,7 @@ function renderJob(job) {
         </div>
         ${busy ? `<div class="busy"><span class="spin"></span>${esc(job.busy)}</div>` : ''}
       </div>
+      ${stepper(job)}
       ${job.error ? `<div class="error-box">${esc(job.error)}</div>` : ''}
       ${!job.script && !busy ? `<div class="row"><button data-act="script" class="primary">Viết lại kịch bản</button></div>` : ''}
     </div>`;
@@ -163,7 +164,7 @@ function renderJob(job) {
   const s = job.script.summary;
   const summary = `
     <div class="card">
-      <h2>A. Mạch video</h2>
+      <h2>✦ Mạch video</h2>
       <dl class="summary">
         <dt>Hook</dt><dd>${esc(s.hook)}</dd>
         <dt>Lời hứa chính</dt><dd>${esc(s.corePromise)}</dd>
@@ -183,7 +184,7 @@ function renderJob(job) {
 
   const genBar = manual ? `
     <div class="card">
-      <h2>② Tạo video trong Flow (bán tự động)</h2>
+      <h2>Tạo video trong Flow</h2>
       <ol class="howto">
         <li>Mở <a href="https://flow.google.com/" target="_blank" rel="noopener">Google Flow</a>, đặt khung <b>9:16</b>, chọn model (Veo 3.1 Fast/Lite…).</li>
         <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
@@ -193,7 +194,7 @@ function renderJob(job) {
       ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>
     </div>` : `
     <div class="card">
-      <h2>② Tạo video trên Flow</h2>
+      <h2>Tạo video trên Flow (tự động)</h2>
       <p class="muted" style="margin:0 0 8px">Tạo lần lượt từng cảnh, mỗi cảnh ~1,5–3 phút và <b>trừ credit Flow thật</b>. Cảnh 2 trở đi dùng khung cuối của cảnh trước làm khung đầu.</p>
       <div class="row">
         ${nextIdx >= 0
@@ -214,7 +215,7 @@ function renderJob(job) {
       <div class="scene">
         <div>
           <div class="scene-head">
-            <h3>Cảnh ${i + 1} · ${esc(sc.title)}</h3>
+            <span class="scene-no">${i + 1}</span><h3>${esc(sc.title)}</h3>
             <span class="badge ${st}">${label}</span>
             <span class="muted" style="font-size:12px">${esc(sceneMode(i, job))}${sc.attempts ? ` · đã tạo ${sc.attempts} lần` : ''}</span>
           </div>
@@ -254,7 +255,7 @@ function renderJob(job) {
   const allClips = job.scenes.every((s) => s.clip);
   const final = `
     <div class="card">
-      <h2>③ Ghép & ④ Đăng nháp Facebook</h2>
+      <h2>Ghép video & đăng Facebook</h2>
       <div class="final">
         <div class="player">
           ${job.final ? `<video src="${fileUrl(job.final.file)}" controls preload="metadata" playsinline></video>
@@ -365,6 +366,24 @@ $('#view-job').addEventListener('click', (e) => {
   const d = e.target.closest('.ph[data-drop].drop');
   if (d) { filePicker.dataset.i = d.dataset.drop; filePicker.click(); }
 });
+
+// Thanh tiến trình 4 bước: Kịch bản → Tạo cảnh → Ghép → Đăng.
+function stepper(job) {
+  const hasScript = Boolean(job.script);
+  const nClips = job.scenes.filter((s) => s.clip).length;
+  const allClips = job.scenes.length > 0 && nClips === job.scenes.length;
+  const posted = ['posted', 'posted_draft', 'scheduled'].includes(job.stage);
+  const steps = [
+    ['Kịch bản', hasScript, job.scenes.length ? `${job.scenes.length} cảnh` : ''],
+    ['Tạo cảnh', allClips, job.scenes.length ? `${nClips}/${job.scenes.length}` : ''],
+    ['Ghép', Boolean(job.final), job.final ? `${job.final.duration.toFixed(0)}s` : ''],
+    ['Đăng', posted, posted ? ({ posted: 'đã đăng', posted_draft: 'nháp', scheduled: 'hẹn giờ' }[job.stage]) : ''],
+  ];
+  const now = steps.findIndex(([, done]) => !done);
+  return `<div class="stepper">${steps.map(([name, done, sub], k) => `
+    <div class="step ${done ? 'done' : k === now ? 'now' : ''}"><span class="n">${done ? '✓' : k + 1}</span>
+      <span>${name}${sub ? `<small class="muted" style="font-weight:500">${esc(sub)}</small>` : ''}</span></div>`).join('')}</div>`;
+}
 
 function logCard(job) {
   return `<div class="card"><details ${job.error ? 'open' : ''}><summary>Nhật ký</summary>
