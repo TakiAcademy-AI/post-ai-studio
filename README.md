@@ -94,6 +94,18 @@ Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ản
 Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
 dấu trên màn hình (Veo vẽ sai dấu).
 
+## Chữ trên màn hình (web vẽ)
+
+Veo vẽ chữ tiếng Việt có dấu sai và hay tự thêm chữ lạ, nên:
+- Prompt gửi Veo cấm hẳn chữ ("Do NOT render any on-screen text…").
+- Kịch bản có `textOverlays` cho từng cảnh: chữ có dấu + giây bắt đầu/kết thúc + vị trí (trên/giữa/dưới).
+- Lúc **Ghép video**, web vẽ từng chữ thành PNG (Pillow + font Noto Sans ExtraBold, `lib/render_text.py`) rồi
+  `overlay` lên đúng thời điểm, hiện/ẩn dần 0,2s. ffmpeg trên máy không có `drawtext` nên không dùng cách đó.
+- Mỗi cảnh trên web có ô **Chữ trên màn hình** để sửa/thêm/xoá; phần Ghép có **Chèn chữ** bật/tắt và 3 kiểu khung
+  (gradient tím-xanh, nền tối, nền sáng). Sửa chữ xong phải **Ghép lại**.
+- Kịch bản cũ chỉ có `onScreenText` → web tự chuyển (đọc chữ trong ngoặc kép và mốc "(0.5s)").
+- Clip đã tạo trước đây vẫn còn chữ do Veo vẽ sẵn trong hình — chỉ video mới mới sạch chữ.
+
 ## Ghi chú
 
 - Web chỉ nghe `127.0.0.1`, không có đăng nhập. Đừng mở ra Internet.

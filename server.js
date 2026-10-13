@@ -127,7 +127,10 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
 
 app.get('/api/jobs/:id', (req, res) => {
   const job = jobOr404(req, res);
-  if (job) res.json(job);
+  if (!job) return;
+  // Kịch bản cũ chỉ có onScreenText → chuyển sẵn thành danh sách chữ để sửa trên web.
+  job.scenes.forEach((_, i) => J.sceneOverlays(job, i));
+  res.json(job);
 });
 
 app.patch('/api/jobs/:id', wrap(async (req, res) => {

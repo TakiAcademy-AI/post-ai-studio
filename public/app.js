@@ -226,7 +226,7 @@ function renderJob(job) {
             <span class="muted" style="font-size:12px">${esc(sceneMode(i, job))}${sc.attempts ? ` · đã tạo ${sc.attempts} lần` : ''}</span>
           </div>
           <div class="dialogue">🎙 ${esc(sc.dialogue)}</div>
-          <div class="ost">Chữ trên màn hình: ${esc(sc.onScreenText)}</div>
+          ${overlayEditor(sc, i, locked)}
           ${sc.stale ? `<div class="error-box" style="color:var(--warn)">Cảnh trước đã được tạo lại nên khung đầu cảnh này không còn khớp. Nên tạo lại từ cảnh này.</div>` : ''}
           ${sc.error ? `<div class="error-box">${esc(sc.error)}</div>` : ''}
           <details ${sc.clip ? '' : 'open'}><summary>Prompt Flow (sửa được, tự lưu khi rời ô) ·
@@ -269,10 +269,14 @@ function renderJob(job) {
                       : `<div class="ph">Chưa ghép</div>`}
         </div>
         <div>
-          <p class="muted" style="margin-top:0">Độ dài dự kiến ≈ ${total.toFixed(1)}s (Reel cho phép 3–90s). Ghép sẽ xoá watermark "Veo", cắt đầu/cuối theo từng cảnh, xuất 1080×1920.</p>
+          <p class="muted" style="margin-top:0">Độ dài dự kiến ≈ ${total.toFixed(1)}s (Reel cho phép 3–90s). Ghép sẽ xoá watermark "Veo", cắt đầu/cuối theo từng cảnh, chèn chữ (nếu bật), xuất 1080×1920.</p>
           <div class="row">
             <button data-act="stitch" class="${job.final ? '' : 'primary'}" ${busy || !allClips ? 'disabled' : ''}>${job.final ? 'Ghép lại' : 'Ghép video'}</button>
             <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="wm" checked style="width:auto"> Xoá watermark Veo</label>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="txt-on" ${job.text?.enabled === false ? '' : 'checked'} style="width:auto"> Chèn chữ</label>
+            <select id="txt-style" style="width:auto" ${job.text?.enabled === false ? 'disabled' : ''}>
+              ${[['brand', 'Khung gradient tím-xanh'], ['dark', 'Khung nền tối'], ['light', 'Khung nền sáng']].map(([v, l]) => `<option value="${v}" ${(job.text?.style || 'brand') === v ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
           </div>
           ${job.scenes.some((s) => s.stale) ? `<div class="error-box" style="color:var(--warn)">Có cảnh bị lệch nối — vẫn ghép được nhưng chỗ nối sẽ giật.</div>` : ''}
           <label style="margin-top:16px">Caption Facebook
@@ -303,6 +307,58 @@ function renderJob(job) {
 
   $('#view-job').innerHTML = head + summary + genBar + scenes + final + logCard(job);
 }
+
+// Chữ trên màn hình (web vẽ lúc ghép): mỗi dòng = nội dung + giây bắt đầu/kết thúc + vị trí.
+function overlayEditor(sc, i, locked) {
+  const rows = (sc.overlays || []).map((o, k) => `
+    <div class="ov-row" data-k="${k}">
+      <input class="ov-text" value="${esc(o.text)}" placeholder="Chữ hiển thị (có dấu)" ${locked ? 'disabled' : ''}>
+      <input class="ov-start" type="number" step="0.1" min="0" max="8" value="${o.start}" title="Hiện từ giây" placeholder="từ" ${locked ? 'disabled' : ''}>
+      <input class="ov-end" type="number" step="0.1" min="0" max="8" value="${o.end}" title="Ẩn ở giây" placeholder="đến" ${locked ? 'disabled' : ''}>
+      <select class="ov-pos" ${locked ? 'disabled' : ''}>${[['top', 'Trên'], ['middle', 'Giữa'], ['bottom', 'Dưới']].map(([v, l]) => `<option value="${v}" ${o.position === v ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <button class="small ov-del" title="Xoá" ${locked ? 'disabled' : ''}>✕</button>
+    </div>`).join('');
+  return `<div class="ov" data-ov="${i}">
+    <div class="ov-head"><span>Chữ trên màn hình <small class="muted" style="display:inline">· web vẽ khi ghép, đúng dấu</small></span>
+      <button class="small ov-add" ${locked || (sc.overlays || []).length >= 6 ? 'disabled' : ''}>＋ Thêm chữ</button></div>
+    ${rows || '<div class="muted" style="font-size:13px">Không có chữ.</div>'}
+  </div>`;
+}
+
+async function saveOverlays(box) {
+  const i = Number(box.dataset.ov);
+  const overlays = [...box.querySelectorAll('.ov-row')].map((r) => ({
+    text: r.querySelector('.ov-text').value,
+    start: Number(r.querySelector('.ov-start').value),
+    end: Number(r.querySelector('.ov-end').value),
+    position: r.querySelector('.ov-pos').value,
+  }));
+  await api(`/api/jobs/${currentJob.id}/scenes/${i}`, { method: 'PATCH', body: { overlays } });
+}
+
+$('#view-job').addEventListener('click', async (e) => {
+  const box = e.target.closest('[data-ov]');
+  if (!box || !currentJob) return;
+  const i = Number(box.dataset.ov);
+  const sc = currentJob.scenes[i];
+  try {
+    if (e.target.closest('.ov-add')) {
+      const last = sc.overlays?.[sc.overlays.length - 1];
+      const start = last ? Math.min(7, last.end + 0.1) : 0.3;
+      await api(`/api/jobs/${currentJob.id}/scenes/${i}`, { method: 'PATCH', body: { overlays: [...(sc.overlays || []), { text: 'Chữ mới', start, end: Math.min(8, start + 2.5), position: 'top' }] } });
+      refresh(true);
+    } else if (e.target.closest('.ov-del')) {
+      e.target.closest('.ov-row').remove();
+      await saveOverlays(box);
+      refresh(true);
+    }
+  } catch (err) { toast(err.message); }
+});
+$('#view-job').addEventListener('change', async (e) => {
+  const box = e.target.closest('[data-ov]');
+  if (!box || !e.target.closest('.ov-row')) return;
+  try { await saveOverlays(box); toast('Đã lưu chữ', 1200); } catch (err) { toast(err.message); }
+}, true);
 
 function manualSteps(job, i) {
   const fileUrl = (rel) => `/files/${job.id}/${rel}`;
@@ -721,6 +777,10 @@ $('#view-job').addEventListener('input', (e) => {
 $('#view-job').addEventListener('change', async (e) => {
   const el = e.target;
   if (!currentJob) return;
+  if (el.id === 'txt-on' || el.id === 'txt-style') {
+    await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { text: el.id === 'txt-on' ? { enabled: el.checked } : { style: el.value } } }).catch((err) => toast(err.message));
+    return refresh(true);
+  }
   if (el.id === 'job-model' || el.id === 'job-mode' || el.id === 'job-consistency') {
     const key = { 'job-model': 'model', 'job-mode': 'mode', 'job-consistency': 'consistency' }[el.id];
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));

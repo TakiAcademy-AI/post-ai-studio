@@ -266,3 +266,12 @@ details[open] summary::before { transform: rotate(90deg); }
   .player { max-width: 280px; }
   .top { padding: 10px 16px; gap: 12px; }
 }
+
+/* Chữ trên màn hình */
+.ov { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fbfbff; }
+.ov-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
+.ov-row { display: grid; grid-template-columns: 74px 74px 1fr 36px; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.ov-row:first-of-type { border-top: 0; padding-top: 0; }
+.ov-row .ov-text { grid-column: 1 / -1; font-weight: 600; }
+.ov-row input, .ov-row select { padding: 6px 8px; font-size: 13px; }
+.ov-row .ov-del { padding: 4px 0; }
