@@ -29,12 +29,14 @@ function toast(msg, ms = 4000) {
 }
 
 function show(view) {
-  for (const v of ['new', 'job', 'empty']) $(`#view-${v}`).hidden = v !== view;
+  for (const v of ['new', 'job', 'empty', 'posts']) $(`#view-${v}`).hidden = v !== view;
+  $('#tab-posts').classList.toggle('active', view === 'posts');
+  $('#tab-videos').classList.toggle('active', view !== 'posts');
 }
 
 const STAGE = {
   scripting: 'Đang viết kịch bản', script_failed: 'Lỗi kịch bản', script_ready: 'Chờ tạo cảnh',
-  generating: 'Đang tạo cảnh', clips_ready: 'Đủ cảnh — chờ ghép', stitched: 'Đã ghép', posted_draft: 'Đã gửi nháp FB', posted: 'Đã đăng FB',
+  generating: 'Đang tạo cảnh', clips_ready: 'Đủ cảnh — chờ ghép', stitched: 'Đã ghép', posted_draft: 'Đã gửi nháp FB', posted: 'Đã đăng FB', scheduled: 'Đã hẹn giờ FB',
 };
 
 // ---------- danh sách ----------
@@ -271,20 +273,22 @@ function renderJob(job) {
           </label>
           <div class="row" style="align-items:center">
             <select id="fb-mode" style="width:auto">
-              <option value="draft">Lưu nháp (duyệt trong Business Suite)</option>
+              <option value="schedule" selected>Hẹn giờ đăng</option>
               <option value="publish">Đăng ngay (công khai)</option>
+              <option value="draft">Lưu nháp (khó tìm lại trên Facebook)</option>
             </select>
+            <input type="datetime-local" id="fb-when" style="width:auto" value="${defaultWhen()}">
             <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbConfigured ? 'disabled' : ''}>Đăng lên ${esc(fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page')}</button>
           </div>
           ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — bấm <b>Đăng nhập Facebook</b> ở cột trái rồi chọn Page.</div>' : ''}
           ${job.facebook ? `
             <div class="dialogue" style="margin-top:12px">
-              ${job.facebook.published ? 'Đã đăng công khai' : 'Đã gửi nháp'}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''} · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
+              ${{ published: 'Đã đăng công khai', scheduled: `Đã hẹn đăng lúc ${job.facebook.scheduledAt ? new Date(job.facebook.scheduledAt).toLocaleString('vi-VN') : ''}`, draft: 'Đã gửi nháp' }[job.facebook.state || (job.facebook.published ? 'published' : 'draft')]}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''} · video_id <code>${esc(job.facebook.videoId)}</code> · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
               ${job.facebook.file !== job.final?.file ? '<br><b>Lưu ý:</b> bản nháp là video ghép trước đó, không phải bản hiện tại.' : ''}
-              ${job.facebook.status ? `<br>Trạng thái: <code>${esc(JSON.stringify(job.facebook.status.status || job.facebook.status))}</code>` : ''}
               ${job.facebook.status?.status?.publishing_phase?.publish_status ? `<br>Facebook: <b>${esc(job.facebook.status.status.video_status)}</b> · ${esc(job.facebook.status.status.publishing_phase.publish_status)}` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
-              <a href="https://www.facebook.com/reel/${encodeURIComponent(job.facebook.videoId)}" target="_blank" rel="noopener">Mở reel</a></div>
+              <a href="https://www.facebook.com/reel/${encodeURIComponent(job.facebook.videoId)}" target="_blank" rel="noopener">Mở reel</a>
+              <a href="#" data-goto-posts>Quản lý ở tab Lịch đăng</a></div>
             </div>` : ''}
         </div>
       </div>
@@ -366,6 +370,114 @@ function logCard(job) {
   return `<div class="card"><details ${job.error ? 'open' : ''}><summary>Nhật ký</summary>
     <div class="log">${esc(job.log.join('\n'))}</div></details></div>`;
 }
+
+// ---------- Lịch đăng ----------
+const pad = (n) => String(n).padStart(2, '0');
+function toLocalInput(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function defaultWhen() {
+  // Mặc định: giờ tròn kế tiếp, ít nhất 1 tiếng nữa.
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  d.setMinutes(0, 0, 0);
+  d.setHours(d.getHours() + 1);
+  return toLocalInput(d);
+}
+
+const POST_STATE = { scheduled: 'Hẹn giờ', published: 'Đã đăng', draft: 'Nháp', deleted: 'Đã huỷ' };
+
+async function openPosts(sync = false) {
+  currentId = null;
+  stopPoll();
+  loadList();
+  show('posts');
+  $('#posts-list').innerHTML = '<div class="card muted">Đang tải…</div>';
+  try {
+    const posts = sync ? await api('/api/posts/sync', { method: 'POST' }) : await api('/api/posts');
+    renderPosts(posts);
+  } catch (e) {
+    $('#posts-list').innerHTML = `<div class="card error-box">${esc(e.message)}</div>`;
+  }
+}
+
+function renderPosts(posts) {
+  const hide = $('#posts-hide-done').checked;
+  const list = posts.filter((p) => !hide || !['published', 'deleted'].includes(p.state))
+    .sort((a, b) => {
+      const rank = (p) => ({ scheduled: 0, draft: 1, published: 2, deleted: 3 }[p.state] ?? 4);
+      return rank(a) - rank(b) || (a.scheduledAt || a.createdAt).localeCompare(b.scheduledAt || b.createdAt) * (a.state === 'scheduled' ? 1 : -1);
+    });
+  if (!list.length) {
+    $('#posts-list').innerHTML = '<div class="card muted">Chưa có bài nào. Ghép video xong → chọn "Hẹn giờ đăng" ở cuối trang video.</div>';
+    return;
+  }
+  $('#posts-list').innerHTML = list.map((p) => {
+    const when = p.scheduledAt ? new Date(p.scheduledAt) : null;
+    const editable = p.state === 'scheduled' || p.state === 'draft';
+    return `<div class="card post" data-post="${esc(p.id)}">
+      <div class="when">${when ? when.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—'}
+        <small><br>${when ? when.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' }) : 'chưa đặt giờ'}</small></div>
+      <div>
+        <div><span class="badge ${p.state}">${POST_STATE[p.state] || p.state}</span> <b>${esc(p.pageName || 'Page')}</b></div>
+        <div style="margin:4px 0"><a href="#" data-open-job="${esc(p.jobId)}">${esc((p.topic || '').slice(0, 90))}</a></div>
+        <div class="muted" style="font-size:13px">${esc((p.caption || '').slice(0, 140))}</div>
+        <div class="muted" style="font-size:12px;margin-top:4px">video_id ${esc(p.id)}${p.fbStatus ? ` · Facebook: ${esc(p.fbStatus)}${p.publishStatus ? ' / ' + esc(p.publishStatus) : ''}` : ''}${p.checkedAt ? ` · kiểm lúc ${new Date(p.checkedAt).toLocaleTimeString('vi-VN')}` : ''}</div>
+        ${p.error ? `<div class="error-box">${esc(p.error)}</div>` : ''}
+      </div>
+      <div class="acts">
+        ${editable ? `<input type="datetime-local" value="${when ? toLocalInput(when) : defaultWhen()}" data-when>
+          <button class="small" data-post-act="reschedule">${p.state === 'draft' ? 'Hẹn giờ' : 'Đổi giờ'}</button>
+          <button class="small" data-post-act="soon">Đăng sớm (sau ~11 phút)</button>
+          <button class="small danger" data-post-act="cancel">Huỷ / xoá khỏi Facebook</button>` : ''}
+        <button class="small" data-post-act="sync">Kiểm tra trạng thái</button>
+        ${p.state !== 'deleted' ? `<a href="https://www.facebook.com/reel/${encodeURIComponent(p.id)}" target="_blank" rel="noopener">Mở reel</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+$('#tab-posts').addEventListener('click', () => openPosts(false));
+$('#tab-videos').addEventListener('click', () => {
+  const first = $('#job-list li[data-id]');
+  if (first) openJob(first.dataset.id); else show('new');
+});
+$('#posts-sync').addEventListener('click', () => openPosts(true));
+$('#posts-hide-done').addEventListener('change', async () => renderPosts(await api('/api/posts')));
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-goto-posts]')) { e.preventDefault(); openPosts(true); }
+  const j = e.target.closest('[data-open-job]');
+  if (j) { e.preventDefault(); openJob(j.dataset.openJob); }
+});
+
+$('#posts-list').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-post-act]');
+  if (!b) return;
+  const card = b.closest('[data-post]');
+  const id = card.dataset.post;
+  const act = b.dataset.postAct;
+  try {
+    b.disabled = true;
+    if (act === 'reschedule' || act === 'soon') {
+      const t = act === 'soon' ? new Date(Date.now() + 11.5 * 60 * 1000) : new Date(card.querySelector('[data-when]').value);
+      if (Number.isNaN(t.getTime())) throw new Error('Chọn ngày giờ');
+      if (!confirm(`${act === 'soon' ? 'Đăng sớm' : 'Hẹn đăng'} lúc ${t.toLocaleString('vi-VN')}? Tới giờ Facebook sẽ TỰ ĐĂNG công khai.`)) return;
+      await api(`/api/posts/${id}/reschedule`, { method: 'POST', body: { at: Math.floor(t.getTime() / 1000) } });
+      toast('Đã cập nhật giờ đăng');
+    } else if (act === 'cancel') {
+      if (!confirm('Huỷ bài này và XOÁ video khỏi Facebook? Không hoàn tác được.')) return;
+      await api(`/api/posts/${id}/cancel`, { method: 'POST' });
+      toast('Đã huỷ');
+    } else {
+      await api(`/api/posts/${id}/sync`, { method: 'POST' });
+    }
+    renderPosts(await api('/api/posts'));
+  } catch (err) {
+    toast(err.message, 7000);
+    renderPosts(await api('/api/posts'));
+  } finally {
+    b.disabled = false;
+  }
+});
 
 // ---------- Facebook ----------
 async function loadFb() {
@@ -470,10 +582,21 @@ $('#view-job').addEventListener('click', async (e) => {
         await api(`/api/jobs/${id}/stitch`, { method: 'POST', body: { removeWatermark: $('#wm').checked } });
         break;
       case 'facebook': {
-        const publish = $('#fb-mode').value === 'publish';
+        const mode = $('#fb-mode').value;
         const page = fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page';
-        if (!confirm(publish ? `ĐĂNG CÔNG KHAI Reel này lên "${page}" ngay bây giờ?` : `Lưu Reel này thành NHÁP trên "${page}" (chưa công khai)?`)) return;
-        await api(`/api/jobs/${id}/facebook`, { method: 'POST', body: { publish } });
+        let scheduledAt = null;
+        if (mode === 'schedule') {
+          const t = new Date($('#fb-when').value);
+          if (Number.isNaN(t.getTime())) return toast('Chọn ngày giờ đăng');
+          scheduledAt = Math.floor(t.getTime() / 1000);
+        }
+        const msg = {
+          schedule: `Hẹn đăng Reel này lên "${page}" lúc ${new Date(scheduledAt * 1000).toLocaleString('vi-VN')}? Tới giờ Facebook sẽ TỰ ĐĂNG công khai.`,
+          publish: `ĐĂNG CÔNG KHAI Reel này lên "${page}" ngay bây giờ?`,
+          draft: `Lưu Reel này thành NHÁP trên "${page}"? Lưu ý: nháp tạo qua API khó tìm lại trong Business Suite.`,
+        }[mode];
+        if (!confirm(msg)) return;
+        await api(`/api/jobs/${id}/facebook`, { method: 'POST', body: { mode, scheduledAt } });
         break;
       }
       case 'fb-refresh':

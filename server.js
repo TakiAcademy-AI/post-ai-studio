@@ -8,6 +8,7 @@ import { toCleanJpg } from './lib/media.js';
 import { fbConfigured, checkPage } from './lib/facebook.js';
 import crypto from 'node:crypto';
 import * as FB from './lib/fb-auth.js';
+import * as P from './lib/posts.js';
 import * as J from './lib/jobs.js';
 
 fs.mkdirSync(path.join(config.dataDir, 'uploads'), { recursive: true });
@@ -162,7 +163,14 @@ app.delete('/api/jobs/:id/scenes/:i/clip', wrap(async (req, res) => {
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
-app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { publish: b.publish === true })));
+app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt })));
+
+// ---------- Lịch đăng ----------
+app.get('/api/posts', (_req, res) => res.json(P.listPosts()));
+app.post('/api/posts/sync', wrap(async (_req, res) => res.json(await P.syncAll())));
+app.post('/api/posts/:id/sync', wrap(async (req, res) => res.json(await P.syncPost(req.params.id))));
+app.post('/api/posts/:id/reschedule', wrap(async (req, res) => res.json(await P.reschedule(req.params.id, Number(req.body?.at)))));
+app.post('/api/posts/:id/cancel', wrap(async (req, res) => res.json(await P.cancel(req.params.id))));
 app.post('/api/jobs/:id/facebook/refresh', action((job) => J.refreshFacebook(job)));
 
 // ---------- Cầu nối extension ----------

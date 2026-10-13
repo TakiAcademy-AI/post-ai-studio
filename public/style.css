@@ -110,3 +110,15 @@ details summary { cursor: pointer; font-size: 13px; color: var(--muted); margin:
 .fb-box select { font-size: 13px; padding: 5px 6px; }
 .fb-box .who { color: var(--ink); font-weight: 600; }
 .btn-fb { background: #1877f2; border-color: #1877f2; color: #fff; font-weight: 600; }
+
+.tabs { display: flex; gap: 4px; }
+.tab { border: 0; background: none; padding: 6px 12px; border-radius: 8px; color: var(--muted); font-weight: 600; }
+.tab.active { background: var(--code); color: var(--ink); }
+.post { display: grid; grid-template-columns: 150px 1fr auto; gap: 14px; align-items: start; }
+.post .when { font-weight: 700; font-size: 15px; }
+.post .when small { font-weight: 400; color: var(--muted); }
+.post .acts { display: grid; gap: 6px; min-width: 210px; }
+.post .acts input { font-size: 13px; padding: 4px 6px; }
+.badge.scheduled { color: var(--run); } .badge.published { color: var(--ok); } .badge.draft { color: var(--muted); } .badge.deleted { color: var(--err); }
+@media (max-width: 820px) { .post { grid-template-columns: 1fr; } }
+.final > div { min-width: 0; overflow-wrap: anywhere; }

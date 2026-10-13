@@ -9,7 +9,7 @@
 <body>
 <header class="top">
   <div class="brand">Ads AI Studio</div>
-  <div class="steps"><span>① Kịch bản</span><span>② Tạo cảnh</span><span>③ Ghép</span><span>④ Nháp Facebook</span></div>
+  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button></nav>
   <div id="status-pills" class="pills"></div>
 </header>
 
@@ -75,6 +75,20 @@
 
     <!-- Chi tiết job -->
     <section id="view-job" hidden></section>
+
+    <section id="view-posts" hidden>
+      <div class="card">
+        <div class="job-head">
+          <div class="grow"><h1>Lịch đăng Facebook</h1>
+            <div class="muted">Mọi Reel đã gửi lên Facebook từ Ads AI Studio — hẹn giờ, nháp, đã đăng. Trạng thái lấy lại từ Facebook khi bấm Làm mới.</div></div>
+          <button id="posts-sync" class="primary">Làm mới từ Facebook</button>
+        </div>
+        <div class="row" id="posts-filter">
+          <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="posts-hide-done" style="width:auto"> Ẩn bài đã đăng / đã huỷ</label>
+        </div>
+      </div>
+      <div id="posts-list"></div>
+    </section>
 
     <section id="view-empty" class="empty">
       <p>Chọn một video bên trái hoặc bấm <b>+ Video mới</b>.</p>
