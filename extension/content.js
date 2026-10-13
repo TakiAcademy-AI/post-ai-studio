@@ -13,6 +13,12 @@ function press(el) {
   }
 }
 
+// Hộp thoại của Flow nhớ lựa chọn lần trước: bấm vào mục ĐANG được chọn là bỏ chọn → chỉ bấm khi chưa chọn.
+async function selectOption(opt) {
+  if (opt.getAttribute('aria-selected') !== 'true') press(opt);
+  await sleep(600);
+}
+
 async function waitFor(fn, what, timeout = 15000) {
   const t0 = Date.now();
   while (Date.now() - t0 < timeout) {
@@ -110,6 +116,25 @@ async function addIngredient(img) {
   });
 }
 
+// @me = hình đại diện "Tôi" của tài khoản Flow (giọng thật của chủ tài khoản).
+// Gõ "@" trong prompt mở ô gợi ý lúc được lúc không, nên thêm qua nút + → tab "Hình đại diện" → "Tôi".
+// Kết quả giống gõ @me (thêm 1 thành phần khuôn mặt), chỉ không chèn chữ "Tôi" vào prompt.
+async function addAvatar() {
+  const plus = await waitFor(() => document.querySelector('button[aria-label="Thêm thành phần vào ô nhập câu lệnh"]'), 'nút + thêm thành phần');
+  press(plus);
+  const tab = await waitFor(() => [...document.querySelectorAll('[role="tab"]')].find((t) => visible(t) && t.innerText.includes('Hình đại diện')), 'mục "Hình đại diện"');
+  press(tab);
+  await sleep(800);
+  const opt = await waitFor(() => [...document.querySelectorAll('[role="option"]')].find((o) => visible(o) && o.innerText.trim().startsWith('Tôi')),
+    'hình đại diện "Tôi" — tài khoản Flow này đã tạo hình đại diện (@me) chưa?', 8000);
+  const before = composerChips().length;
+  await selectOption(opt);
+  const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!byText('[role="tab"]', 'Hình đại diện') && 'closed'), 'nút "Thêm vào câu lệnh"', 6000);
+  if (add !== 'closed') press(add);
+  await sleep(1000);
+  if (composerChips().length <= before) throw new Error('Chưa gắn được hình đại diện "Tôi" — thử "Điền lại"');
+}
+
 async function setPrompt(text) {
   const ed = await waitFor(() => document.querySelector('.ProseMirror[contenteditable="true"]'), 'ô nhập prompt');
   ed.focus();
@@ -164,11 +189,12 @@ async function addVoice(name) {
   }
   if (!opt) throw new Error(`Không thấy giọng "${name}" trong Flow`);
   opt.scrollIntoView({ block: 'center' });
-  press(opt);
-  await sleep(600);
+  const before = composerChips().length;
+  await selectOption(opt);
   const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!byText('[role="tab"]', 'Giọng nói') && 'closed'), 'nút "Thêm vào câu lệnh"', 6000);
   if (add !== 'closed') press(add);
   await sleep(1000);
+  if (composerChips().length <= before) throw new Error(`Chưa gắn được giọng ${name} — thử "Điền lại"`);
 }
 
 async function fill(p, model) {
@@ -184,7 +210,8 @@ async function fill(p, model) {
       await addIngredient(img);
     }
   }
-  if (p.voice && p.mode !== 'frames') { status(`Đang gắn giọng ${p.voice}…`); await addVoice(p.voice); }
+  if (p.voice === 'me' && p.mode !== 'frames') { status('Đang gắn hình đại diện "Tôi" (@me)…'); await addAvatar(); }
+  else if (p.voice && p.mode !== 'frames') { status(`Đang gắn giọng ${p.voice}…`); await addVoice(p.voice); }
   status('Đang điền prompt…');
   await setPrompt(p.prompt);
 }

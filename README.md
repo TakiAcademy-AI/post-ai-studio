@@ -96,7 +96,8 @@ dấu trên màn hình (Veo vẽ sai dấu).
 
 ## Giọng đọc đồng nhất
 
-Veo tự tạo giọng mới cho từng clip nên mỗi cảnh một giọng. Flow có thư viện giọng (Thành phần → **Giọng nói**:
+Veo tự tạo giọng mới cho từng clip nên mỗi cảnh một giọng. Chọn **@me — giọng của tôi** (mặc định) để dùng hình đại
+diện "Tôi" của tài khoản Flow (giống gõ @me trong prompt), hoặc một giọng trong thư viện Flow (Thành phần → **Giọng nói**:
 Achird, Charon, Iapetus, Aoede…). Chọn **Giọng đọc cố định** khi tạo video (hoặc trên trang video) → extension gắn
 cùng giọng đó vào mọi cảnh; prompt ghi cùng một câu VOICE. Giọng chỉ gắn được ở chế độ Thành phần (Khung hình không có
 nút +). Cảnh 2+ ở chế độ "Giữ đúng mặt nhân vật" dùng đủ 3 thành phần: ảnh nhân vật + khung cuối cảnh trước + giọng.

@@ -386,7 +386,7 @@ function manualSteps(job, i) {
   const identity = job.refImage && (job.consistency || 'identity') === 'identity';
   if (i > 0 && identity) {
     const prev = job.scenes[i - 1];
-    how = `Chế độ <b>Thành phần</b>${job.voice ? ` · giọng <b>${esc(job.voice)}</b>` : ''} · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
+    how = `Chế độ <b>Thành phần</b>${job.voice ? ` · giọng <b>${job.voice === 'me' ? '@me' : esc(job.voice)}</b>` : ''} · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
       ? `<a href="${fileUrl(prev.lastFrame)}" download="canh-${i}-cuoi.jpg">khung cuối cảnh ${i}</a>`
       : `<span class="over">cần clip cảnh ${i} trước</span>`}`;
   } else if (i === 0 && job.refImage) {
@@ -826,7 +826,7 @@ $('#view-job').addEventListener('change', async (e) => {
   }
   if (el.id === 'job-voice') {
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { voice: el.value || null } }).catch((err) => toast(err.message));
-    toast(el.value ? `Các cảnh điền từ giờ sẽ dùng giọng ${el.value}` : 'Bỏ giọng cố định');
+    toast(el.value ? `Các cảnh điền từ giờ sẽ dùng giọng ${el.value === 'me' ? '@me (giọng của bạn)' : el.value}` : 'Bỏ giọng cố định');
     return refresh(true);
   }
   if (el.id === 'job-model' || el.id === 'job-mode' || el.id === 'job-consistency') {
@@ -851,9 +851,9 @@ $('#view-job').addEventListener('change', async (e) => {
 // ---------- khởi động ----------
 (async () => {
   cfg = await api('/api/config');
-  const voiceOpts = (sel) => (cfg.voices || []).map((v) => `<option value="${esc(v.name)}" ${v.name === sel ? 'selected' : ''}>${esc(v.name)} — ${esc(v.gender)}, ${esc(v.desc)}</option>`).join('');
+  const voiceOpts = (sel) => (cfg.voices || []).map((v) => `<option value="${esc(v.name)}" ${v.name === sel ? 'selected' : ''}>${v.name === 'me' ? '@me — giọng của tôi' : `${esc(v.name)} — ${esc(v.gender)}, ${esc(v.desc)}`}</option>`).join('');
   window.voiceOpts = voiceOpts;
-  $('#voice-select').insertAdjacentHTML('beforeend', voiceOpts('Achird'));
+  $('#voice-select').insertAdjacentHTML('beforeend', voiceOpts('me'));
   $('#model-select').innerHTML = cfg.models.map((m) => `<option ${m === cfg.defaultModel ? 'selected' : ''}>${m}</option>`).join('');
   $('#status-pills').innerHTML = `
     <span class="pill ${cfg.gflowFound ? 'ok' : 'bad'}">gflow ${cfg.gflowFound ? '✓' : '✗'}</span>
