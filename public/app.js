@@ -284,7 +284,6 @@ function renderJob(job) {
               ${job.facebook.status ? `<br>Trạng thái: <code>${esc(JSON.stringify(job.facebook.status.status || job.facebook.status))}</code>` : ''}
               ${job.facebook.status?.status?.publishing_phase?.publish_status ? `<br>Facebook: <b>${esc(job.facebook.status.status.video_status)}</b> · ${esc(job.facebook.status.status.publishing_phase.publish_status)}` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
-              ${job.facebook.pageId ? `<a href="https://business.facebook.com/latest/posts/drafts?asset_id=${encodeURIComponent(job.facebook.pageId)}" target="_blank" rel="noopener">Mở bản nháp của Page</a>` : ''}
               <a href="https://www.facebook.com/reel/${encodeURIComponent(job.facebook.videoId)}" target="_blank" rel="noopener">Mở reel</a></div>
             </div>` : ''}
         </div>
