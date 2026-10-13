@@ -14,7 +14,7 @@ Khâu ② có 2 chế độ (chọn theo từng video):
 
 Cài một lần:
 1. Mở `chrome://extensions`, bật **Developer mode** (góc phải trên).
-2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/ads-ai-studio/extension`.
+2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/post-ai-studio/extension`.
 3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Ads AI**.
 
 Quy trình (mỗi cảnh bạn chỉ bấm 1 nút — nút tạo):
@@ -30,7 +30,7 @@ Giới hạn: extension dựa vào nhãn tiếng Việt của giao diện Flow (
 ## Chạy
 
 ```bash
-cd ~/Downloads/ads-ai-studio
+cd ~/Downloads/post-ai-studio
 npm install        # lần đầu
 npm start          # mở http://127.0.0.1:3200
 ```

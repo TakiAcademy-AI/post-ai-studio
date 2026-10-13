@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "ads-ai-studio",
+      "name": "post-ai-studio",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["/home/taki/Downloads/ads-ai-studio/server.js"],
+      "runtimeArgs": ["/home/taki/Downloads/post-ai-studio/server.js"],
       "port": 3200
     }
   ]
