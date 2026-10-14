@@ -33,7 +33,7 @@ Cách nhập giữ nguyên; chỉ khác chế độ **"Tự động hoàn toàn 
 
 1. Tab **Tài khoản → Chrome Flow**: chọn profile Chrome đã đăng nhập Google Flow → **Chép lại & mở** (chép cookie sang `data/flow-chrome`, Chrome hằng ngày không bị đụng) → **Kiểm tra đăng nhập Flow**. Chưa đăng nhập: **Hiện cửa sổ** rồi tự đăng nhập trong cửa sổ đó.
 2. Trang video: chọn **Model Flow** → **▶ Tự tạo cả N cảnh**. Server mở Chrome Flow (cổng DevTools `9334`, đổi bằng `FLOW_CDP_PORT`), tạo một dự án Flow riêng cho video, điền từng cảnh bằng đúng code điền của extension, bấm tạo (Playwright), chờ, tải 720p và gắn vào cảnh. Mỗi cảnh có nút **↻ Tự tạo lại cảnh này**.
-3. Flow báo "hết thời gian tạo" → tự thử lại 2 lần; vi phạm chính sách / hết credit → dừng và báo lỗi ở cảnh đó.
+3. Flow báo "hết thời gian tạo" hoặc chặn "người nổi tiếng" → tự thử lại 2 lần; lỗi khác / hết credit → dừng và báo lỗi ở cảnh đó. Đủ video mọi cảnh thì web **tự ghép** luôn (cả khi làm bằng extension).
 
 Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản (không dùng mẹo né phát hiện) — nên thử bằng tài khoản phụ trước. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ).
 
