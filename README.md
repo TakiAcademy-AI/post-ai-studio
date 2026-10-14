@@ -12,7 +12,7 @@ Làm theo cách của taki-agentic-ai:
 
 1. Tab **Tài khoản → Google Flow**: chọn profile Chrome đã đăng nhập Google Flow → **Chép lại & mở** (chép cookie sang `data/flow-chrome`, Chrome hằng ngày không bị đụng) → **Kiểm tra đăng nhập Flow**. Chưa đăng nhập: **Hiện cửa sổ** rồi tự đăng nhập trong cửa sổ đó.
 2. Trang video: chọn **Model Flow** → **▶ Tự tạo cả N cảnh**. Server mở Chrome Flow (cổng DevTools `9334`, đổi bằng `FLOW_CDP_PORT`), luôn mở Flow tiếng Việt (`?hl=vi`), tạo một dự án Flow riêng cho video, điền từng cảnh (code điền ở `flow-page/`), bấm tạo, chờ, tải 720p và gắn vào cảnh. Mỗi cảnh có nút **↻ Tự tạo lại cảnh này**.
-3. Flow báo "hết thời gian tạo" hoặc chặn "người nổi tiếng" → tự thử lại 2 lần; lỗi khác / hết credit → dừng và báo lỗi ở cảnh đó. Đủ video mọi cảnh thì web **tự ghép** luôn.
+3. Flow báo "hết thời gian tạo" → tự thử lại 2 lần. Flow chặn "người nổi tiếng" (được hoàn credit) → tự xử lý theo thang: thử lại nguyên prompt → Claude **tự viết lại prompt** 3 bậc (reframe + bỏ từ nhạy cảm → người nhỏ trong khung, góc nghiêng → bản tối giản), luôn giữ nguyên lời thoại và giọng @me → thử thêm 1 lần; cảnh nào bị viết lại có nút **Dùng lại prompt gốc**. Lỗi khác / hết credit → dừng và báo lỗi ở cảnh đó. Đủ video mọi cảnh thì web **tự ghép** luôn.
 
 Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản — dùng tài khoản có hình đại diện "Tôi" của chính bạn nếu dùng giọng @me. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ). Clip mp4 vẫn kéo thả tay vào cảnh được nếu cần thay.
 

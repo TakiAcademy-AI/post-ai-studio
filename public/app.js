@@ -240,6 +240,8 @@ function renderJob(job) {
             <span class="${sc.prompt.length > LIMIT ? 'over' : ''}" data-count="${i}">${sc.prompt.length}/${LIMIT} ký tự</span></summary>
             <textarea class="prompt" rows="14" data-field="prompt" data-i="${i}" ${locked ? 'disabled' : ''}>${esc(sc.prompt)}</textarea>
           </details>
+          ${sc.promptOriginal ? `<div class="manual" style="border-color:#f3d9a8;background:var(--warn-bg)">Prompt đã được <b>tự viết lại ${sc.policyRewrites || 1} lần</b> để né bộ lọc "người nổi tiếng" của Flow (lời thoại giữ nguyên).
+            <div class="row"><button class="small" data-act="restore-prompt" data-i="${i}" ${locked ? 'disabled' : ''}>Dùng lại prompt gốc</button></div></div>` : ''}
           ${sceneSteps(job, i)}
           ${sc.prompt.length > LIMIT - 300 ? `<div class="row"><button class="small" data-act="compress" data-i="${i}" ${locked ? 'disabled' : ''}>Rút gọn prompt</button></div>` : ''}
         </div>
@@ -860,6 +862,10 @@ $('#view-job').addEventListener('click', async (e) => {
         toast('Đã bắt đầu — theo dõi ở nhật ký và từng cảnh', 5000);
         break;
       }
+      case 'restore-prompt':
+        if (!confirm(`Bỏ bản prompt đã tự viết lại, dùng lại prompt gốc của cảnh ${i + 1}?`)) return;
+        await api(`/api/jobs/${id}/scenes/${i}`, { method: 'PATCH', body: { restorePrompt: true } });
+        break;
       case 'copy':
         await navigator.clipboard.writeText(currentJob.scenes[i].prompt);
         toast(`Đã copy prompt cảnh ${i + 1} (${currentJob.scenes[i].prompt.length} ký tự)`);
