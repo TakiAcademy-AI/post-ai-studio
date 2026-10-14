@@ -277,8 +277,8 @@ function renderJob(job) {
           <div class="row">
             <button data-act="stitch" class="${job.final ? '' : 'primary'}" ${busy || !allClips ? 'disabled' : ''}>${job.final ? 'Ghép lại' : 'Ghép video'}</button>
             <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="wm" checked style="width:auto"> Xoá watermark Veo</label>
-            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="txt-on" ${job.text?.enabled === false ? '' : 'checked'} style="width:auto"> Chèn chữ</label>
-            <select id="txt-style" style="width:auto" ${job.text?.enabled === false ? 'disabled' : ''}>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="txt-on" ${job.text?.enabled === true ? 'checked' : ''} style="width:auto"> Chèn chữ</label>
+            <select id="txt-style" style="width:auto" ${job.text?.enabled === true ? '' : 'disabled'}>
               ${[['brand', 'Khung gradient tím-xanh'], ['dark', 'Khung nền tối'], ['light', 'Khung nền sáng']].map(([v, l]) => `<option value="${v}" ${(job.text?.style || 'brand') === v ? 'selected' : ''}>${l}</option>`).join('')}
             </select>
           </div>
@@ -323,7 +323,7 @@ function overlayEditor(sc, i, locked) {
       <button class="small ov-del" title="Xoá" ${locked ? 'disabled' : ''}>✕</button>
     </div>`).join('');
   return `<div class="ov" data-ov="${i}">
-    <div class="ov-head"><span>Chữ trên màn hình <small class="muted" style="display:inline">· web vẽ khi ghép, đúng dấu</small></span>
+    <div class="ov-head"><span>Chữ trên màn hình <small class="muted" style="display:inline">· chỉ chèn khi bật "Chèn chữ" lúc ghép</small></span>
       <button class="small ov-add" ${locked || (sc.overlays || []).length >= 6 ? 'disabled' : ''}>＋ Thêm chữ</button></div>
     ${rows || '<div class="muted" style="font-size:13px">Không có chữ.</div>'}
   </div>`;
@@ -929,6 +929,7 @@ $('#view-job').addEventListener('change', async (e) => {
   if (!currentJob) return;
   if (el.id === 'txt-on' || el.id === 'txt-style') {
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { text: el.id === 'txt-on' ? { enabled: el.checked } : { style: el.value } } }).catch((err) => toast(err.message));
+    if (currentJob.scenes.every((x) => x.clip)) toast('Đã đổi phần chữ — bấm "Ghép video" để áp dụng', 4000);
     return refresh(true);
   }
   if (el.id === 'job-voice') {
