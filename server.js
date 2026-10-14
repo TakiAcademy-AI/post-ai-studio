@@ -12,6 +12,8 @@ import * as P from './lib/posts.js';
 import * as CA from './lib/claude-accounts.js';
 import { VOICES, isVoice } from './lib/voices.js';
 import * as FC from './lib/flow-chrome.js';
+import * as FBC from './lib/fb-chrome.js';
+import * as FBB from './lib/fb-browser.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
@@ -181,10 +183,20 @@ app.post('/api/flow/sync', wrap(async (req, res) => { const s = await FC.syncPro
 app.post('/api/flow/show', wrap(async (req, res) => { await FC.ensure({ show: req.body?.show !== false }); res.json({ ok: true }); }));
 app.post('/api/flow/check', wrap(async (_req, res) => res.json(await FC.checkLogin())));
 app.post('/api/flow/close', wrap(async (_req, res) => { await FC.close(); res.json({ ok: true }); }));
+const fbSelectedPageId = () => FB.status().selectedPageId || config.fbPageId || null;
+app.get('/api/fbchrome/status', wrap(async (_req, res) => res.json({ up: await FBC.isUp(), source: FBC.source(), profiles: FBC.listProfiles(), port: FBC.CDP_PORT })));
+app.post('/api/fbchrome/sync', wrap(async (req, res) => { const s = await FBC.syncProfile(String(req.body?.dir || '')); await FBC.ensure({ show: true }); res.json(s); }));
+app.post('/api/fbchrome/show', wrap(async (req, res) => { await FBC.ensure({ show: req.body?.show !== false }); res.json({ ok: true }); }));
+app.post('/api/fbchrome/check', wrap(async (_req, res) => {
+  const id = fbSelectedPageId();
+  const r = await FBB.checkLogin(id);
+  res.json({ ...r, page: r.ok && id ? FB.status().pages?.find((p) => p.id === id)?.name || id : null });
+}));
+app.post('/api/fbchrome/close', wrap(async (_req, res) => { await FBC.close(); res.json({ ok: true }); }));
 
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
-app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt })));
+app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt, via: b.via === 'browser' ? 'browser' : 'api' })));
 
 // ---------- Tài khoản Claude ----------
 app.get('/api/claude/accounts', wrap(async (_req, res) => res.json(await CA.list())));

@@ -37,6 +37,15 @@ Cách nhập giữ nguyên; chỉ khác chế độ **"Tự động hoàn toàn 
 
 Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản (không dùng mẹo né phát hiện) — nên thử bằng tài khoản phụ trước. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ).
 
+## Đăng Reel qua trình duyệt (Chrome Facebook)
+
+Ngoài Graph API, web đăng được như người đăng tay qua **Meta Business Suite**:
+1. Tab **Tài khoản → Facebook → Chrome Facebook**: chọn profile Chrome → **Chép lại & mở**. Facebook thường không nhận phiên chép sang → **tự đăng nhập một lần** trong cửa sổ Chrome Facebook (tài khoản quản trị Page), rồi **Kiểm tra đăng nhập Facebook**.
+2. Trang video → mục đăng: **Qua trình duyệt (Business Suite)** + Hẹn giờ / Đăng ngay / Lưu nháp → **Đăng lên <Page>**. Server mở trình soạn thước phim, tải video, điền caption, chọn kiểu đăng (hẹn giờ theo múi giờ Business Suite hiện), bấm nút cuối, rồi **xác nhận** bài nằm trong mục Đã đăng / Đã lên lịch / Bản nháp.
+3. Sau đó web dò lại video_id qua API (nếu Page có token) để tab **Lịch đăng** vẫn đổi giờ / huỷ được.
+
+Page dùng là Page đang chọn ở thẻ Facebook. Chrome Facebook dùng cổng `9335` (`FB_CDP_PORT`).
+
 ## Chạy
 
 ```bash
