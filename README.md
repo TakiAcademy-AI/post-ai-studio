@@ -21,9 +21,9 @@ Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google c
 Bài đăng KHÔNG đi qua Graph API — web đăng như người đăng tay qua **Meta Business Suite**:
 1. Tab **Tài khoản → Facebook → Chrome Facebook**: chọn profile Chrome → **Chép lại & mở**. Facebook thường không nhận phiên chép sang → **tự đăng nhập một lần** trong cửa sổ Chrome Facebook (tài khoản quản trị Page), rồi **Kiểm tra đăng nhập Facebook**.
 2. Trang video → Hẹn giờ / Đăng ngay / Lưu nháp → **Đăng lên <Page>**. Server mở trình soạn thước phim, tải video, điền caption, chọn kiểu đăng (hẹn giờ theo múi giờ Business Suite hiện), bấm nút cuối, rồi **xác nhận** bài nằm trong mục Đã đăng / Đã lên lịch / Bản nháp.
-3. Graph API không còn dùng để đăng; chỉ để lấy danh sách Page (đăng nhập ở thẻ Facebook), dò lại video_id sau khi đăng, và tab **Lịch đăng** (làm mới trạng thái; đổi giờ / huỷ bài đã hẹn).
+3. Graph API (thẻ **Facebook API — tuỳ chọn**) không dùng để đăng; nếu kết nối thì web dò lại video_id sau khi đăng và tab **Lịch đăng** làm mới trạng thái / đổi giờ / huỷ được.
 
-Page dùng là Page đang chọn ở thẻ Facebook. Chrome Facebook dùng cổng `9335` (`FB_CDP_PORT`).
+**Page để đăng** chọn ngay trong thẻ Chrome Facebook ("Lấy danh sách Page" đọc từ bảng chuyển tài sản của Business Suite, chọn Page → web đọc mã Page) — không cần kết nối API. Chrome Facebook dùng cổng `9335` (`FB_CDP_PORT`).
 
 ## Chạy
 

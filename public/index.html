@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Cdefs%3E%3ClinearGradient id=%27g%27 x1=%270%27 y1=%270%27 x2=%271%27 y2=%271%27%3E%3Cstop offset=%270%27 stop-color=%27%237c5cff%27/%3E%3Cstop offset=%271%27 stop-color=%27%233b9bf6%27/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2732%27 height=%2732%27 rx=%279%27 fill=%27url(%23g)%27/%3E%3Cpath fill=%27%23fff%27 d=%27M16 6l2.2 6.6L25 15l-6.8 2.3L16 24l-2.2-6.7L7 15l6.8-2.4z%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,6 +23,7 @@
 <div class="layout">
   <aside class="side">
     <button id="btn-new" class="primary block big">＋ Tạo video mới</button>
+    <button id="side-toggle" class="side-toggle" type="button" aria-label="Danh sách video"></button>
     <div class="side-title">Các video</div>
     <ul id="job-list" class="job-list"></ul>
   </aside>
@@ -123,20 +125,18 @@
           <div id="cl-box" class="acc-body muted">Đang kiểm tra…</div>
         </div>
         <div class="card acc-card">
-          <div class="acc-head"><span class="acc-icon fb">f</span><div><h2 style="margin:0">Facebook</h2><div class="muted" style="font-size:13px">Đăng Reel nháp, hẹn giờ, đăng ngay lên Page</div></div></div>
-          <div id="fb-box" class="acc-body muted">Đang kiểm tra…</div>
-          <div class="manual" style="margin-top:10px">
-            <b>Chrome Facebook — đăng Reel từ trình duyệt</b>
-            <div class="muted" style="font-size:12px;margin:2px 0 8px">Chrome riêng đăng nhập Facebook (tài khoản quản trị Page); server mở Meta Business Suite và đăng như người đăng tay, không qua Graph API. Đăng nhập Facebook bạn tự làm một lần trong cửa sổ này.</div>
-            <div id="chromefb-box" class="acc-body" style="font-size:13px">Đang kiểm tra…</div>
-          </div>
+          <div class="acc-head"><span class="acc-icon flow">▶</span><div><h2 style="margin:0">Google Flow</h2><div class="muted" style="font-size:13px">Chrome Flow tự tạo video từng cảnh</div></div></div>
+          <p class="acc-note">Chrome riêng mang đăng nhập Google chép từ profile bạn chọn; server tự điền và tự bấm tạo. Chrome hằng ngày không bị đụng tới. Nên dùng tài khoản có hình đại diện "Tôi" của chính bạn.</p>
+          <div id="chromeflow-box" class="acc-body">Đang kiểm tra…</div>
         </div>
         <div class="card acc-card">
-          <div class="acc-head"><span class="acc-icon flow">▶</span><div><h2 style="margin:0">Google Flow</h2><div class="muted" style="font-size:13px">Chrome Flow tự tạo video từng cảnh</div></div></div>
-          <div id="flow-box" class="acc-body">
-            <div class="muted" style="font-size:12px;margin:0 0 8px">Chrome riêng mang đăng nhập Google chép từ profile bạn chọn; server tự điền và tự bấm tạo. Chrome hằng ngày không bị đụng tới. Tự động hoá Flow có rủi ro bị Google chặn — nên dùng tài khoản có hình đại diện "Tôi" của chính bạn.</div>
-            <div id="chromeflow-box" class="acc-body" style="font-size:13px">Đang kiểm tra…</div>
-          </div>
+          <div class="acc-head"><span class="acc-icon fb">f</span><div><h2 style="margin:0">Chrome Facebook</h2><div class="muted" style="font-size:13px">Đăng Reel qua Business Suite: hẹn giờ, đăng ngay, nháp</div></div></div>
+          <p class="acc-note">Chrome riêng đăng nhập Facebook (tài khoản quản trị Page); server đăng như người đăng tay, không qua API. Facebook không nhận phiên chép sang → tự đăng nhập một lần trong cửa sổ này.</p>
+          <div id="chromefb-box" class="acc-body">Đang kiểm tra…</div>
+        </div>
+        <div class="card acc-card">
+          <div class="acc-head"><span class="acc-icon api">⚙</span><div><h2 style="margin:0">Facebook API <span class="badge">tuỳ chọn</span></h2><div class="muted" style="font-size:13px">Chỉ cho tab Lịch đăng: làm mới trạng thái, đổi giờ, huỷ</div></div></div>
+          <div id="fb-box" class="acc-body muted">Đang kiểm tra…</div>
         </div>
       </div>
     </section>

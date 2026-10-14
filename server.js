@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import path from 'node:path';
-import { config, readSettings } from './lib/config.js';
+import { config, readSettings, writeSettings } from './lib/config.js';
 import { toCleanJpg } from './lib/media.js';
 import { fbConfigured, checkPage } from './lib/facebook.js';
 import crypto from 'node:crypto';
@@ -181,14 +181,25 @@ app.post('/api/flow/sync', wrap(async (req, res) => { const s = await FC.syncPro
 app.post('/api/flow/show', wrap(async (req, res) => { await FC.ensure({ show: req.body?.show !== false }); res.json({ ok: true }); }));
 app.post('/api/flow/check', wrap(async (_req, res) => res.json(await FC.checkLogin())));
 app.post('/api/flow/close', wrap(async (_req, res) => { await FC.close(); res.json({ ok: true }); }));
-const fbSelectedPageId = () => FB.status().selectedPageId || config.fbPageId || null;
-app.get('/api/fbchrome/status', wrap(async (_req, res) => res.json({ up: await FBC.isUp(), source: FBC.source(), profiles: FBC.listProfiles(), port: FBC.CDP_PORT })));
+const fbSelectedPageId = () => FBB.browserPage()?.id || FB.status().selectedPageId || config.fbPageId || null;
+app.get('/api/fbchrome/status', wrap(async (_req, res) => res.json({
+  up: await FBC.isUp(), source: FBC.source(), profiles: FBC.listProfiles(), port: FBC.CDP_PORT,
+  page: FBB.browserPage(), pages: readSettings().fbBrowserPages || [],
+})));
+// Danh sách Page lấy từ bảng chuyển tài sản của Business Suite (không cần Graph API).
+app.post('/api/fbchrome/pages', wrap(async (_req, res) => {
+  const r = await FBB.listPages();
+  writeSettings({ fbBrowserPages: r.pages });
+  if (!FBB.browserPage() && r.current?.id) writeSettings({ fbBrowserPage: r.current });
+  res.json({ pages: r.pages, page: FBB.browserPage() });
+}));
+app.post('/api/fbchrome/page', wrap(async (req, res) => res.json(await FBB.selectPage(String(req.body?.name || '')))));
 app.post('/api/fbchrome/sync', wrap(async (req, res) => { const s = await FBC.syncProfile(String(req.body?.dir || '')); await FBC.ensure({ show: true }); res.json(s); }));
 app.post('/api/fbchrome/show', wrap(async (req, res) => { await FBC.ensure({ show: req.body?.show !== false }); res.json({ ok: true }); }));
 app.post('/api/fbchrome/check', wrap(async (_req, res) => {
   const id = fbSelectedPageId();
   const r = await FBB.checkLogin(id);
-  res.json({ ...r, page: r.ok && id ? FB.status().pages?.find((p) => p.id === id)?.name || id : null });
+  res.json({ ...r, page: r.ok && id ? FBB.browserPage()?.name || FB.status().pages?.find((p) => p.id === id)?.name || id : null });
 }));
 app.post('/api/fbchrome/close', wrap(async (_req, res) => { await FBC.close(); res.json({ ok: true }); }));
 

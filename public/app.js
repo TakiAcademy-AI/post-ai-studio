@@ -33,6 +33,10 @@ function show(view) {
   $('#tab-posts').classList.toggle('active', view === 'posts');
   $('#tab-accounts').classList.toggle('active', view === 'accounts');
   $('#tab-videos').classList.toggle('active', !['posts', 'accounts'].includes(view));
+  document.body.dataset.view = view;
+  $('.side').classList.remove('open'); // mobile: mở video xong thì gấp danh sách lại
+  if (typeof sideLabel === 'function') sideLabel();
+  window.scrollTo({ top: 0 });
 }
 
 const STAGE = {
@@ -48,7 +52,15 @@ async function loadList() {
       ${esc(j.topic.slice(0, 60))}
       <div class="meta">${j.sceneCount} cảnh · ${esc(STAGE[j.stage] || j.stage)}${j.busy ? ' · ⏳' : ''}</div>
     </li>`).join('') || '<li class="muted">Chưa có video nào</li>';
+  sideJobs = jobs;
+  sideLabel();
 }
+let sideJobs = [];
+function sideLabel() {
+  const cur = document.body.dataset.view === 'job' && sideJobs.find((j) => j.id === currentId);
+  $('#side-toggle').innerHTML = `<span>${cur ? esc(cur.topic.slice(0, 60)) : `Các video (${sideJobs.length})`}</span><span class="chev">▾</span>`;
+}
+$('#side-toggle').addEventListener('click', () => $('.side').classList.toggle('open'));
 
 $('#job-list').addEventListener('click', (e) => {
   const li = e.target.closest('li[data-id]');
@@ -129,11 +141,6 @@ async function refresh(force = false) {
   }
 }
 
-function sceneMode(i, job) {
-  if (i > 0) return 'khung đầu = khung cuối cảnh trước';
-  return job.refImage ? 'ảnh nhân vật làm reference' : 'chỉ từ prompt';
-}
-
 function renderJob(job) {
   const busy = Boolean(job.busy);
   const doneCount = job.scenes.filter((s) => s.clip).length;
@@ -193,7 +200,7 @@ function renderJob(job) {
         ${job.voice === 'me' ? '<span class="muted" style="font-size:12px">@me: mặt + giọng lấy từ hình đại diện "Tôi"; không dùng ảnh nhân vật hay khung cuối cảnh trước (Flow chặn ảnh mặt người thật)</span>'
           : job.voice && job.refImage && (job.consistency || 'identity') === 'frames' ? '<span class="over" style="font-size:12px">Chế độ "Nối cảnh liền khung" không gắn được giọng cho cảnh 2+</span>' : ''}
       </div>
-      ${job.refImage ? `<div class="row" style="margin:0 0 10px">
+      ${job.refImage && job.voice !== 'me' ? `<div class="row" style="margin:0 0 10px">
         <label style="display:flex;gap:8px;align-items:center;font-weight:600">Cảnh 2 trở đi:
           <select id="job-consistency" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
             <option value="identity" ${(job.consistency || 'identity') === 'identity' ? 'selected' : ''}>Giữ đúng mặt nhân vật (ảnh nhân vật + khung cuối cảnh trước)</option>
@@ -223,7 +230,7 @@ function renderJob(job) {
           <div class="scene-head">
             <span class="scene-no">${i + 1}</span><h3>${esc(sc.title)}</h3>
             <span class="badge ${st}">${label}</span>
-            <span class="muted" style="font-size:12px">${esc(sceneMode(i, job))}${sc.attempts ? ` · đã tạo ${sc.attempts} lần` : ''}</span>
+            ${sc.attempts ? `<span class="muted" style="font-size:12px">đã tạo ${sc.attempts} lần</span>` : ''}
           </div>
           <div class="dialogue">🎙 ${esc(sc.dialogue)}</div>
           ${overlayEditor(sc, i, locked)}
@@ -284,9 +291,9 @@ function renderJob(job) {
               <option value="draft">Lưu nháp</option>
             </select>
             <input type="datetime-local" id="fb-when" style="width:auto" value="${defaultWhen()}">
-            <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbConfigured ? 'disabled' : ''}>Đăng lên ${esc(fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page')}</button>
+            <button data-act="facebook" class="primary" ${busy || !job.final || !cfg.fbReady ? 'disabled' : ''}>Đăng lên ${esc(fbc.page?.name || 'Page')}</button>
           </div>
-          ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — vào tab <a href="#" data-goto-accounts>Tài khoản</a> để đăng nhập và chọn Page.</div>' : ''}
+          ${!cfg.fbReady ? '<div class="muted">Chưa sẵn sàng đăng — tab <a href="#" data-goto-accounts>Tài khoản</a> → Chrome Facebook: chép profile, đăng nhập Facebook và chọn <b>Page để đăng</b>.</div>' : ''}
           ${job.facebook ? `
             <div class="dialogue" style="margin-top:12px">
               ${{ published: 'Đã đăng công khai', scheduled: `Đã hẹn đăng lúc ${job.facebook.scheduledAt ? new Date(job.facebook.scheduledAt).toLocaleString('vi-VN') : ''}`, draft: 'Đã gửi nháp' }[job.facebook.state || (job.facebook.published ? 'published' : 'draft')]}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''}${job.facebook.videoId ? ` · video_id <code>${esc(job.facebook.videoId)}</code>` : ''} · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
@@ -523,6 +530,29 @@ function openAccounts() {
 }
 $('#tab-accounts').addEventListener('click', openAccounts);
 
+// Trạng thái Chrome Flow / Chrome Facebook cho pill đầu trang và nút đăng.
+let fbc = {};
+function setFbc(st) {
+  fbc = st || {};
+  cfg.fbReady = Boolean(fbc.source && fbc.page);
+  const pill = $('#pill-fb');
+  if (pill) {
+    pill.className = `pill ${cfg.fbReady ? 'ok' : 'bad'}`;
+    pill.textContent = cfg.fbReady ? `Facebook: ${fbc.page.name}` : 'Facebook chưa sẵn sàng';
+  }
+}
+function setFlowPill(st) {
+  const pill = $('#pill-flow');
+  if (!pill) return;
+  pill.className = `pill ${st?.source ? 'ok' : 'bad'}`;
+  pill.textContent = st?.source ? `Flow: ${st.source.email || st.source.name}` : 'Flow chưa sẵn sàng';
+}
+async function loadChromeStatus() {
+  const [f, b] = await Promise.all([api('/api/flow/status').catch(() => null), api('/api/fbchrome/status').catch(() => null)]);
+  setFlowPill(f);
+  setFbc(b);
+}
+
 // Hộp quản lý "Chrome riêng" (chép profile, hiện/ẩn, kiểm tra đăng nhập) — dùng cho Chrome Flow và Chrome Facebook.
 const CHROMES = {
   flow: { box: '#chromeflow-box', api: '/api/flow', name: 'Chrome Flow', site: 'Flow', checkLabel: 'Kiểm tra đăng nhập Flow',
@@ -530,7 +560,18 @@ const CHROMES = {
     bad: (r) => `Chưa vào được Flow (đang ở ${esc(r.url)}). Bấm <b>Hiện cửa sổ</b> và đăng nhập Google/Flow trong cửa sổ Chrome Flow, rồi kiểm tra lại.` },
   fb: { box: '#chromefb-box', api: '/api/fbchrome', name: 'Chrome Facebook', site: 'Facebook', checkLabel: 'Kiểm tra đăng nhập Facebook',
     ok: (r) => `✓ Chrome Facebook đã đăng nhập${r.name ? ` (<b>${esc(r.name)}</b>)` : ''}${r.page ? ` và mở được Business Suite của Page <b>${esc(r.page)}</b>` : ''}. Sẵn sàng đăng.`,
-    bad: (r) => `${esc(r.reason || 'Chưa đăng nhập Facebook')}. Bấm <b>Hiện cửa sổ</b>, tự đăng nhập Facebook (tài khoản quản trị Page) trong cửa sổ Chrome Facebook, rồi kiểm tra lại.` },
+    bad: (r) => `${esc(r.reason || 'Chưa đăng nhập Facebook')}. Bấm <b>Hiện cửa sổ</b>, tự đăng nhập Facebook (tài khoản quản trị Page) trong cửa sổ Chrome Facebook, rồi kiểm tra lại.`,
+    extra: (st) => !st.source ? '' : `
+      <div class="field" style="margin-top:2px">
+        <span class="field-label">Page để đăng</span>
+        <div class="row" style="margin-top:0">
+          <select data-cb="page" class="grow-sel">${st.pages.length || st.page ? '' : '<option value="">— bấm "Lấy danh sách Page" —</option>'}
+            ${[...new Set([...(st.page ? [st.page.name] : []), ...st.pages])].map((n) => `<option ${n === st.page?.name ? 'selected' : ''}>${esc(n)}</option>`).join('')}
+          </select>
+          <button class="small" data-cb="pages">${st.pages.length ? 'Tải lại danh sách' : 'Lấy danh sách Page'}</button>
+        </div>
+        <small class="muted">Lấy từ Business Suite của tài khoản trong Chrome Facebook — không cần API.</small>
+      </div>` },
 };
 async function loadChromeBox(kind, extra = '') {
   const c = CHROMES[kind];
@@ -548,14 +589,27 @@ async function loadChromeBox(kind, extra = '') {
     ${src ? `<div class="row" style="margin-top:0">
       <button class="small" data-cb="show">Hiện cửa sổ</button><button class="small" data-cb="hide">Ẩn sang mép</button>
       <button class="small" data-cb="check">${c.checkLabel}</button>${st.up ? '<button class="small danger" data-cb="close">Tắt</button>' : ''}</div>` : ''}
+    ${c.extra ? c.extra(st) : ''}
     ${extra}`;
+  if (kind === 'fb') setFbc(st); else setFlowPill(st);
 }
 const loadChromeFlow = (extra) => loadChromeBox('flow', extra);
 
 for (const [kind, c] of Object.entries(CHROMES)) {
+  $(c.box)?.addEventListener('change', async (e) => {
+    if (e.target.dataset?.cb !== 'page' || !e.target.value) return;
+    const sel = e.target;
+    sel.disabled = true;
+    toast(`Đang chọn Page "${sel.value}" trong Business Suite…`, 30000);
+    try {
+      const r = await api(`${c.api}/page`, { method: 'POST', body: { name: sel.value } });
+      toast(`Sẽ đăng lên "${r.name}"`);
+    } catch (err) { toast(err.message, 8000); }
+    loadChromeBox(kind);
+  });
   $(c.box)?.addEventListener('click', async (e) => {
     const act = e.target.dataset?.cb;
-    if (!act || act === 'profile') return;
+    if (!act || act === 'profile' || act === 'page') return;
     const box = $(c.box);
     const b = e.target;
     const label = b.textContent;
@@ -569,6 +623,11 @@ for (const [kind, c] of Object.entries(CHROMES)) {
       }
       if (act === 'show' || act === 'hide') { await api(`${c.api}/show`, { method: 'POST', body: { show: act === 'show' } }); return loadChromeBox(kind); }
       if (act === 'close') { await api(`${c.api}/close`, { method: 'POST' }); return loadChromeBox(kind); }
+      if (act === 'pages') {
+        b.textContent = 'Đang lấy từ Business Suite…';
+        const r = await api(`${c.api}/pages`, { method: 'POST' });
+        return loadChromeBox(kind, `<div class="dialogue" style="margin:0">Tìm thấy ${r.pages.length} Page.</div>`);
+      }
       if (act === 'check') {
         b.textContent = `Đang mở ${c.site}…`;
         const r = await api(`${c.api}/check`, { method: 'POST' });
@@ -731,13 +790,6 @@ async function loadFb() {
         </select></label>
       <div class="row" style="margin-top:0"><button class="small" id="fb-login">Đăng nhập lại</button><button class="small danger" id="fb-out">Ngắt</button></div>${appLine()}`;
   }
-  const pill = $('#pill-fb');
-  if (pill) {
-    const ok = Boolean(sel || fb.envPage);
-    pill.className = `pill ${ok ? 'ok' : 'bad'}`;
-    pill.textContent = ok ? `Facebook: ${sel ? sel.name : 'Page .env'}` : 'Facebook chưa kết nối';
-  }
-  cfg.fbConfigured = Boolean(sel || fb.envPage);
 }
 
 $('#fb-box').addEventListener('click', async (e) => {
@@ -831,7 +883,7 @@ $('#view-job').addEventListener('click', async (e) => {
         break;
       case 'facebook': {
         const mode = $('#fb-mode').value;
-        const page = fb.pages?.find((p) => p.id === fb.selectedPageId)?.name || 'Page';
+        const page = fbc.page?.name || 'Page';
         let scheduledAt = null;
         if (mode === 'schedule') {
           const t = new Date($('#fb-when').value);
@@ -906,8 +958,9 @@ $('#view-job').addEventListener('change', async (e) => {
   $('#flow-model-select').innerHTML = (cfg.flowModels || []).map((m) => `<option>${esc(m)}</option>`).join('');
   $('#status-pills').innerHTML = `
     <span class="pill" id="pill-cl">Claude…</span>
+    <span class="pill" id="pill-flow">Flow…</span>
     <span class="pill" id="pill-fb">Facebook…</span>`;
-  await loadFb();
+  await Promise.all([loadFb(), loadChromeStatus()]);
   loadClaude(); // không chờ: kiểm tra tài khoản Claude mất vài giây
   durHint();
   await loadList();
