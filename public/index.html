@@ -50,12 +50,9 @@
           </div>
           <small id="dur-hint" class="muted"></small>
         </div>
-        <label>Cách tạo video
-          <select name="mode">
-            <option value="manual" selected>Bán tự động — extension điền, bạn bấm tạo</option>
-            <option value="auto">Tự động hoàn toàn — Chrome Flow tự bấm tạo</option>
-          </select>
-          <small class="muted">Model Flow (tự động hoàn toàn): <select name="flowModel" id="flow-model-select" style="width:auto;padding:1px 4px"></select></small>
+        <label>Model Flow
+          <select name="flowModel" id="flow-model-select"></select>
+          <small class="muted">Chrome Flow tự điền, tự bấm tạo từng cảnh, tải clip và ghép (tab Tài khoản → Google Flow).</small>
         </label>
         <label>Đối tượng xem
           <input name="audience" placeholder="VD: chủ shop online 25–40 tuổi">
@@ -118,7 +115,7 @@
       <div class="card hero-card">
         <span class="eyebrow">✦ Kết nối</span>
         <h1>Tài khoản</h1>
-        <p class="muted" style="margin:0">Tài khoản Claude để viết kịch bản, Facebook để đăng bài, và trạng thái Google Flow / extension.</p>
+        <p class="muted" style="margin:0">Tài khoản Claude để viết kịch bản, Chrome Facebook để đăng bài, Chrome Flow để tạo video.</p>
       </div>
       <div class="acc-grid">
         <div class="card acc-card">
@@ -135,19 +132,10 @@
           </div>
         </div>
         <div class="card acc-card">
-          <div class="acc-head"><span class="acc-icon flow">▶</span><div><h2 style="margin:0">Google Flow & extension</h2><div class="muted" style="font-size:13px">Tạo video từng cảnh</div></div></div>
+          <div class="acc-head"><span class="acc-icon flow">▶</span><div><h2 style="margin:0">Google Flow</h2><div class="muted" style="font-size:13px">Chrome Flow tự tạo video từng cảnh</div></div></div>
           <div id="flow-box" class="acc-body">
-            <ol class="howto" style="font-size:13px">
-              <li>Cài extension <b>Post AI → Flow</b> vào đúng profile Chrome đang đăng nhập Flow: <code>chrome://extensions</code> → bật Developer mode → <b>Load unpacked</b> → thư mục <code>~/Downloads/post-ai-studio/extension</code>.</li>
-              <li>Cập nhật extension: bấm ↻ Reload ở thẻ extension rồi tải lại tab Flow.</li>
-              <li>Mở một dự án Flow; trên trang video bấm <b>Điền cảnh vào Flow</b> — mỗi cảnh chỉ bấm → trong Flow.</li>
-            </ol>
-            <div id="flow-status" class="muted" style="font-size:13px"></div>
-            <div class="manual" style="margin-top:4px">
-              <b>Chrome Flow — cho chế độ "Tự động hoàn toàn"</b>
-              <div class="muted" style="font-size:12px;margin:2px 0 8px">Chrome riêng mang đăng nhập Google chép từ profile bạn chọn; server tự điền và tự bấm tạo. Chrome hằng ngày không bị đụng tới. Tự động hoá Flow có rủi ro bị Google chặn — nên thử bằng tài khoản phụ trước.</div>
-              <div id="chromeflow-box" class="acc-body" style="font-size:13px">Đang kiểm tra…</div>
-            </div>
+            <div class="muted" style="font-size:12px;margin:0 0 8px">Chrome riêng mang đăng nhập Google chép từ profile bạn chọn; server tự điền và tự bấm tạo. Chrome hằng ngày không bị đụng tới. Tự động hoá Flow có rủi ro bị Google chặn — nên dùng tài khoản có hình đại diện "Tôi" của chính bạn.</div>
+            <div id="chromeflow-box" class="acc-body" style="font-size:13px">Đang kiểm tra…</div>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 // Chạy trong "main world" của trang Flow. Flow tạo <input type=file> rồi gọi .click() để mở hộp chọn file;
-// khi extension đã chuẩn bị sẵn một file, ta gán file đó vào input thay vì mở hộp thoại.
+// khi đã chuẩn bị sẵn một file, ta gán file đó vào input thay vì mở hộp thoại.
 (() => {
   let pendingFile = null;
 

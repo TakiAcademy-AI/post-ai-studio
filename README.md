@@ -2,47 +2,26 @@
 
 Website chạy trên máy nhà, biến skill **Video AI** thành dây chuyền:
 
-① Claude viết kịch bản + prompt từng cảnh → ② tạo từng cảnh trong Google Flow → ③ ffmpeg ghép thành 1 Reel → ④ đăng **nháp** lên Page Facebook.
+① Claude viết kịch bản + prompt từng cảnh → ② **Chrome Flow** tự tạo từng cảnh trên Google Flow → ③ ffmpeg tự ghép thành 1 Reel → ④ **Chrome Facebook** đăng lên Page qua Meta Business Suite (hẹn giờ / đăng ngay / nháp).
 
-Khâu ② có 2 chế độ (chọn theo từng video):
-- **Tự bấm trong Flow** (mặc định): web đưa prompt + ảnh khung đầu, bạn tạo trong Flow rồi kéo mp4 vào web. Không bị reCAPTCHA chặn vì người bấm thật.
-- **Tự động hoàn toàn (Chrome Flow)**: server tự điền và tự bấm tạo trong một Chrome riêng — xem mục bên dưới.
+Cả khâu tạo video lẫn đăng bài đều chạy bằng trình duyệt như người thật bấm (Playwright điều khiển một Chrome riêng), không có mẹo che giấu tự động hoá.
 
-## Extension "Post AI → Flow" (khuyên dùng)
+## Tạo video tự động (Chrome Flow)
 
-Điền sẵn từng cảnh vào Flow trong Chrome thật của bạn; **bạn tự bấm nút tạo** nên không dính reCAPTCHA.
+Làm theo cách của taki-agentic-ai:
 
-Cài một lần:
-1. Mở `chrome://extensions`, bật **Developer mode** (góc phải trên).
-2. Bấm **Load unpacked** → chọn thư mục `~/Downloads/post-ai-studio/extension`.
-3. Mở/tải lại tab `flow.google.com` → góc phải dưới có bảng **Post AI**.
+1. Tab **Tài khoản → Google Flow**: chọn profile Chrome đã đăng nhập Google Flow → **Chép lại & mở** (chép cookie sang `data/flow-chrome`, Chrome hằng ngày không bị đụng) → **Kiểm tra đăng nhập Flow**. Chưa đăng nhập: **Hiện cửa sổ** rồi tự đăng nhập trong cửa sổ đó.
+2. Trang video: chọn **Model Flow** → **▶ Tự tạo cả N cảnh**. Server mở Chrome Flow (cổng DevTools `9334`, đổi bằng `FLOW_CDP_PORT`), luôn mở Flow tiếng Việt (`?hl=vi`), tạo một dự án Flow riêng cho video, điền từng cảnh (code điền ở `flow-page/`), bấm tạo, chờ, tải 720p và gắn vào cảnh. Mỗi cảnh có nút **↻ Tự tạo lại cảnh này**.
+3. Flow báo "hết thời gian tạo" hoặc chặn "người nổi tiếng" → tự thử lại 2 lần; lỗi khác / hết credit → dừng và báo lỗi ở cảnh đó. Đủ video mọi cảnh thì web **tự ghép** luôn.
 
-Quy trình (mỗi cảnh bạn chỉ bấm 1 nút — nút tạo):
-1. Web: bấm **Điền cảnh 1 vào Flow**. Để sẵn một tab Flow đang mở dự án; chọn model ở bảng Post AI (lưu cho lần sau).
-2. Extension **tự điền**: Video · Khung hình/Thành phần · 9:16 · 8 giây · x1, tải ảnh khung đầu/ảnh nhân vật lên, điền prompt.
-3. **Bạn bấm nút → để tạo** (nút duy nhất phải bấm tay — cú bấm này reCAPTCHA chấm điểm, để người thật bấm thì an toàn cho tài khoản).
-4. Video xong extension **tự Tải xuống → 720p**, gửi về web; web gắn vào cảnh, cắt khung cuối, và đẩy cảnh kế tiếp sang Flow — extension tự điền tiếp. Lặp lại bước 3.
-
-Nếu tự tải không chạy (bảng báo lỗi), tự bấm ⋮ → Tải xuống → 720p là clip vẫn về web. Đừng tạo video khác trong cùng dự án lúc đang chờ — extension lấy video mới nhất xuất hiện ở đầu lưới. Chrome phải để chế độ tải về không hỏi vị trí lưu.
-
-Giới hạn: extension dựa vào nhãn tiếng Việt của giao diện Flow (đo ngày 2026-10-12) — Flow đổi giao diện thì bảng sẽ báo "Không thấy …"; lúc đó vẫn dùng cách kéo thả mp4. Web chỉ nhận file mp4 nằm trong `~/Downloads`.
-
-## Tự động hoàn toàn (Chrome Flow) — không cần bấm tạo
-
-Cách nhập giữ nguyên; chỉ khác chế độ **"Tự động hoàn toàn — Chrome Flow tự bấm tạo"** (chọn khi tạo video, hoặc đổi ở trang video). Làm theo cách của taki-agentic-ai:
-
-1. Tab **Tài khoản → Chrome Flow**: chọn profile Chrome đã đăng nhập Google Flow → **Chép lại & mở** (chép cookie sang `data/flow-chrome`, Chrome hằng ngày không bị đụng) → **Kiểm tra đăng nhập Flow**. Chưa đăng nhập: **Hiện cửa sổ** rồi tự đăng nhập trong cửa sổ đó.
-2. Trang video: chọn **Model Flow** → **▶ Tự tạo cả N cảnh**. Server mở Chrome Flow (cổng DevTools `9334`, đổi bằng `FLOW_CDP_PORT`), tạo một dự án Flow riêng cho video, điền từng cảnh bằng đúng code điền của extension, bấm tạo (Playwright), chờ, tải 720p và gắn vào cảnh. Mỗi cảnh có nút **↻ Tự tạo lại cảnh này**.
-3. Flow báo "hết thời gian tạo" hoặc chặn "người nổi tiếng" → tự thử lại 2 lần; lỗi khác / hết credit → dừng và báo lỗi ở cảnh đó. Đủ video mọi cảnh thì web **tự ghép** luôn (cả khi làm bằng extension).
-
-Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản (không dùng mẹo né phát hiện) — nên thử bằng tài khoản phụ trước. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ).
+Lưu ý: mỗi cảnh trừ credit Flow; tự động hoá có rủi ro Google chặn tài khoản — dùng tài khoản có hình đại diện "Tôi" của chính bạn nếu dùng giọng @me. Cửa sổ Chrome Flow được đẩy ra mép phải (không thu nhỏ vì trang sẽ ngừng vẽ). Clip mp4 vẫn kéo thả tay vào cảnh được nếu cần thay.
 
 ## Đăng Reel qua trình duyệt (Chrome Facebook)
 
-Ngoài Graph API, web đăng được như người đăng tay qua **Meta Business Suite**:
+Bài đăng KHÔNG đi qua Graph API — web đăng như người đăng tay qua **Meta Business Suite**:
 1. Tab **Tài khoản → Facebook → Chrome Facebook**: chọn profile Chrome → **Chép lại & mở**. Facebook thường không nhận phiên chép sang → **tự đăng nhập một lần** trong cửa sổ Chrome Facebook (tài khoản quản trị Page), rồi **Kiểm tra đăng nhập Facebook**.
-2. Trang video → mục đăng: **Qua trình duyệt (Business Suite)** + Hẹn giờ / Đăng ngay / Lưu nháp → **Đăng lên <Page>**. Server mở trình soạn thước phim, tải video, điền caption, chọn kiểu đăng (hẹn giờ theo múi giờ Business Suite hiện), bấm nút cuối, rồi **xác nhận** bài nằm trong mục Đã đăng / Đã lên lịch / Bản nháp.
-3. Sau đó web dò lại video_id qua API (nếu Page có token) để tab **Lịch đăng** vẫn đổi giờ / huỷ được.
+2. Trang video → Hẹn giờ / Đăng ngay / Lưu nháp → **Đăng lên <Page>**. Server mở trình soạn thước phim, tải video, điền caption, chọn kiểu đăng (hẹn giờ theo múi giờ Business Suite hiện), bấm nút cuối, rồi **xác nhận** bài nằm trong mục Đã đăng / Đã lên lịch / Bản nháp.
+3. Graph API không còn dùng để đăng; chỉ để lấy danh sách Page (đăng nhập ở thẻ Facebook), dò lại video_id sau khi đăng, và tab **Lịch đăng** (làm mới trạng thái; đổi giờ / huỷ bài đã hẹn).
 
 Page dùng là Page đang chọn ở thẻ Facebook. Chrome Facebook dùng cổng `9335` (`FB_CDP_PORT`).
 
@@ -56,7 +35,7 @@ npm start          # mở http://127.0.0.1:3200
 
 Yêu cầu trên máy:
 - `claude` CLI đã đăng nhập (dùng gói đăng ký, không cần API key).
-- Google Chrome (`/usr/bin/google-chrome`) cho extension và chế độ Chrome Flow.
+- Google Chrome (`/usr/bin/google-chrome`) cho Chrome Flow và Chrome Facebook.
 - `ffmpeg` / `ffprobe`.
 
 Cấu hình nằm trong `.env` (xem `.env.example`).
@@ -71,9 +50,9 @@ Cột trái → khung **Claude**:
 - Mỗi tài khoản thêm từ web lưu ở `data/claude/<id>/` (thư mục cấu hình riêng, `CLAUDE_CONFIG_DIR`).
 - Khi Claude báo hết hạn mức, lỗi trên web gợi ý đổi tài khoản.
 
-## Kết nối Facebook
+## Kết nối Facebook (danh sách Page + Lịch đăng)
 
-Cách chính — **Đăng nhập Facebook** (giống Ads OS, dùng chung app Facebook của Ads OS):
+**Đăng nhập Facebook** (giống Ads OS, dùng chung app Facebook của Ads OS) — để web biết các Page và đọc trạng thái bài:
 1. Cần App ID + App Secret của một app Facebook. Máy mới: tab **Tài khoản** → thẻ Facebook → nhập App ID/Secret
    → **Kiểm tra & lưu** (web xác nhận với Facebook, Secret mã hoá trong `data/settings.json`). Hoặc khai
    `FB_APP_ID` / `FB_APP_SECRET` trong `.env` (được ưu tiên). `ENCRYPTION_KEY` để trống thì web tự tạo `data/secret.key`.
@@ -95,13 +74,12 @@ Chỉ dùng khi chưa đăng nhập/chưa chọn Page.
 
 1. **Video mới** → điền chủ đề, số cảnh, CTA, mô tả nhân vật, ảnh tham chiếu (tuỳ chọn) → *Viết kịch bản* (1–3 phút).
 2. Duyệt mạch video, bảng nối cảnh, sửa thoại/prompt từng cảnh. Prompt phải ≤ 4000 ký tự (Flow cắt phần thừa) — có bộ đếm và nút *Rút gọn prompt*.
-3. **Chế độ tự bấm trong Flow**: với từng cảnh, theo thứ tự từ cảnh 1 — *Copy prompt*, chọn đúng chế độ Flow ghi ở cảnh (cảnh 1: Text/Ingredients to Video; cảnh 2+: Frames to Video với ảnh *khung đầu* tải từ web), khung 9:16, tạo, tải mp4 về rồi kéo vào ô video của cảnh. Web tự cắt khung cuối làm khung đầu cảnh sau.
-   **Chế độ tự động hoàn toàn**: *▶ Tự tạo cả N cảnh* — Chrome Flow làm lần lượt từng cảnh, mỗi cảnh **trừ credit Flow**.
-4. Cảnh nào hỏng: *Bỏ clip cảnh này* rồi tạo lại (bằng extension hoặc *↻ Tự tạo lại cảnh này*). Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
-5. *Ghép video* → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
+3. *▶ Tự tạo cả N cảnh* — Chrome Flow làm lần lượt từng cảnh, mỗi cảnh **trừ credit Flow**.
+4. Cảnh nào hỏng: *Bỏ clip cảnh này* rồi *↻ Tự tạo lại cảnh này*. Cảnh thừa đầu/cuối: chỉnh *Cắt đầu / Cắt cuối* (giây) thay vì render lại.
+5. Đủ cảnh thì web tự ghép (hoặc bấm *Ghép video*) → 1080×1920, 30fps, AAC 48kHz, xoá watermark "Veo".
 6. Sửa caption → chọn **Hẹn giờ đăng** (mặc định; > 10 phút và ≤ 29 ngày tới), **Đăng ngay**, hoặc **Lưu nháp** → bấm **Đăng lên <Page>**.
 7. Tab **Lịch đăng** (đầu trang): mọi Reel đã gửi lên Facebook, mọi Page. Làm mới trạng thái từ Facebook, đổi giờ, đăng sớm (~11 phút), huỷ (xoá video khỏi Facebook), mở reel.
-   Lưu ý: nháp tạo qua API không hiện trong danh sách Reel của Page và khó tìm trong Business Suite → nên dùng hẹn giờ.
+   Nháp nằm ở Business Suite → Nội dung → **Bản nháp**.
    Đổi giờ/huỷ dùng cập nhật Video node chung của Graph API (tài liệu Reels không mô tả) — nếu Facebook từ chối, sửa trong Business Suite.
 
 ## Giữ nhân vật đồng nhất
@@ -119,7 +97,7 @@ dấu trên màn hình (Veo vẽ sai dấu).
 
 Veo tự tạo giọng mới cho từng clip nên mỗi cảnh một giọng. Chọn **@me — giọng của tôi** (mặc định) để dùng hình đại
 diện "Tôi" của tài khoản Flow (giống gõ @me trong prompt), hoặc một giọng trong thư viện Flow (Thành phần → **Giọng nói**:
-Achird, Charon, Iapetus, Aoede…). Chọn **Giọng đọc cố định** khi tạo video (hoặc trên trang video) → extension gắn
+Achird, Charon, Iapetus, Aoede…). Chọn **Giọng đọc cố định** khi tạo video (hoặc trên trang video) → Chrome Flow gắn
 cùng giọng đó vào mọi cảnh; prompt ghi cùng một câu VOICE. Giọng chỉ gắn được ở chế độ Thành phần (Khung hình không có
 nút +). Cảnh 2+ ở chế độ "Giữ đúng mặt nhân vật" dùng đủ 3 thành phần: ảnh nhân vật + khung cuối cảnh trước + giọng.
 

@@ -5,9 +5,8 @@ let cfg = {};
 let currentId = null;
 let currentJob = null;
 let pollTimer = null;
-let bridgeNow = null;
 let fb = { connected: false }; // trạng thái đăng nhập Facebook
-let fbEditingApp = false;      // đang mở form đổi App ID/Secret // cảnh đang chờ extension Flow
+let fbEditingApp = false;      // đang mở form đổi App ID/Secret
 const LIMIT = 4000; // Flow cắt prompt sau 4000 ký tự
 
 async function api(url, opts = {}) {
@@ -115,10 +114,6 @@ async function refresh(force = false) {
   if (!currentId) return;
   try {
     const job = await api(`/api/jobs/${currentId}`);
-    const b = (await api('/api/bridge').catch(() => ({}))).pending || null;
-    const bridgeChanged = JSON.stringify(b && [b.jobId, b.index]) !== JSON.stringify(bridgeNow && [bridgeNow.jobId, bridgeNow.index]);
-    bridgeNow = b;
-    if (bridgeChanged) force = true;
     const editing = document.activeElement?.matches?.('#view-job textarea, #view-job input');
     if (force || !editing) {
       if (force || !currentJob || job.updatedAt !== currentJob.updatedAt) {
@@ -141,7 +136,6 @@ function sceneMode(i, job) {
 
 function renderJob(job) {
   const busy = Boolean(job.busy);
-  const auto = job.mode === 'auto';
   const doneCount = job.scenes.filter((s) => s.clip).length;
   const total = job.scenes.reduce((a, s) => a + (s.duration || 8) - (s.trimStart || 0) - (s.trimEnd || 0), 0);
   const nextIdx = job.scenes.findIndex((s) => !s.clip);
@@ -152,12 +146,7 @@ function renderJob(job) {
       <div class="job-head">
         <div class="grow">
           <h1>${esc(job.input.topic)}</h1>
-          <div class="muted">${job.input.sceneCount} cảnh ·
-            <select id="job-mode" ${busy ? 'disabled' : ''} style="width:auto;padding:2px 6px">
-              <option value="manual" ${job.mode === 'manual' || !job.mode ? 'selected' : ''}>Bán tự động (extension, tự bấm tạo)</option>
-              <option value="auto" ${auto ? 'selected' : ''}>Tự động hoàn toàn (Chrome Flow)</option>
-            </select>
-            · ${doneCount}/${job.scenes.length} cảnh có video · ${esc(STAGE[job.stage] || job.stage)}
+          <div class="muted">${job.input.sceneCount} cảnh · ${doneCount}/${job.scenes.length} cảnh có video · ${esc(STAGE[job.stage] || job.stage)}
           </div>
         </div>
         ${busy ? `<div class="busy"><span class="spin"></span>${esc(job.busy)}</div>` : ''}
@@ -195,7 +184,7 @@ function renderJob(job) {
 
   const genBar = `
     <div class="card">
-      <h2>Tạo video trong Flow</h2>
+      <h2>Tạo video trên Flow (tự động)</h2>
       <div class="row" style="margin:0 0 10px">
         <label style="display:flex;gap:8px;align-items:center;font-weight:600">Giọng đọc:
           <select id="job-voice" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
@@ -210,7 +199,6 @@ function renderJob(job) {
             <option value="identity" ${(job.consistency || 'identity') === 'identity' ? 'selected' : ''}>Giữ đúng mặt nhân vật (ảnh nhân vật + khung cuối cảnh trước)</option>
             <option value="frames" ${job.consistency === 'frames' ? 'selected' : ''}>Nối cảnh liền khung (chỉ khung đầu — mặt dễ trôi)</option>
           </select></label></div>` : ''}
-      ${auto ? `
       <div class="auto-box">
         <div class="row" style="margin:0">
           <label style="display:flex;gap:8px;align-items:center;font-weight:600">Model Flow:
@@ -221,14 +209,7 @@ function renderJob(job) {
           ${busy && job.stage === 'generating' ? '<button class="danger" data-act="cancel">Dừng sau cảnh này</button>' : ''}
         </div>
         <p class="muted" style="margin:8px 0 0;font-size:13px">Server mở <b>Chrome Flow</b> (tab Tài khoản), tự điền, <b>tự bấm tạo</b>, chờ, tải clip và gắn vào từng cảnh — mỗi cảnh trừ credit Flow. Flow báo "hết thời gian" thì tự thử lại 2 lần; vi phạm chính sách / hết credit thì dừng và báo.</p>
-      </div>` : `
-      <ol class="howto">
-        <li>Mở <a href="https://flow.google.com/" target="_blank" rel="noopener">Google Flow</a>, đặt khung <b>9:16</b>, chọn model (Veo 3.1 Fast/Lite…).</li>
-        <li>Làm <b>lần lượt từ cảnh 1</b>: bấm <b>Copy prompt</b>, chọn đúng chế độ ghi ở từng cảnh, tải ảnh đi kèm vào Flow, bấm tạo.</li>
-        <li>Tải mp4 từ Flow về, rồi <b>kéo file vào ô video của cảnh đó</b>. Web tự cắt khung cuối làm khung đầu cho cảnh sau.</li>
-      </ol>
-      <p class="muted" style="margin:8px 0 0">Có extension <b>Post AI → Flow</b>: bấm <b>Điền cảnh vào Flow</b> → tab Flow (đang mở một dự án) tự điền → <b>bạn bấm nút tạo →</b>. Video xong extension tự tải 720p về web và tự điền cảnh sau.
-      ${bridgeNow ? `<br>⏳ Đang chờ: cảnh ${bridgeNow.index + 1}${bridgeNow.jobId !== job.id ? ' (của video khác)' : ''}` : ''}</p>`}
+      </div>
     </div>`;
 
   const scenes = job.scenes.map((sc, i) => {
@@ -252,7 +233,7 @@ function renderJob(job) {
             <span class="${sc.prompt.length > LIMIT ? 'over' : ''}" data-count="${i}">${sc.prompt.length}/${LIMIT} ký tự</span></summary>
             <textarea class="prompt" rows="14" data-field="prompt" data-i="${i}" ${locked ? 'disabled' : ''}>${esc(sc.prompt)}</textarea>
           </details>
-          ${manualSteps(job, i)}
+          ${sceneSteps(job, i)}
           ${sc.prompt.length > LIMIT - 300 ? `<div class="row"><button class="small" data-act="compress" data-i="${i}" ${locked ? 'disabled' : ''}>Rút gọn prompt</button></div>` : ''}
         </div>
         <div class="player">
@@ -297,10 +278,6 @@ function renderJob(job) {
             <textarea rows="4" data-field="caption" ${busy ? 'disabled' : ''}>${esc(job.caption)}</textarea>
           </label>
           <div class="row" style="align-items:center">
-            <select id="fb-via" style="width:auto" title="Cách đăng">
-              <option value="browser" ${fbVia() === 'browser' ? 'selected' : ''}>Qua trình duyệt (Business Suite)</option>
-              <option value="api" ${fbVia() === 'api' ? 'selected' : ''}>Qua API</option>
-            </select>
             <select id="fb-mode" style="width:auto">
               <option value="schedule" selected>Hẹn giờ đăng</option>
               <option value="publish">Đăng ngay (công khai)</option>
@@ -312,7 +289,7 @@ function renderJob(job) {
           ${!cfg.fbConfigured ? '<div class="muted">Chưa kết nối Facebook — vào tab <a href="#" data-goto-accounts>Tài khoản</a> để đăng nhập và chọn Page.</div>' : ''}
           ${job.facebook ? `
             <div class="dialogue" style="margin-top:12px">
-              ${{ published: 'Đã đăng công khai', scheduled: `Đã hẹn đăng lúc ${job.facebook.scheduledAt ? new Date(job.facebook.scheduledAt).toLocaleString('vi-VN') : ''}`, draft: 'Đã gửi nháp' }[job.facebook.state || (job.facebook.published ? 'published' : 'draft')]}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''}${job.facebook.videoId ? ` · video_id <code>${esc(job.facebook.videoId)}</code>` : ''}${job.facebook.via === 'browser' ? ' · qua trình duyệt' : ''} · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
+              ${{ published: 'Đã đăng công khai', scheduled: `Đã hẹn đăng lúc ${job.facebook.scheduledAt ? new Date(job.facebook.scheduledAt).toLocaleString('vi-VN') : ''}`, draft: 'Đã gửi nháp' }[job.facebook.state || (job.facebook.published ? 'published' : 'draft')]}${job.facebook.pageName ? ` lên <b>${esc(job.facebook.pageName)}</b>` : ''}${job.facebook.videoId ? ` · video_id <code>${esc(job.facebook.videoId)}</code>` : ''} · ${new Date(job.facebook.at).toLocaleString('vi-VN')}
               ${job.facebook.file !== job.final?.file ? '<br><b>Lưu ý:</b> bản nháp là video ghép trước đó, không phải bản hiện tại.' : ''}
               ${job.facebook.status?.status?.publishing_phase?.publish_status ? `<br>Facebook: <b>${esc(job.facebook.status.status.video_status)}</b> · ${esc(job.facebook.status.status.publishing_phase.publish_status)}` : ''}
               <div class="row"><button class="small" data-act="fb-refresh">Kiểm tra trạng thái</button>
@@ -327,8 +304,6 @@ function renderJob(job) {
 }
 
 // Chữ trên màn hình (web vẽ lúc ghép): mỗi dòng = nội dung + giây bắt đầu/kết thúc + vị trí.
-function fbVia() { try { return localStorage.getItem('fbVia') || 'browser'; } catch { return 'browser'; } }
-
 function overlayEditor(sc, i, locked) {
   const rows = (sc.overlays || []).map((o, k) => `
     <div class="ov-row" data-k="${k}">
@@ -380,42 +355,12 @@ $('#view-job').addEventListener('change', async (e) => {
   try { await saveOverlays(box); toast('Đã lưu chữ', 1200); } catch (err) { toast(err.message); }
 }, true);
 
-function manualSteps(job, i) {
-  const fileUrl = (rel) => `/files/${job.id}/${rel}`;
-  if (job.mode === 'auto') {
-    const prev = job.scenes[i - 1];
-    const ready = i === 0 || prev?.lastFrame;
-    return `<div class="manual"><div>Tự động: ${job.voice === 'me' ? 'Thành phần + <b>@me</b>' : job.refImage && (job.consistency || 'identity') === 'identity' ? 'Thành phần (ảnh nhân vật' + (i ? ' + khung cuối cảnh trước' : '') + ')' : i ? 'Khung hình (khung cuối cảnh trước)' : 'chỉ prompt'}${job.voice && job.voice !== 'me' ? ` · giọng <b>${esc(job.voice)}</b>` : ''}</div>
-      <div class="row"><button class="small" data-act="auto-run" data-i="${i}" ${currentJob?.busy || !ready ? 'disabled' : ''}>${job.scenes[i].clip ? '↻ Tự tạo lại cảnh này' : '▶ Tự tạo từ cảnh này'}</button>
-      <button class="small" data-act="copy" data-i="${i}">Copy prompt</button></div></div>`;
-  }
-  let how;
-  const identity = job.refImage && (job.consistency || 'identity') === 'identity';
-  if (job.voice === 'me') {
-    how = 'Chế độ <b>Thành phần</b> · hình đại diện <b>@me (Tôi)</b> — mặt + giọng của bạn';
-  } else if (i > 0 && identity) {
-    const prev = job.scenes[i - 1];
-    how = `Chế độ <b>Thành phần</b>${job.voice ? ` · giọng <b>${job.voice === 'me' ? '@me' : esc(job.voice)}</b>` : ''} · 2 ảnh: <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a> + ${prev.lastFrame
-      ? `<a href="${fileUrl(prev.lastFrame)}" download="canh-${i}-cuoi.jpg">khung cuối cảnh ${i}</a>`
-      : `<span class="over">cần clip cảnh ${i} trước</span>`}`;
-  } else if (i === 0 && job.refImage) {
-    how = `Chế độ <b>Ingredients to Video</b> (Thành phần) · thêm <a href="${fileUrl(job.refImage)}" download="nhan-vat.jpg">ảnh nhân vật</a>`;
-  } else if (i === 0) {
-    how = 'Chế độ <b>Text to Video</b> (chỉ prompt)';
-  } else {
-    const prev = job.scenes[i - 1];
-    how = prev.lastFrame
-      ? `Chế độ <b>Frames to Video</b> · khung đầu: <a href="${fileUrl(prev.lastFrame)}" download="canh-${i + 1}-khung-dau.jpg">tải khung cuối cảnh ${i}</a>`
-      : `Chế độ <b>Frames to Video</b> · <span class="over">cần có clip cảnh ${i} trước để lấy khung đầu</span>`;
-  }
-  return `<div class="manual">
-    <div>${how}</div>
-    <div class="row">
-      <button class="small primary" data-act="bridge" data-i="${i}" ${i > 0 && !job.scenes[i - 1].lastFrame ? 'disabled' : ''}>
-        ${bridgeNow?.jobId === job.id && bridgeNow?.index === i ? '⏳ Đã điền — chờ bấm tạo trong Flow' : `Điền cảnh ${i + 1} vào Flow`}</button>
-      <button class="small" data-act="copy" data-i="${i}">Copy prompt</button>
-      ${job.scenes[i].clip ? '' : `<button class="small" data-act="pick" data-i="${i}">Chọn file mp4…</button>`}</div>
-  </div>`;
+// Cách Chrome Flow tạo cảnh này + nút tự tạo lại.
+function sceneSteps(job, i) {
+  const ready = i === 0 || job.scenes[i - 1]?.lastFrame;
+  return `<div class="manual"><div>Tự động: ${job.voice === 'me' ? 'Thành phần + <b>@me</b>' : job.refImage && (job.consistency || 'identity') === 'identity' ? 'Thành phần (ảnh nhân vật' + (i ? ' + khung cuối cảnh trước' : '') + ')' : i ? 'Khung hình (khung cuối cảnh trước)' : 'chỉ prompt'}${job.voice && job.voice !== 'me' ? ` · giọng <b>${esc(job.voice)}</b>` : ''}</div>
+    <div class="row"><button class="small" data-act="auto-run" data-i="${i}" ${currentJob?.busy || !ready ? 'disabled' : ''}>${job.scenes[i].clip ? '↻ Tự tạo lại cảnh này' : '▶ Tự tạo từ cảnh này'}</button>
+    <button class="small" data-act="copy" data-i="${i}">Copy prompt</button></div></div>`;
 }
 
 const filePicker = Object.assign(document.createElement('input'), { type: 'file', accept: 'video/mp4,video/*' });
@@ -575,7 +520,6 @@ function openAccounts() {
   loadFb();
   loadChromeFlow();
   loadChromeBox('fb');
-  $('#flow-status').innerHTML = `Cảnh đang chờ extension: ${bridgeNow ? `cảnh ${bridgeNow.index + 1}` : 'không'}`;
 }
 $('#tab-accounts').addEventListener('click', openAccounts);
 
@@ -857,10 +801,6 @@ $('#view-job').addEventListener('click', async (e) => {
         if (currentJob.scenes.some((s) => s.clip) && !confirm('Viết lại kịch bản sẽ bỏ hết video các cảnh đã tạo. Tiếp tục?')) return;
         await api(`/api/jobs/${id}/script`, { method: 'POST' });
         break;
-      case 'bridge':
-        await api(`/api/jobs/${id}/bridge`, { method: 'POST', body: { i } });
-        toast(`Cảnh ${i + 1} đang được điền vào tab Flow (cần mở sẵn một dự án) — bạn chỉ bấm nút tạo →`, 6000);
-        break;
       case 'auto-run': {
         const n = currentJob.scenes.slice(i).filter((x, k) => k === 0 || !x.clip).length;
         if (!confirm(`Chrome Flow sẽ TỰ ĐIỀN và TỰ BẤM TẠO ${n} cảnh (từ cảnh ${i + 1}) bằng ${currentJob.flowModel || 'Veo 3.1 - Fast'} — mỗi cảnh trừ credit Flow. Tiếp tục?`)) return;
@@ -901,12 +841,10 @@ $('#view-job').addEventListener('click', async (e) => {
         const msg = {
           schedule: `Hẹn đăng Reel này lên "${page}" lúc ${new Date(scheduledAt * 1000).toLocaleString('vi-VN')}? Tới giờ Facebook sẽ TỰ ĐĂNG công khai.`,
           publish: `ĐĂNG CÔNG KHAI Reel này lên "${page}" ngay bây giờ?`,
-          draft: `Lưu Reel này thành NHÁP trên "${page}"?${$('#fb-via').value === 'api' ? ' Lưu ý: nháp tạo qua API khó tìm lại trong Business Suite.' : ''}`,
+          draft: `Lưu Reel này thành NHÁP trên "${page}"?`,
         }[mode];
-        const via = $('#fb-via').value;
-        if (!confirm(`${msg}\n\nCách đăng: ${via === 'browser' ? 'trình duyệt — Chrome Facebook mở Business Suite và tự bấm như người đăng tay' : 'Graph API'}.`)) return;
-        try { localStorage.setItem('fbVia', via); } catch {}
-        await api(`/api/jobs/${id}/facebook`, { method: 'POST', body: { mode, scheduledAt, via } });
+        if (!confirm(`${msg}\n\nChrome Facebook sẽ mở Business Suite và tự đăng như người đăng tay.`)) return;
+        await api(`/api/jobs/${id}/facebook`, { method: 'POST', body: { mode, scheduledAt } });
         break;
       }
       case 'fb-refresh':
@@ -940,8 +878,8 @@ $('#view-job').addEventListener('change', async (e) => {
     toast(el.value ? `Các cảnh điền từ giờ sẽ dùng giọng ${el.value === 'me' ? '@me (giọng của bạn)' : el.value}` : 'Bỏ giọng cố định');
     return refresh(true);
   }
-  if (el.id === 'job-mode' || el.id === 'job-consistency' || el.id === 'job-flow-model') {
-    const key = { 'job-mode': 'mode', 'job-consistency': 'consistency', 'job-flow-model': 'flowModel' }[el.id];
+  if (el.id === 'job-consistency' || el.id === 'job-flow-model') {
+    const key = { 'job-consistency': 'consistency', 'job-flow-model': 'flowModel' }[el.id];
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { [key]: el.value } }).catch((err) => toast(err.message));
     return refresh(true);
   }
