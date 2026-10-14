@@ -77,6 +77,13 @@ async function uploadAndSelect(img, openPicker) {
   const bytes = Uint8Array.from(atob(img.b64), (c) => c.charCodeAt(0));
   window.postMessage({ source: 'adsai', type: 'arm-file', name: img.name, mime: img.mime, buffer: bytes.buffer }, '*');
   await openPicker();
+  // Bảng nhớ tab dùng lần trước (vd. "Hình đại diện" — không có nút tải lên) → chuyển sang tab "Tệp tải lên".
+  if (!byText('button', 'Tải nội dung nghe nhìn')) {
+    const tab = await waitFor(() => [...document.querySelectorAll('[role="tab"]')].find((t) => visible(t) && /Tệp tải lên|Tất cả/.test(t.innerText)), 'tab "Tệp tải lên"', 5000).catch(() => null);
+    if (tab) { press(tab); await sleep(700); }
+  }
+  // Bỏ chọn mục đang được chọn sẵn từ lần trước (để "Thêm vào câu lệnh" chỉ thêm đúng ảnh này).
+  for (const o of document.querySelectorAll('button[role="option"][aria-selected="true"]')) if (visible(o)) { press(o); await sleep(250); }
   const up = await waitFor(() => byText('button', 'Tải nội dung nghe nhìn'), 'nút "Tải nội dung nghe nhìn lên"');
   press(up);
   // Đợi ảnh tải xong: mục trong danh sách (button[role=option]) có tên file và đã có ảnh thu nhỏ
@@ -196,6 +203,19 @@ async function addVoice(name) {
   if (add !== 'closed') press(add);
   await sleep(1000);
   if (composerChips().length <= before) throw new Error(`Chưa gắn được giọng ${name} — thử "Điền lại"`);
+}
+
+// Chế độ tạo ẢNH (Nano Banana): dùng cho ảnh bối cảnh / trang phục (không có người) gắn vào mọi cảnh.
+async function fillImage(prompt) {
+  if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow');
+  const btn = await openSettings();
+  await pickRadio('Hình ảnh');
+  await pickRadio('9:16');
+  await pickRadio('x1', false);
+  if (byText('button[role=radio]', '9:16')) press(btn);
+  await sleep(400);
+  await clearComposerMedia();
+  await setPrompt(prompt);
 }
 
 async function fill(p, model) {

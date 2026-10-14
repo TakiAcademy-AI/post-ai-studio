@@ -93,6 +93,14 @@ Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ản
 Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
 dấu trên màn hình (Veo vẽ sai dấu).
 
+## Bối cảnh & trang phục đồng nhất (giọng @me)
+
+Hình đại diện "Tôi" mang theo nền + quần áo của video selfie lúc tạo nó, nên nếu chỉ gắn @me thì Veo hay lấy nền/áo đó và mỗi cảnh một căn phòng.
+Web xử lý tự động trước cảnh 1: Claude viết mô tả → Flow (Nano Banana) tạo **1 ảnh căn phòng trống + 1 ảnh trang phục** (không có người, nên
+không bị chặn "người nổi tiếng") → gắn vào **mọi cảnh** cùng @me (đủ 3 thành phần), kèm câu "SET & OUTFIT REFERENCES" có mô tả ngắn của 2 ảnh
+(vị trí đèn, màu áo, "áo không in hình/logo"). Trang video có ô **Bối cảnh & trang phục cố định** xem 2 ảnh và **Tạo lại ảnh bối cảnh**.
+Prompt cảnh quá dài để chèn câu này thì tự rút gọn cho vừa 4000 ký tự.
+
 ## Giọng đọc đồng nhất
 
 Veo tự tạo giọng mới cho từng clip nên mỗi cảnh một giọng. Chọn **@me — giọng của tôi** (mặc định) để dùng hình đại
