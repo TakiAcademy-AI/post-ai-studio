@@ -198,6 +198,43 @@ async function addVoice(name) {
   if (composerChips().length <= before) throw new Error(`Chưa gắn được giọng ${name} — thử "Điền lại"`);
 }
 
+// Chọn một ảnh CÓ SẴN trong thư viện dự án (ảnh Flow đã tạo) làm thành phần — không tải gì lên. key = "/image/<uuid>".
+async function addProjectImage(key) {
+  const plus = await waitFor(() => document.querySelector('button[aria-label="Thêm thành phần vào ô nhập câu lệnh"]'), 'nút + thêm thành phần');
+  press(plus);
+  const tab = await waitFor(() => [...document.querySelectorAll('[role="tab"]')].find((t) => visible(t) && /Hình ảnh/.test(t.innerText)), 'tab "Hình ảnh"');
+  press(tab);
+  await sleep(800);
+  // Bỏ chọn mục còn được chọn từ lần trước để chỉ thêm đúng ảnh này.
+  for (const o of document.querySelectorAll('button[role="option"][aria-selected="true"]')) if (visible(o)) { press(o); await sleep(250); }
+  const keyOf = (o) => { const i = o.querySelector('img'); try { return i ? new URL(i.src, location.href).pathname : ''; } catch { return ''; } };
+  const opt = await waitFor(() => [...document.querySelectorAll('button[role="option"]')].find((o) => visible(o) && keyOf(o) === key),
+    'ảnh nhân vật trong thư viện dự án', 10000);
+  const before = composerChips().length;
+  await selectOption(opt);
+  const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!byText('[role="tab"]', 'Hình ảnh') && 'closed'), 'nút "Thêm vào câu lệnh"', 6000);
+  if (add !== 'closed') press(add);
+  await sleep(1000);
+  if (composerChips().length <= before) throw new Error('Chưa gắn được ảnh nhân vật vào câu lệnh');
+}
+
+// Chế độ tạo ẢNH (Nano Banana) có gắn hình đại diện @me: tạo "ảnh nhân vật" mặc đúng trang phục DNA trong bối cảnh,
+// dùng làm ảnh tham chiếu (chọn thẳng trong thư viện dự án, không tải lên) cho các cảnh video.
+async function fillLookImage(prompt) {
+  if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow');
+  const btn = await openSettings();
+  await pickRadio('Hình ảnh');
+  await pickRadio('9:16');
+  await pickRadio('x1', false);
+  if (byText('button[role=radio]', '9:16')) press(btn);
+  await sleep(400);
+  await clearComposerMedia();
+  status('Đang gắn hình đại diện "Tôi" (@me)…');
+  await addAvatar();
+  status('Đang điền prompt ảnh…');
+  await setPrompt(prompt);
+}
+
 async function fill(p, model) {
   if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow (bấm "Dự án mới" hoặc một dự án có sẵn) rồi bấm lại');
   status('Đang chỉnh cài đặt…');
@@ -211,6 +248,7 @@ async function fill(p, model) {
       await addIngredient(img);
     }
   }
+  if (p.lookKey && p.mode === 'ingredients') { status('Đang gắn ảnh nhân vật (trang phục DNA) từ thư viện dự án…'); await addProjectImage(p.lookKey); }
   if (p.voice === 'me' && p.mode !== 'frames') { status('Đang gắn hình đại diện "Tôi" (@me)…'); await addAvatar(); }
   else if (p.voice && p.mode !== 'frames') { status(`Đang gắn giọng ${p.voice}…`); await addVoice(p.voice); }
   status('Đang điền prompt…');

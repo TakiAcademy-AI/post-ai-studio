@@ -349,3 +349,9 @@ details[open] summary::before { transform: rotate(90deg); }
   .auto-box .row > button, .auto-box .row > .badge { flex: 1 1 100%; text-align: center; }
   .acc-body .row > button { flex: 1 1 auto; }
 }
+
+/* Ảnh nhân vật (@me + trang phục DNA) */
+.look { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 0 0 12px; background: #fbfbff; }
+.look img, .look-ph { width: 84px; aspect-ratio: 9/16; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.look-ph { border: 1.5px dashed var(--line-2); display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
+@media (max-width: 900px) { .look { grid-template-columns: minmax(0, 1fr); } }
