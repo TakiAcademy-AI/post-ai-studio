@@ -93,13 +93,15 @@ Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ản
 Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
 dấu trên màn hình (Veo vẽ sai dấu).
 
-## Trang phục đồng nhất (giọng @me) — ảnh nhân vật
+## Trang phục đồng nhất (giọng @me) — khoá áo + tự kiểm tra
 
-Hình đại diện "Tôi" mang theo quần áo/nền của video selfie gốc, nên chỉ gắn @me thì mỗi cảnh một kiểu áo. Trước cảnh 1, web cho
-Flow **tạo ảnh ở chế độ Hình ảnh (Nano Banana) có gắn @me**: chính bạn mặc đúng trang phục trong DNA, trong bối cảnh của video.
-Ảnh nằm trong thư viện dự án Flow của video → mọi cảnh **chọn thẳng ảnh đó** (tab Hình ảnh của nút +) cùng @me — không tải ảnh nào lên,
-kèm câu "LOOK REFERENCE" trong prompt. Trang video có ô **Ảnh nhân vật** để xem và **Tạo lại ảnh nhân vật**. Ảnh gắn với dự án Flow:
-đổi dự án thì web tự tạo lại. Bị chặn "người nổi tiếng" đến bậc cuối thì bỏ ảnh nhân vật, chỉ còn @me.
+Hình đại diện "Tôi" mang theo áo của video selfie gốc, và **@me chiếm hết 3 suất ảnh tham chiếu của Flow** — gắn thêm bất kỳ ảnh nào
+(ảnh nhân vật, ảnh áo, tải lên hay do Flow tạo) đều bị Flow đánh lỗi "Đã đạt đến số lượng thành phần hình ảnh tối đa (cho phép 3)" và bỏ qua.
+Giọng "Tôi" cũng chỉ có trong @me. Nên trang phục được khoá bằng chữ và kiểm tra tự động:
+1. Claude chuyển trang phục DNA thành mô tả chính xác + danh sách "không được mặc" (vd. NOT a crew-neck T-shirt) → "OUTFIT LOCK" đầu mọi prompt.
+2. Mỗi cảnh xong: cắt 2 khung hình, Claude xem và so với DNA. Sai áo → nhắc trang phục ở cả CHARACTER LOCK và cuối prompt, kèm "lần trước ra …",
+   tạo lại (tối đa 3 lần, mỗi lần tốn credit Flow). Hết lượt vẫn sai thì giữ clip và báo trong nhật ký.
+Mỗi cảnh hiện kết quả kiểm tra áo (✓/✗ + áo thấy được). Cách bền nhất: quay lại video selfie hình đại diện mặc bộ đồ hay dùng.
 
 ## Giọng đọc đồng nhất
 
