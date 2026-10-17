@@ -13,6 +13,8 @@ import { VOICES, isVoice } from './lib/voices.js';
 import * as FC from './lib/flow-chrome.js';
 import * as FBC from './lib/fb-chrome.js';
 import * as FBB from './lib/fb-browser.js';
+import * as FI from './lib/fb-insights.js';
+import * as PB from './lib/playbook.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
@@ -222,6 +224,48 @@ app.post('/api/posts/:id/sync', wrap(async (req, res) => res.json(await P.syncPo
 app.post('/api/posts/:id/reschedule', wrap(async (req, res) => res.json(await P.reschedule(req.params.id, Number(req.body?.at)))));
 app.post('/api/posts/:id/cancel', wrap(async (req, res) => res.json(await P.cancel(req.params.id))));
 app.post('/api/jobs/:id/facebook/refresh', action((job) => J.refreshFacebook(job)));
+
+// ---------- Hiệu quả & sổ tay tối ưu (vòng phản hồi) ----------
+let insightsRun = null;
+let insightsState = { lastError: null, lastRunAt: null };
+function insightPages() {
+  const pages = new Map();
+  const bp = FBB.browserPage();
+  if (bp?.id) pages.set(bp.id, bp.name);
+  for (const p of P.listPosts()) if (p.pageId && !pages.has(p.pageId)) pages.set(p.pageId, p.pageName);
+  return [...pages].filter(([id]) => id).map(([pageId, pageName]) => ({ pageId, pageName }));
+}
+async function collectInsights() {
+  if (insightsRun) return insightsRun;
+  insightsRun = (async () => {
+    const out = [];
+    try {
+      if (!FBC.source()) throw new Error('Chưa chuẩn bị Chrome Facebook (tab Tài khoản)');
+      for (const pg of insightPages()) out.push(await FI.collectPage(pg));
+      insightsState = { lastError: null, lastRunAt: new Date().toISOString() };
+    } catch (e) {
+      insightsState = { lastError: e.message, lastRunAt: new Date().toISOString() };
+      throw e;
+    } finally {
+      insightsRun = null;
+    }
+    return out;
+  })();
+  return insightsRun;
+}
+// Tự thu mỗi 6 giờ (lần đầu sau 3 phút khởi động); lỗi (vd. chưa đăng nhập) chỉ ghi lại, không làm sập server.
+setTimeout(() => { collectInsights().catch(() => {}); setInterval(() => collectInsights().catch(() => {}), 6 * 3600 * 1000); }, 3 * 60 * 1000);
+
+app.get('/api/insights', (_req, res) => {
+  const d = FI.readInsights();
+  res.json({ rows: PB.performanceRows(), pages: Object.fromEntries(Object.entries(d.pages || {}).map(([id, pg]) => [id, { name: pg.name, collectedAt: pg.collectedAt }])), running: Boolean(insightsRun), ...insightsState });
+});
+app.post('/api/insights/collect', wrap(async (_req, res) => res.json(await collectInsights())));
+app.get('/api/playbook', (_req, res) => res.json(PB.readPlaybook()));
+app.post('/api/playbook/analyze', wrap(async (_req, res) => res.json(await PB.analyze())));
+app.post('/api/playbook/approve', wrap(async (req, res) => res.json(PB.approve(req.body?.text))));
+app.post('/api/playbook/enabled', wrap(async (req, res) => res.json(PB.setEnabled(req.body?.on))));
+app.post('/api/playbook/discard', wrap(async (_req, res) => res.json(PB.discardDraft())));
 
 app.listen(config.port, config.host, () => {
   console.log(`Post AI Studio: http://${config.host}:${config.port}`);

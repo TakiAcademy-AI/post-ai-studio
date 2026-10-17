@@ -272,7 +272,7 @@ details[open] summary::before { transform: rotate(90deg); }
   .side-toggle .chev { transition: transform .15s; color: var(--muted); }
   .side.open .side-toggle .chev { transform: rotate(180deg); }
   #btn-new.big { padding: 10px 14px; font-size: 14px; }
-  body[data-view="posts"] .side, body[data-view="accounts"] .side { display: none; }
+  body[data-view="posts"] .side, body[data-view="accounts"] .side, body[data-view="perf"] .side { display: none; }
   main { padding: 16px 16px 60px; }
   .card { padding: 18px 16px; }
   .grid-form, .scene, .final, .post { grid-template-columns: minmax(0, 1fr); }
@@ -349,3 +349,13 @@ details[open] summary::before { transform: rotate(90deg); }
   .auto-box .row > button, .auto-box .row > .badge { flex: 1 1 100%; text-align: center; }
   .acc-body .row > button { flex: 1 1 auto; }
 }
+
+/* Tab Hiệu quả */
+.perf-wrap { overflow-x: auto; margin: 0 -4px; }
+table.perf { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+table.perf th, table.perf td { text-align: right; padding: 8px 8px; border-top: 1px solid var(--line); white-space: nowrap; }
+table.perf th { color: var(--muted); font-weight: 600; font-size: 12px; border-top: 0; }
+table.perf td.t, table.perf th:nth-child(2) { text-align: left; white-space: normal; min-width: 260px; }
+table.perf th:first-child, table.perf td:first-child { text-align: left; color: var(--muted); }
+#pb-card textarea { font-size: 13.5px; line-height: 1.55; }
+@media (max-width: 900px) { .tab { font-size: 13px; padding: 7px 4px; white-space: nowrap; } }

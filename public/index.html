@@ -16,7 +16,7 @@
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.95 2.55L22.5 17.5l-2.55.95L19 21l-.95-2.55L15.5 17.5l2.55-.95z"/></svg></span>
     <span>Post AI <b>Studio</b></span>
   </div>
-  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
+  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
   <div id="status-pills" class="pills"></div>
 </header>
 
@@ -113,6 +113,22 @@
         </div>
       </div>
       <div id="posts-list"></div>
+    </section>
+
+    <section id="view-perf" hidden>
+      <div class="card">
+        <div class="job-head">
+          <div class="grow"><h1>Hiệu quả & sổ tay tối ưu</h1>
+            <div class="muted">Số liệu Reel đọc từ Meta Business Suite (Chrome Facebook, tự cập nhật mỗi 6 giờ). Claude so sánh video tốt / kém → đề xuất sổ tay; bạn duyệt thì sổ tay mới được dùng khi viết kịch bản.</div>
+            <div id="perf-status" class="muted" style="font-size:12.5px;margin-top:6px"></div></div>
+          <button id="perf-collect" class="primary">Cập nhật số liệu</button>
+        </div>
+      </div>
+      <div class="card" id="pb-card"></div>
+      <div class="card">
+        <h2>Xếp hạng Reel <small class="muted" style="display:inline;font-weight:500">· theo % thời lượng được xem (bài ≥ 24 giờ)</small></h2>
+        <div class="perf-wrap"><table class="perf" id="perf-table"></table></div>
+      </div>
     </section>
 
     <section id="view-accounts" hidden>

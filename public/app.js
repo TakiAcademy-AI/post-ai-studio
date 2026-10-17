@@ -29,10 +29,11 @@ function toast(msg, ms = 4000) {
 }
 
 function show(view) {
-  for (const v of ['new', 'job', 'empty', 'posts', 'accounts']) $(`#view-${v}`).hidden = v !== view;
+  for (const v of ['new', 'job', 'empty', 'posts', 'accounts', 'perf']) $(`#view-${v}`).hidden = v !== view;
   $('#tab-posts').classList.toggle('active', view === 'posts');
   $('#tab-accounts').classList.toggle('active', view === 'accounts');
-  $('#tab-videos').classList.toggle('active', !['posts', 'accounts'].includes(view));
+  $('#tab-perf').classList.toggle('active', view === 'perf');
+  $('#tab-videos').classList.toggle('active', !['posts', 'accounts', 'perf'].includes(view));
   document.body.dataset.view = view;
   $('.side').classList.remove('open'); // mobile: mở video xong thì gấp danh sách lại
   if (typeof sideLabel === 'function') sideLabel();
@@ -978,3 +979,76 @@ $('#view-job').addEventListener('change', async (e) => {
   if (first) openJob(first.dataset.id);
   else show('new');
 })();
+
+// ---------- Hiệu quả & sổ tay tối ưu ----------
+let perfTimer = null;
+async function openPerf() {
+  currentId = null;
+  stopPoll();
+  show('perf');
+  await loadPerf();
+}
+$('#tab-perf').addEventListener('click', openPerf);
+
+const fmtN = (n) => (n == null ? '–' : Number(n).toLocaleString('vi-VN'));
+async function loadPerf() {
+  clearTimeout(perfTimer);
+  const [ins, pb] = await Promise.all([api('/api/insights').catch((e) => ({ rows: [], lastError: e.message })), api('/api/playbook').catch(() => ({}))]);
+  const pages = Object.values(ins.pages || {});
+  $('#perf-status').innerHTML = (ins.running ? '<span class="busy"><span class="spin"></span>Đang đọc số liệu từ Business Suite…</span> ' : '')
+    + (pages.length ? pages.map((p) => `${esc(p.name)}: cập nhật ${p.collectedAt ? new Date(p.collectedAt).toLocaleString('vi-VN') : 'chưa'}`).join(' · ') : 'Chưa có số liệu — bấm "Cập nhật số liệu".')
+    + (ins.lastError ? ` <span class="over">· Lỗi lần trước: ${esc(ins.lastError)}</span>` : '');
+  $('#perf-collect').disabled = Boolean(ins.running);
+  if (ins.running) perfTimer = setTimeout(loadPerf, 5000);
+
+  const rows = (ins.rows || []).filter((r) => r.ageH >= 24 && r.durationSec).sort((a, b) => (b.derived.watchPct ?? -1) - (a.derived.watchPct ?? -1));
+  const young = (ins.rows || []).filter((r) => r.ageH < 24).length;
+  $('#perf-table').innerHTML = rows.length ? `
+    <thead><tr><th>#</th><th>Reel</th><th>Đăng</th><th>Dài</th><th>Lượt xem</th><th>Tiếp cận</th><th>Xem TB</th><th>% xem</th><th>Giữ 3s</th><th>Tương tác</th><th>Chia sẻ</th><th>Bình luận</th><th>Theo dõi</th></tr></thead>
+    <tbody>${rows.map((r, i) => `<tr>
+      <td>${i + 1}</td>
+      <td class="t">${r.source === 'Post AI' ? '<span class="badge done">Post AI</span> ' : ''}${esc(r.title.slice(0, 90))}</td>
+      <td>${new Date(r.postedAt).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+      <td>${r.durationSec ?? '–'}s</td><td>${fmtN(r.metrics.views)}</td><td>${fmtN(r.metrics.reach)}</td>
+      <td>${r.metrics.avgWatchSec ?? '–'}s</td><td><b>${r.derived.watchPct ?? '–'}%</b></td><td>${r.derived.hold3sPct ?? '–'}%</td>
+      <td>${fmtN(r.metrics.engagements)} <small class="muted" style="display:inline">(${r.derived.engRatePct ?? '–'}%)</small></td>
+      <td>${fmtN(r.metrics.shares)}</td><td>${fmtN(r.metrics.comments)}</td><td>${fmtN(r.metrics.follows)}</td></tr>`).join('')}</tbody>`
+    : '<tbody><tr><td class="muted">Chưa có Reel nào đủ 24 giờ.</td></tr></tbody>';
+
+  const d = pb.draft;
+  $('#pb-card').innerHTML = `
+    <h2>Sổ tay tối ưu ${pb.text ? `<span class="badge ${pb.enabled ? 'done' : ''}">${pb.enabled ? 'đang dùng khi viết kịch bản' : 'đang tắt'}</span>` : ''}</h2>
+    <p class="muted" style="margin:0 0 10px;font-size:13px">Claude đọc công thức + số liệu ${rows.length} Reel (≥ 24 giờ) và đề xuất quy tắc. Dưới ~20–30 video, quy luật còn nhiều may rủi — xem như gợi ý. ${young ? `(${young} Reel dưới 24 giờ chưa tính.)` : ''}</p>
+    ${d ? `<div class="manual" style="border-color:rgba(109,93,252,.35)">
+      <b>Bản đề xuất mới</b> · dựa trên ${d.basedOn} Reel · độ tin cậy <b>${esc(d.confidence)}</b> · ${new Date(d.at).toLocaleString('vi-VN')}
+      <textarea id="pb-draft" rows="10" style="margin-top:8px">${esc(d.text)}</textarea>
+      <details><summary>Căn cứ so sánh</summary><div style="white-space:pre-wrap;font-size:13px">${esc(d.evidence)}</div></details>
+      ${d.topics?.length ? `<div style="font-size:13px;margin-top:6px"><b>Chủ đề nên làm tiếp:</b> ${d.topics.map((t) => `<a href="#" class="pb-topic" data-t="${esc(t)}">${esc(t)}</a>`).join(' · ')}</div>` : ''}
+      <div class="row"><button class="primary small" id="pb-approve">Duyệt & dùng sổ tay này</button><button class="small" id="pb-discard">Bỏ bản đề xuất</button></div>
+    </div>` : ''}
+    ${pb.text ? `<label style="margin-top:10px">Sổ tay đang áp dụng (sửa được)
+      <textarea id="pb-text" rows="8">${esc(pb.text)}</textarea></label>
+      ${pb.topics?.length ? `<div style="font-size:13px;margin-top:6px"><b>Chủ đề gợi ý:</b> ${pb.topics.map((t) => `<a href="#" class="pb-topic" data-t="${esc(t)}">${esc(t)}</a>`).join(' · ')}</div>` : ''}
+      <div class="row"><button class="small" id="pb-save">Lưu sửa đổi</button>
+        <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="pb-enabled" ${pb.enabled ? 'checked' : ''} style="width:auto"> Dùng sổ tay khi viết kịch bản mới</label></div>` : ''}
+    <div class="row"><button class="${pb.text ? '' : 'primary'}" id="pb-analyze" ${rows.length ? '' : 'disabled'}>${pb.text ? 'Phân tích lại & đề xuất cập nhật' : 'Phân tích & đề xuất sổ tay'}</button></div>`;
+}
+
+$('#perf-collect').addEventListener('click', async (e) => {
+  e.target.disabled = true;
+  api('/api/insights/collect', { method: 'POST' }).then(() => toast('Đã cập nhật số liệu')).catch((err) => toast(err.message, 8000)).finally(loadPerf);
+  setTimeout(loadPerf, 800);
+});
+$('#pb-card').addEventListener('click', async (e) => {
+  const t = e.target;
+  try {
+    if (t.classList.contains('pb-topic')) { e.preventDefault(); show('new'); $('#form-new [name=topic]').value = t.dataset.t; $('#form-new [name=topic]').focus(); return; }
+    if (t.id === 'pb-analyze') { t.disabled = true; t.textContent = 'Claude đang phân tích…'; await api('/api/playbook/analyze', { method: 'POST' }); return loadPerf(); }
+    if (t.id === 'pb-approve') { await api('/api/playbook/approve', { method: 'POST', body: { text: $('#pb-draft').value } }); toast('Đã duyệt — sổ tay sẽ dùng khi viết kịch bản mới'); return loadPerf(); }
+    if (t.id === 'pb-discard') { await api('/api/playbook/discard', { method: 'POST' }); return loadPerf(); }
+    if (t.id === 'pb-save') { await api('/api/playbook/approve', { method: 'POST', body: { text: $('#pb-text').value } }); toast('Đã lưu sổ tay'); return loadPerf(); }
+  } catch (err) { toast(err.message, 8000); loadPerf(); }
+});
+$('#pb-card').addEventListener('change', async (e) => {
+  if (e.target.id === 'pb-enabled') { await api('/api/playbook/enabled', { method: 'POST', body: { on: e.target.checked } }).catch((err) => toast(err.message)); loadPerf(); }
+});

@@ -25,6 +25,20 @@ Bài đăng KHÔNG đi qua Graph API — web đăng như người đăng tay qua
 
 **Page để đăng** chọn ngay trong thẻ Chrome Facebook ("Lấy danh sách Page" đọc từ bảng chuyển tài sản của Business Suite, chọn Page → web đọc mã Page) — không cần kết nối API. Chrome Facebook dùng cổng `9335` (`FB_CDP_PORT`).
 
+## Vòng phản hồi: Hiệu quả & sổ tay tối ưu
+
+1. **Công thức**: mỗi lần đăng, web lưu "công thức" của video vào bài trong Lịch đăng (chủ đề, hook, câu mở đầu, số cảnh, độ dài, số từ,
+   có CTA, giọng, model, chèn chữ, độ dài caption, số hashtag, giờ/thứ đăng — `lib/recipe.js`).
+2. **Số liệu**: Chrome Facebook đọc bảng "Bài viết đã đăng" của Business Suite (90 ngày, mọi Reel của Page — cả bài không do web đăng):
+   tiếp cận, lượt xem, người xem, theo dõi, tương tác, thích, bình luận, chia sẻ, lưu, thời gian xem, **xem trung bình**, lượt xem ≥3s.
+   Tự cập nhật mỗi 6 giờ (lần đầu 3 phút sau khi bật server) hoặc bấm **Cập nhật số liệu** ở tab **Hiệu quả**. Lưu `data/insights.json`
+   (mỗi bài nhiều mốc). Chỉ số so sánh: % thời lượng được xem, giữ 3s, tỉ lệ tương tác, chia sẻ/1000 tiếp cận.
+3. **Sổ tay**: **Phân tích & đề xuất sổ tay** → Claude so Reel tốt / kém (chỉ bài ≥ 24 giờ) → bản đề xuất + căn cứ + 5 chủ đề nên làm.
+   Bạn sửa / **Duyệt** thì sổ tay mới được đưa vào brief khi viết kịch bản mới (tắt được). Yêu cầu nhập trong form luôn được ưu tiên hơn sổ tay.
+   Bấm một chủ đề gợi ý để mở form Video mới điền sẵn.
+
+Không tự đăng hay tự tạo video theo sổ tay — vẫn do bạn bấm. Mốc code trước khi có tính năng này: tag `backup-truoc-feedback-loop`.
+
 ## Chạy
 
 ```bash
