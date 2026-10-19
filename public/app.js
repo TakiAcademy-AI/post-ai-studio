@@ -1091,7 +1091,7 @@ async function loadAuto(fill = false) {
     $('#ap-scenes').value = t.sceneCount;
     $('#ap-voice').innerHTML = '<option value="">Không cố định</option>' + (window.voiceOpts ? window.voiceOpts(t.voice) : '');
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
-    for (const k of ['character', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
+    for (const k of ['character', 'setting', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-topics').value = d.topics.join('\n');
   }
   const planBySlot = new Map(d.plan.map((p) => [p.slot, p]));
@@ -1118,7 +1118,7 @@ function apForm() {
     requireApproval: $('#ap-approval').checked,
     channel: $('#ap-channel').value,
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
-      ...Object.fromEntries(['character', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
+      ...Object.fromEntries(['character', 'setting', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
   };
 }
 $('#view-auto').addEventListener('click', async (e) => {

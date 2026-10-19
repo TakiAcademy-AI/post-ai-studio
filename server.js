@@ -125,6 +125,7 @@ app.post('/api/jobs', upload.single('refImage'), wrap(async (req, res) => {
     audience: b.audience?.trim() || '',
     cta: b.cta?.trim() || '',
     character: b.character?.trim() || '',
+    setting: b.setting?.trim() || '',
     mustSay: b.mustSay?.trim() || '',
     avoid: b.avoid?.trim() || '',
     tone: b.tone?.trim() || '',

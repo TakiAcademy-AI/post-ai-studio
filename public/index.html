@@ -66,6 +66,10 @@
         <label class="full">Nhân vật / character DNA
           <textarea name="character" rows="2" placeholder="VD: Nam 35 tuổi, kính gọng đen, áo sơ mi trắng, đồng hồ bạc, giọng miền Bắc ấm, tự nhiên"></textarea>
         </label>
+        <label class="full">Bối cảnh & góc quay
+          <textarea name="setting" rows="2" placeholder="VD: Nhân vật ngồi trong phòng đọc sách, chiếm 80% khung hình, ánh sáng chiếu đều mặt, ngồi đối diện camera chuẩn bị chia sẻ. Các phân cảnh chung 1 góc quay."></textarea>
+          <small class="muted">Áp dụng bắt buộc cho mọi cảnh (căn phòng, khung hình, ánh sáng, góc máy). Để trống = Claude tự chọn theo chủ đề.</small>
+        </label>
         <label>Ảnh tham chiếu nhân vật
           <input type="file" name="refImage" accept="image/*">
           <small class="muted">Để trống ô mô tả nhân vật thì Claude tự đọc ảnh để mô tả</small>
@@ -153,6 +157,7 @@
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
             <label>Giọng đọc<select id="ap-voice"></select></label>
             <label class="full">Nhân vật / DNA (trang phục…)<input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
+            <label class="full">Bối cảnh & góc quay <small class="muted" style="display:inline">(mọi video, mọi cảnh)</small><textarea id="ap-setting" rows="2" placeholder="VD: Ngồi trong phòng đọc sách, chiếm 80% khung hình, ánh sáng đều mặt, đối diện camera; mọi cảnh chung 1 góc quay."></textarea></label>
             <label>Đối tượng xem<input id="ap-audience"></label>
             <label>Tông giọng<input id="ap-tone"></label>
             <label>CTA <small class="muted" style="display:inline">(trống = không có)</small><input id="ap-cta"></label>
