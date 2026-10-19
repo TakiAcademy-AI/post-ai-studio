@@ -149,7 +149,16 @@
           <h2>Lịch đăng mỗi ngày</h2>
           <div class="row" id="ap-slots" style="margin-top:0"></div>
           <div class="row"><button class="small" id="ap-slot-add">＋ Thêm khung giờ</button>
-            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ap-approval" style="width:auto"> Cần tôi duyệt từng video trước khi hẹn đăng</label></div>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ap-approval" style="width:auto"> Cần tôi duyệt từng video (tắt tự chấm)</label></div>
+          <div class="manual" style="margin-top:10px">
+            <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="ap-review" style="width:auto"> <b>Tự chấm khả năng viral &amp; tự đăng</b></label>
+            <div class="muted" style="font-size:12.5px;margin:4px 0 8px">Claude xem khung hình từng cảnh + lời thoại + caption, chấm 0–100 theo sổ tay số liệu của Page (hook 2 giây đầu, xung đột cụ thể, độ dài, câu kết, lỗi hình: chữ lạ / sai áo / méo mặt). Đạt ngưỡng → sửa chính tả caption rồi tự hẹn đăng. Chưa đạt → làm lại cùng chủ đề theo nhận xét.</div>
+            <div class="row" style="margin-top:0">
+              <label style="font-weight:400">Điểm tự đăng ≥ <input type="number" id="ap-minscore" min="30" max="95" style="width:70px;display:inline-block"></label>
+              <label style="font-weight:400">Làm lại tối đa <input type="number" id="ap-maxredo" min="0" max="4" style="width:60px;display:inline-block"> lần</label>
+              <label style="font-weight:400">Hết lượt vẫn đăng nếu ≥ <input type="number" id="ap-fallback" min="0" max="95" style="width:70px;display:inline-block"></label>
+            </div>
+          </div>
           <small class="muted">Giờ Việt Nam. Web làm trước video cho các khung giờ trong ~20 giờ tới (mỗi video ~10–25 phút), mỗi lúc 1 video.</small>
           <h2 style="margin-top:18px">Định vị kênh</h2>
           <textarea id="ap-channel" rows="3" placeholder="VD: Kênh chia sẻ chuyện hôn nhân – gia đình cho phụ nữ 25–45 tuổi: mẹ chồng nàng dâu, chồng nhu nhược, tiền bạc vợ chồng. Giọng chân thành, sâu sắc, không phán xét."></textarea>

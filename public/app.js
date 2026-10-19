@@ -191,6 +191,10 @@ function renderJob(job) {
       </div>
     </div>`;
 
+  const reviewBox = job.review ? `
+    <div class="card"><h2>Tự chấm khả năng viral: <span class="${job.review.score >= 70 ? '' : 'over'}">${job.review.score}/100</span> · ${esc(job.review.verdict)}</h2>
+      <div style="font-size:13.5px"><b>Điểm mạnh:</b> ${esc(job.review.strengths)}<br><b>Điểm trừ:</b> ${esc(job.review.issues)}${job.review.verdict !== 'đăng' ? `<br><b>Cách sửa:</b> ${esc(job.review.fixes)}` : ''}</div></div>` : '';
+
   const genBar = `
     <div class="card">
       <h2>Tạo video trên Flow (tự động)</h2>
@@ -312,7 +316,7 @@ function renderJob(job) {
       </div>
     </div>`;
 
-  $('#view-job').innerHTML = head + summary + genBar + scenes + final + logCard(job);
+  $('#view-job').innerHTML = head + reviewBox + summary + genBar + scenes + final + logCard(job);
 }
 
 // Chữ trên màn hình (web vẽ lúc ghép): mỗi dòng = nội dung + giây bắt đầu/kết thúc + vị trí.
@@ -1086,6 +1090,8 @@ async function loadAuto(fill = false) {
   if (fill) {
     renderSlots(d.slots);
     $('#ap-approval').checked = d.requireApproval;
+    $('#ap-review').checked = d.autoReview && !d.requireApproval;
+    $('#ap-minscore').value = d.minScore; $('#ap-maxredo').value = d.maxRedo; $('#ap-fallback').value = d.fallbackScore;
     $('#ap-channel').value = d.channel || '';
     const t = d.template;
     $('#ap-scenes').value = t.sceneCount;
@@ -1096,16 +1102,17 @@ async function loadAuto(fill = false) {
   }
   const planBySlot = new Map(d.plan.map((p) => [p.slot, p]));
   const rows = [...new Set([...d.upcoming, ...d.plan.slice(0, 15).map((p) => p.slot)])].sort().reverse().slice(0, 18);
-  const ST = { 'đang làm': 'running', 'chờ duyệt': 'stale', 'đã hẹn': 'done', 'lỗi': 'error', 'bỏ qua': 'draft' };
+  const ST = { 'đang làm': 'running', 'chờ duyệt': 'stale', 'đã hẹn': 'done', 'lỗi': 'error', 'bỏ qua': 'draft', 'không đạt': 'error' };
   $('#ap-plan').innerHTML = rows.length ? rows.map((slot) => {
     const p = planBySlot.get(slot);
     const future = Date.parse(slot) > Date.now();
     return `<div class="ap-row">
       <div class="when">${vnTime(slot)}</div>
       <div class="grow">${p ? `<span class="badge ${ST[p.status] || ''}">${esc(p.status)}${p.step ? ` · ${esc(p.step)}` : ''}</span> ${esc(p.topic || '')}
+        ${p.score != null ? ` · <b>${p.score}/100</b>` : ''}${p.attempts?.length > 1 ? ` <small class="muted" style="display:inline">(${p.attempts.map((a) => a.score).join(' → ')})</small>` : ''}
         ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
-      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${future && p && ['chờ duyệt', 'bỏ qua', 'lỗi'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
+      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${future && p && ['chờ duyệt', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
   }).join('') : '<div class="muted">Chưa có khung giờ nào.</div>';
   $('#ap-log').textContent = (d.log || []).map((l) => `[${vnTime(l.at)}] ${l.msg}`).join('\n');
@@ -1116,6 +1123,7 @@ function apForm() {
   return {
     slots: [...$('#ap-slots').querySelectorAll('input[type=time]')].map((i) => i.value).filter(Boolean),
     requireApproval: $('#ap-approval').checked,
+    autoReview: $('#ap-review').checked, minScore: $('#ap-minscore').value, maxRedo: $('#ap-maxredo').value, fallbackScore: $('#ap-fallback').value,
     channel: $('#ap-channel').value,
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
       ...Object.fromEntries(['character', 'setting', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
@@ -1142,6 +1150,10 @@ $('#view-auto').addEventListener('click', async (e) => {
     }
     if (t.dataset.apSkip) { await api('/api/autopilot/skip', { method: 'POST', body: { slot: t.dataset.apSkip } }); return loadAuto(false); }
   } catch (err) { toast(err.message, 8000); loadAuto(false); }
+});
+$('#view-auto').addEventListener('change', (e) => {
+  if (e.target.id === 'ap-approval' && e.target.checked) $('#ap-review').checked = false;
+  if (e.target.id === 'ap-review' && e.target.checked) $('#ap-approval').checked = false;
 });
 $('#ap-enabled').addEventListener('change', async (e) => {
   const on = e.target.checked;

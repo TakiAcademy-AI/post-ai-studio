@@ -46,6 +46,11 @@ tông giọng, CTA, điều cấm, model) và hàng đợi chủ đề (hết th
 Khi **Bật**, cứ 5 phút web xem khung giờ nào trong ~20 giờ tới chưa có video → làm trọn: kịch bản → Chrome Flow tạo cảnh (kiểm tra áo) →
 ghép → Chrome Facebook **hẹn giờ đăng** đúng khung giờ (còn thời gian xem / huỷ trong Lịch đăng hoặc Business Suite). Mỗi lúc 1 video;
 lỗi thì ghi lại và sang khung kế tiếp. Bật **Cần tôi duyệt** thì video làm xong dừng ở "chờ duyệt", bấm **Duyệt & hẹn đăng** mới đăng.
+**Tự chấm & tự đăng** (mặc định bật, thay cho duyệt tay): video ghép xong → Claude xem khung đầu/giữa/cuối từng cảnh + lời thoại + caption,
+chấm 0–100 theo sổ tay số liệu (hook 2 giây đầu, xung đột cụ thể, độ dài, câu kết, lỗi hình: chữ lạ / sai áo / méo mặt / người thừa).
+≥ ngưỡng (mặc định 70) → sửa chính tả caption rồi tự hẹn đăng. Chưa đạt → kịch bản ổn thì chỉ tạo lại các cảnh lỗi hình (kèm câu VISUAL FIX),
+kịch bản yếu thì viết lại cùng chủ đề theo nhận xét; tối đa 2 lần. Hết lượt: bản tốt nhất ≥ 55 thì vẫn đăng, thấp hơn thì không đăng ("không đạt").
+Điểm và nhận xét hiện ở lịch khung giờ và đầu trang video. Claude không nghe âm thanh — lời thoại chấm qua kịch bản.
 Cần sẵn: Chrome Flow, Chrome Facebook (đã đăng nhập) và Page để đăng. Mỗi video tốn credit Flow + lượt Claude.
 Mốc code trước tính năng này: tag `backup-truoc-tu-nuoi-kenh`.
 
