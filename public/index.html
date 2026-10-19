@@ -16,7 +16,7 @@
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.95 2.55L22.5 17.5l-2.55.95L19 21l-.95-2.55L15.5 17.5l2.55-.95z"/></svg></span>
     <span>Post AI <b>Studio</b></span>
   </div>
-  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
+  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-auto" class="tab">Tự nuôi kênh</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
   <div id="status-pills" class="pills"></div>
 </header>
 
@@ -128,6 +128,47 @@
       <div class="card">
         <h2>Xếp hạng Reel <small class="muted" style="display:inline;font-weight:500">· theo % thời lượng được xem (bài ≥ 24 giờ)</small></h2>
         <div class="perf-wrap"><table class="perf" id="perf-table"></table></div>
+      </div>
+    </section>
+
+    <section id="view-auto" hidden>
+      <div class="card">
+        <div class="job-head">
+          <div class="grow"><h1>Tự nuôi kênh</h1>
+            <div class="muted">Mỗi ngày đăng theo các khung giờ: web tự chọn chủ đề → viết kịch bản → Chrome Flow tạo cảnh → ghép → <b>hẹn giờ đăng</b> lên Page qua Business Suite. Mỗi video tốn credit Flow + lượt Claude.</div>
+            <div id="ap-status" style="margin-top:8px;font-size:13px"></div></div>
+          <label class="switch-big"><input type="checkbox" id="ap-enabled"> <span>Bật tự nuôi kênh</span></label>
+        </div>
+      </div>
+      <div class="ap-grid">
+        <div class="card">
+          <h2>Lịch đăng mỗi ngày</h2>
+          <div class="row" id="ap-slots" style="margin-top:0"></div>
+          <div class="row"><button class="small" id="ap-slot-add">＋ Thêm khung giờ</button>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ap-approval" style="width:auto"> Cần tôi duyệt từng video trước khi hẹn đăng</label></div>
+          <small class="muted">Giờ Việt Nam. Web làm trước video cho các khung giờ trong ~20 giờ tới (mỗi video ~10–25 phút), mỗi lúc 1 video.</small>
+          <h2 style="margin-top:18px">Định vị kênh</h2>
+          <textarea id="ap-channel" rows="3" placeholder="VD: Kênh chia sẻ chuyện hôn nhân – gia đình cho phụ nữ 25–45 tuổi: mẹ chồng nàng dâu, chồng nhu nhược, tiền bạc vợ chồng. Giọng chân thành, sâu sắc, không phán xét."></textarea>
+          <div class="grid-form" style="margin-top:12px">
+            <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
+            <label>Giọng đọc<select id="ap-voice"></select></label>
+            <label class="full">Nhân vật / DNA (trang phục…)<input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
+            <label>Đối tượng xem<input id="ap-audience"></label>
+            <label>Tông giọng<input id="ap-tone"></label>
+            <label>CTA <small class="muted" style="display:inline">(trống = không có)</small><input id="ap-cta"></label>
+            <label>Model Flow<select id="ap-model"></select></label>
+            <label class="full">Điều cấm<input id="ap-avoid"></label>
+          </div>
+          <div class="row"><button class="primary" id="ap-save">Lưu cài đặt</button><button id="ap-run">Làm video cho khung giờ kế tiếp ngay</button></div>
+        </div>
+        <div class="card">
+          <h2>Chủ đề sắp làm <small class="muted" style="display:inline;font-weight:500">· lấy từ trên xuống, hết thì Claude tự nghĩ</small></h2>
+          <textarea id="ap-topics" rows="10" placeholder="Mỗi dòng 1 chủ đề"></textarea>
+          <div class="row"><button class="small" id="ap-topics-save">Lưu danh sách</button><button class="small" id="ap-ideate">✦ Claude gợi ý thêm</button></div>
+          <h2 style="margin-top:18px">Khung giờ sắp tới & đã làm</h2>
+          <div id="ap-plan"></div>
+          <details style="margin-top:10px"><summary>Nhật ký tự nuôi kênh</summary><div id="ap-log" class="log"></div></details>
+        </div>
       </div>
     </section>
 

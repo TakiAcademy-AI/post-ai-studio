@@ -272,7 +272,7 @@ details[open] summary::before { transform: rotate(90deg); }
   .side-toggle .chev { transition: transform .15s; color: var(--muted); }
   .side.open .side-toggle .chev { transform: rotate(180deg); }
   #btn-new.big { padding: 10px 14px; font-size: 14px; }
-  body[data-view="posts"] .side, body[data-view="accounts"] .side, body[data-view="perf"] .side { display: none; }
+  body[data-view="posts"] .side, body[data-view="accounts"] .side, body[data-view="perf"] .side, body[data-view="auto"] .side { display: none; }
   main { padding: 16px 16px 60px; }
   .card { padding: 18px 16px; }
   .grid-form, .scene, .final, .post { grid-template-columns: minmax(0, 1fr); }
@@ -359,3 +359,17 @@ table.perf td.t, table.perf th:nth-child(2) { text-align: left; white-space: nor
 table.perf th:first-child, table.perf td:first-child { text-align: left; color: var(--muted); }
 #pb-card textarea { font-size: 13.5px; line-height: 1.55; }
 @media (max-width: 900px) { .tab { font-size: 13px; padding: 7px 4px; white-space: nowrap; } }
+
+/* Tự nuôi kênh */
+.ap-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.ap-grid .card { margin-bottom: 0; }
+.slot { display: inline-flex; gap: 4px; align-items: center; }
+.slot input { width: auto; padding: 6px 8px; }
+.ap-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.ap-row .when { font-weight: 700; color: var(--accent); }
+.ap-row .acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; }
+.ap-row .acts:empty { display: none; }
+.switch-big { display: flex; gap: 8px; align-items: center; font-weight: 700; font-size: 14px; padding: 8px 12px; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; cursor: pointer; }
+.switch-big input { width: 18px; height: 18px; }
+@media (max-width: 900px) { .ap-grid { grid-template-columns: minmax(0, 1fr); } .ap-row { grid-template-columns: 76px minmax(0, 1fr); } }
+@media (max-width: 900px) { .tabs { overflow-x: auto; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; } .tab { flex: 1 0 auto; } }

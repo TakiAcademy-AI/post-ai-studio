@@ -15,6 +15,7 @@ import * as FBC from './lib/fb-chrome.js';
 import * as FBB from './lib/fb-browser.js';
 import * as FI from './lib/fb-insights.js';
 import * as PB from './lib/playbook.js';
+import * as AP from './lib/autopilot.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
@@ -266,6 +267,15 @@ app.post('/api/playbook/analyze', wrap(async (_req, res) => res.json(await PB.an
 app.post('/api/playbook/approve', wrap(async (req, res) => res.json(PB.approve(req.body?.text))));
 app.post('/api/playbook/enabled', wrap(async (req, res) => res.json(PB.setEnabled(req.body?.on))));
 app.post('/api/playbook/discard', wrap(async (_req, res) => res.json(PB.discardDraft())));
+
+// ---------- Tự nuôi kênh ----------
+app.get('/api/autopilot', (_req, res) => res.json(AP.view()));
+app.post('/api/autopilot', wrap(async (req, res) => { AP.saveSettings(req.body || {}); res.json(AP.view()); }));
+app.post('/api/autopilot/run', wrap(async (_req, res) => { AP.tick().catch(() => {}); res.json({ ok: true }); }));
+app.post('/api/autopilot/ideate', wrap(async (_req, res) => { await AP.ideate(); res.json(AP.view()); }));
+app.post('/api/autopilot/approve', wrap(async (req, res) => { await AP.approve(String(req.body?.slot || '')); res.json(AP.view()); }));
+app.post('/api/autopilot/skip', wrap(async (req, res) => { AP.skip(String(req.body?.slot || '')); res.json(AP.view()); }));
+AP.startLoop();
 
 app.listen(config.port, config.host, () => {
   console.log(`Post AI Studio: http://${config.host}:${config.port}`);

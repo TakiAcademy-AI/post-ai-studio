@@ -39,6 +39,16 @@ Bài đăng KHÔNG đi qua Graph API — web đăng như người đăng tay qua
 
 Không tự đăng hay tự tạo video theo sổ tay — vẫn do bạn bấm. Mốc code trước khi có tính năng này: tag `backup-truoc-feedback-loop`.
 
+## Tự nuôi kênh (mỗi ngày N video, mặc định 3)
+
+Tab **Tự nuôi kênh**: khung giờ đăng (mặc định 11:30 · 14:30 · 20:30 giờ VN), định vị kênh, khuôn video (số cảnh, giọng, DNA, đối tượng,
+tông giọng, CTA, điều cấm, model) và hàng đợi chủ đề (hết thì Claude tự nghĩ theo định vị kênh + sổ tay đã duyệt, tránh trùng bài cũ).
+Khi **Bật**, cứ 5 phút web xem khung giờ nào trong ~20 giờ tới chưa có video → làm trọn: kịch bản → Chrome Flow tạo cảnh (kiểm tra áo) →
+ghép → Chrome Facebook **hẹn giờ đăng** đúng khung giờ (còn thời gian xem / huỷ trong Lịch đăng hoặc Business Suite). Mỗi lúc 1 video;
+lỗi thì ghi lại và sang khung kế tiếp. Bật **Cần tôi duyệt** thì video làm xong dừng ở "chờ duyệt", bấm **Duyệt & hẹn đăng** mới đăng.
+Cần sẵn: Chrome Flow, Chrome Facebook (đã đăng nhập) và Page để đăng. Mỗi video tốn credit Flow + lượt Claude.
+Mốc code trước tính năng này: tag `backup-truoc-tu-nuoi-kenh`.
+
 ## Chạy
 
 ```bash
