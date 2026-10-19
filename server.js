@@ -275,6 +275,7 @@ app.post('/api/autopilot', wrap(async (req, res) => { AP.saveSettings(req.body |
 app.post('/api/autopilot/run', wrap(async (_req, res) => { AP.tick().catch(() => {}); res.json({ ok: true }); }));
 app.post('/api/autopilot/ideate', wrap(async (_req, res) => { await AP.ideate(); res.json(AP.view()); }));
 app.post('/api/autopilot/approve', wrap(async (req, res) => { await AP.approve(String(req.body?.slot || '')); res.json(AP.view()); }));
+app.post('/api/autopilot/redo', wrap(async (req, res) => res.json(AP.redo(String(req.body?.slot || ''), { sameTopic: Boolean(req.body?.sameTopic) }))));
 app.post('/api/autopilot/skip', wrap(async (req, res) => { AP.skip(String(req.body?.slot || '')); res.json(AP.view()); }));
 AP.startLoop();
 

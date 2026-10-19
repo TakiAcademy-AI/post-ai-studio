@@ -1105,7 +1105,7 @@ async function loadAuto(fill = false) {
       <div class="grow">${p ? `<span class="badge ${ST[p.status] || ''}">${esc(p.status)}${p.step ? ` · ${esc(p.step)}` : ''}</span> ${esc(p.topic || '')}
         ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
-      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
+      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${future && p && ['chờ duyệt', 'bỏ qua', 'lỗi'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
   }).join('') : '<div class="muted">Chưa có khung giờ nào.</div>';
   $('#ap-log').textContent = (d.log || []).map((l) => `[${vnTime(l.at)}] ${l.msg}`).join('\n');
@@ -1132,6 +1132,14 @@ $('#view-auto').addEventListener('click', async (e) => {
     if (t.id === 'ap-ideate') { t.disabled = true; t.textContent = 'Claude đang nghĩ…'; await api('/api/autopilot/ideate', { method: 'POST' }); return loadAuto(true); }
     if (t.id === 'ap-run') { if (!confirm('Làm ngay 1 video cho khung giờ kế tiếp (tốn credit Flow)?')) return; await api('/api/autopilot', { method: 'POST', body: apForm() }); await api('/api/autopilot/run', { method: 'POST' }); toast('Đã bắt đầu'); return setTimeout(() => loadAuto(false), 1500); }
     if (t.dataset.apApprove) { t.disabled = true; await api('/api/autopilot/approve', { method: 'POST', body: { slot: t.dataset.apApprove } }); toast('Đã hẹn đăng'); return loadAuto(false); }
+    if (t.dataset.apRedo) {
+      const same = Boolean(t.dataset.same);
+      if (!confirm(`Làm lại video cho khung ${vnTime(t.dataset.apRedo)}${same ? ' với cùng chủ đề' : ' với chủ đề kế tiếp'}? (tốn credit Flow + lượt Claude; video cũ vẫn giữ trong danh sách Video)`)) return;
+      await api('/api/autopilot/redo', { method: 'POST', body: { slot: t.dataset.apRedo, sameTopic: same } });
+      if (!apData?.enabled) toast('Đã xoá khỏi lịch — bật "Tự nuôi kênh" (hoặc bấm "Làm video cho khung giờ kế tiếp ngay") để web làm lại', 6000);
+      else toast('Đang làm lại…');
+      return loadAuto(true);
+    }
     if (t.dataset.apSkip) { await api('/api/autopilot/skip', { method: 'POST', body: { slot: t.dataset.apSkip } }); return loadAuto(false); }
   } catch (err) { toast(err.message, 8000); loadAuto(false); }
 });
