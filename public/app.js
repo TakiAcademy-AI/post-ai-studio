@@ -212,13 +212,21 @@ function renderJob(job) {
             <option value="identity" ${(job.consistency || 'identity') === 'identity' ? 'selected' : ''}>Giữ đúng mặt nhân vật (ảnh nhân vật + khung cuối cảnh trước)</option>
             <option value="frames" ${job.consistency === 'frames' ? 'selected' : ''}>Nối cảnh liền khung (chỉ khung đầu — mặt dễ trôi)</option>
           </select></label></div>` : ''}
-      ${job.voice === 'me' && job.outfit ? `<div class="manual" style="margin:0 0 12px"><b>Trang phục khoá theo DNA</b> — ${esc(job.outfit.text)}<br><span class="muted">Tránh: ${esc(job.outfit.avoid)} · Mỗi cảnh xong, Claude xem 2 khung hình; sai áo thì tự tạo lại (tối đa 3 lần).</span></div>` : ''}
+      ${job.voice === 'me' ? `<div class="look">
+        ${job.look?.preview ? `<a href="${fileUrl(job.look.preview)}?t=${encodeURIComponent(job.look.at || '')}" target="_blank" rel="noopener"><img src="${fileUrl(job.look.preview)}?t=${encodeURIComponent(job.look.at || '')}" alt="Ảnh nhân vật"></a>` : '<div class="look-ph">Ảnh nhân vật</div>'}
+        <div>
+          <b>Ảnh nhân vật + @me · model Omni 1.1 Flash</b>
+          <p class="muted" style="margin:4px 0 6px;font-size:13px">Flow vẽ chính bạn (@me) mặc đúng trang phục DNA, rồi mọi cảnh gắn ảnh đó (chọn trong thư viện dự án, không tải lên) cùng @me — áo đồng nhất ngay từ đầu. ${job.look ? (job.look.project !== job.flowProject ? '<span class="over">Dự án Flow đã đổi — sẽ tạo lại.</span>' : '') : 'Tự tạo khi bấm Tự tạo cảnh.'}</p>
+          ${job.outfit ? `<div style="font-size:12.5px"><b>Trang phục:</b> ${esc(job.outfit.text)} <span class="muted">· tránh: ${esc(job.outfit.avoid)}</span></div>` : ''}
+          <button class="small" data-act="look" style="margin-top:6px" ${busy ? 'disabled' : ''}>${job.look ? '↻ Tạo lại ảnh nhân vật' : 'Tạo ảnh nhân vật ngay'}</button>
+        </div>
+      </div>` : ''}
       <div class="auto-box">
         <div class="row" style="margin:0">
-          <label style="display:flex;gap:8px;align-items:center;font-weight:600">Model Flow:
+          ${job.voice === 'me' ? '<span style="font-weight:600;font-size:14px">Model Flow: Omni 1.1 Flash <small class="muted" style="display:inline;font-weight:500">(bắt buộc với @me)</small></span>' : `<label style="display:flex;gap:8px;align-items:center;font-weight:600">Model Flow:
             <select id="job-flow-model" style="width:auto;margin:0" ${busy ? 'disabled' : ''}>
               ${(cfg.flowModels || []).map((m) => `<option ${m === (job.flowModel || 'Veo 3.1 - Fast') ? 'selected' : ''}>${esc(m)}</option>`).join('')}
-            </select></label>
+            </select></label>`}
           ${nextIdx >= 0 ? `<button class="primary" data-act="auto-run" data-i="${nextIdx}" ${busy ? 'disabled' : ''}>▶ Tự tạo ${nextIdx === 0 ? `cả ${job.scenes.length} cảnh` : `từ cảnh ${nextIdx + 1} (${job.scenes.length - nextIdx} cảnh)`}</button>` : '<span class="badge done">Đủ cảnh</span>'}
           ${busy && job.stage === 'generating' ? '<button class="danger" data-act="cancel">Dừng sau cảnh này</button>' : ''}
         </div>
@@ -374,7 +382,7 @@ $('#view-job').addEventListener('change', async (e) => {
 // Cách Chrome Flow tạo cảnh này + nút tự tạo lại.
 function sceneSteps(job, i) {
   const ready = i === 0 || job.scenes[i - 1]?.lastFrame;
-  return `<div class="manual"><div>Tự động: ${job.voice === 'me' ? `Thành phần: <b>@me</b>${job.scenes[i].outfitSeen ? ` · áo: ${job.scenes[i].outfitOk ? '✓' : '<span class="over">✗</span>'} ${esc(job.scenes[i].outfitSeen)}` : ''}` : job.refImage && (job.consistency || 'identity') === 'identity' ? 'Thành phần (ảnh nhân vật' + (i ? ' + khung cuối cảnh trước' : '') + ')' : i ? 'Khung hình (khung cuối cảnh trước)' : 'chỉ prompt'}${job.voice && job.voice !== 'me' ? ` · giọng <b>${esc(job.voice)}</b>` : ''}</div>
+  return `<div class="manual"><div>Tự động: ${job.voice === 'me' ? `Thành phần: ${job.look ? 'ảnh nhân vật + ' : ''}<b>@me</b> (Omni)${job.scenes[i].outfitSeen ? ` · áo: ${job.scenes[i].outfitOk ? '✓' : '<span class="over">✗</span>'} ${esc(job.scenes[i].outfitSeen)}` : ''}` : job.refImage && (job.consistency || 'identity') === 'identity' ? 'Thành phần (ảnh nhân vật' + (i ? ' + khung cuối cảnh trước' : '') + ')' : i ? 'Khung hình (khung cuối cảnh trước)' : 'chỉ prompt'}${job.voice && job.voice !== 'me' ? ` · giọng <b>${esc(job.voice)}</b>` : ''}</div>
     <div class="row"><button class="small" data-act="auto-run" data-i="${i}" ${currentJob?.busy || !ready ? 'disabled' : ''}>${job.scenes[i].clip ? '↻ Tự tạo lại cảnh này' : '▶ Tự tạo từ cảnh này'}</button>
     <button class="small" data-act="copy" data-i="${i}">Copy prompt</button></div></div>`;
 }
@@ -869,6 +877,10 @@ $('#view-job').addEventListener('click', async (e) => {
         toast('Đã bắt đầu — theo dõi ở nhật ký và từng cảnh', 5000);
         break;
       }
+      case 'look':
+        if (currentJob.look && !confirm('Tạo lại ảnh nhân vật? Các cảnh đã tạo theo ảnh cũ có thể lệch áo — nên tạo lại các cảnh sau đó.')) return;
+        await api(`/api/jobs/${id}/look`, { method: 'POST' });
+        break;
       case 'restore-prompt':
         if (!confirm(`Bỏ bản prompt đã tự viết lại, dùng lại prompt gốc của cảnh ${i + 1}?`)) return;
         await api(`/api/jobs/${id}/scenes/${i}`, { method: 'PATCH', body: { restorePrompt: true } });

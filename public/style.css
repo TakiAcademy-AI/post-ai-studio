@@ -373,3 +373,9 @@ table.perf th:first-child, table.perf td:first-child { text-align: left; color: 
 .switch-big input { width: 18px; height: 18px; }
 @media (max-width: 900px) { .ap-grid { grid-template-columns: minmax(0, 1fr); } .ap-row { grid-template-columns: 76px minmax(0, 1fr); } }
 @media (max-width: 900px) { .tabs { overflow-x: auto; scrollbar-width: none; } .tabs::-webkit-scrollbar { display: none; } .tab { flex: 1 0 auto; } }
+
+/* Ảnh nhân vật (@me + trang phục DNA, Omni) */
+.look { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: start; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 0 0 12px; background: #fbfbff; }
+.look img, .look-ph { width: 84px; aspect-ratio: 9/16; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.look-ph { border: 1.5px dashed var(--line-2); display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
+@media (max-width: 900px) { .look { grid-template-columns: minmax(0, 1fr); } }

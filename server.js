@@ -177,6 +177,7 @@ app.delete('/api/jobs/:id/scenes/:i/clip', wrap(async (req, res) => {
   if (job) res.json(J.removeClip(job, Number(req.params.i)));
 }));
 app.post('/api/jobs/:id/compress', action((job, b) => J.startCompress(job, Number(b.i))));
+app.post('/api/jobs/:id/look', action((job) => J.startLook(job)));
 app.post('/api/jobs/:id/auto', action((job, b) => J.startAutoFlow(job, { from: b.from ?? null })));
 
 // ---------- Chrome Flow (tự động hoàn toàn) ----------

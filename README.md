@@ -122,15 +122,16 @@ Flow không cho dùng cùng lúc khung đầu (chế độ Khung hình) và ản
 Có ảnh nhân vật mà để trống ô mô tả → Claude tự đọc ảnh để viết CHARACTER LOCK. Prompt được dặn tránh chữ tiếng Việt có
 dấu trên màn hình (Veo vẽ sai dấu).
 
-## Trang phục đồng nhất (giọng @me) — khoá áo + tự kiểm tra
+## Trang phục đồng nhất (giọng @me) — ảnh nhân vật + Omni 1.1 Flash
 
-Hình đại diện "Tôi" mang theo áo của video selfie gốc, và **@me chiếm hết 3 suất ảnh tham chiếu của Flow** — gắn thêm bất kỳ ảnh nào
-(ảnh nhân vật, ảnh áo, tải lên hay do Flow tạo) đều bị Flow đánh lỗi "Đã đạt đến số lượng thành phần hình ảnh tối đa (cho phép 3)" và bỏ qua.
-Giọng "Tôi" cũng chỉ có trong @me. Nên trang phục được khoá bằng chữ và kiểm tra tự động:
-1. Claude chuyển trang phục DNA thành mô tả chính xác + danh sách "không được mặc" (vd. NOT a crew-neck T-shirt) → "OUTFIT LOCK" đầu mọi prompt.
-2. Mỗi cảnh xong: cắt 2 khung hình, Claude xem và so với DNA. Sai áo → nhắc trang phục ở cả CHARACTER LOCK và cuối prompt, kèm "lần trước ra …",
-   tạo lại (tối đa 3 lần, mỗi lần tốn credit Flow). Hết lượt vẫn sai thì giữ clip và báo trong nhật ký.
-Mỗi cảnh hiện kết quả kiểm tra áo (✓/✗ + áo thấy được). Cách bền nhất: quay lại video selfie hình đại diện mặc bộ đồ hay dùng.
+Hình đại diện "Tôi" mang theo áo của video selfie gốc (đo được 65% lần kiểm tra ra áo henley đen cổ tròn của video gốc).
+Với **Veo 3.1**, @me chiếm hết 3 suất ảnh tham chiếu nên không gắn thêm ảnh trang phục được. Với **Omni 1.1 Flash** thì gắn được
+**ảnh + @me** cùng lúc (cách người dùng vẫn làm tay). Nên với giọng @me, web:
+1. Claude chuyển trang phục DNA thành mô tả chính xác + danh sách "không được mặc".
+2. Flow (chế độ Hình ảnh, Nano Banana + @me) tạo **ảnh nhân vật**: chính chủ mặc đúng trang phục, trong bối cảnh video. Ảnh nằm trong thư viện
+   dự án Flow → mọi cảnh **chọn thẳng ảnh đó theo tên** + @me (không tải gì lên), model **Omni 1.1 Flash** (bắt buộc với @me).
+3. Vẫn kiểm tra áo từng cảnh (Claude xem 2 khung hình), sai thì tạo lại tối đa 1 lần.
+Thử 2026-10-19: ảnh nhân vật + 2 cảnh đều đúng áo polo đen ngay lần đầu, cùng phòng, ~5 phút. Trang video có ô **Ảnh nhân vật** + nút tạo lại.
 
 ## Giọng đọc đồng nhất
 

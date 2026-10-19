@@ -198,6 +198,53 @@ async function addVoice(name) {
   if (composerChips().length <= before) throw new Error(`Chưa gắn được giọng ${name} — thử "Điền lại"`);
 }
 
+// Mở bảng + → tab "Hình ảnh" (ảnh trong thư viện dự án, mới nhất ở đầu).
+async function openImagePicker() {
+  const plus = await waitFor(() => document.querySelector('button[aria-label="Thêm thành phần vào ô nhập câu lệnh"]'), 'nút + thêm thành phần');
+  press(plus);
+  const tab = await waitFor(() => [...document.querySelectorAll('[role="tab"]')].find((t) => visible(t) && /Hình ảnh/.test(t.innerText)), 'tab "Hình ảnh"');
+  press(tab);
+  await sleep(900);
+}
+const optTitle = (o) => (o.querySelector('.asset-title')?.textContent || o.innerText.split('\n')[0] || '').trim();
+
+/** Tên ảnh mới nhất trong thư viện dự án (vừa tạo xong). Bảng để mở — phía Playwright bấm Esc đóng lại. */
+async function newestImageTitle() {
+  await openImagePicker();
+  const opt = await waitFor(() => [...document.querySelectorAll('button[role="option"]')].find(visible), 'ảnh trong thư viện', 10000);
+  return optTitle(opt);
+}
+
+// Chọn ảnh CÓ SẴN trong thư viện dự án theo tên (ảnh Flow đã tạo) làm thành phần — không tải gì lên.
+async function addProjectImage(title) {
+  await openImagePicker();
+  for (const o of document.querySelectorAll('button[role="option"][aria-selected="true"]')) if (visible(o)) { press(o); await sleep(250); }
+  const opt = await waitFor(() => [...document.querySelectorAll('button[role="option"]')].find((o) => visible(o) && optTitle(o) === title),
+    `ảnh nhân vật "${title}" trong thư viện dự án`, 10000);
+  const before = composerChips().length;
+  await selectOption(opt);
+  const add = await waitFor(() => byText('button', 'Thêm vào câu lệnh') || (!byText('[role="tab"]', 'Hình ảnh') && 'closed'), 'nút "Thêm vào câu lệnh"', 6000);
+  if (add !== 'closed') press(add);
+  await sleep(1000);
+  if (composerChips().length <= before) throw new Error('Chưa gắn được ảnh nhân vật vào câu lệnh');
+}
+
+// Chế độ ẢNH (Nano Banana) có gắn @me: tạo "ảnh nhân vật" — chính chủ mặc đúng trang phục DNA trong bối cảnh video.
+async function fillLookImage(prompt) {
+  if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow');
+  const btn = await openSettings();
+  await pickRadio('Hình ảnh');
+  await pickRadio('9:16');
+  await pickRadio('x1', false);
+  if (byText('button[role=radio]', '9:16')) press(btn);
+  await sleep(400);
+  await clearComposerMedia();
+  status('Đang gắn hình đại diện "Tôi" (@me)…');
+  await addAvatar();
+  status('Đang điền prompt ảnh…');
+  await setPrompt(prompt);
+}
+
 async function fill(p, model) {
   if (!location.pathname.startsWith('/project/')) throw new Error('Hãy mở một dự án Flow (bấm "Dự án mới" hoặc một dự án có sẵn) rồi bấm lại');
   status('Đang chỉnh cài đặt…');
@@ -211,6 +258,7 @@ async function fill(p, model) {
       await addIngredient(img);
     }
   }
+  if (p.lookTitle && p.mode === 'ingredients') { status('Đang gắn ảnh nhân vật từ thư viện dự án…'); await addProjectImage(p.lookTitle); }
   if (p.voice === 'me' && p.mode !== 'frames') { status('Đang gắn hình đại diện "Tôi" (@me)…'); await addAvatar(); }
   else if (p.voice && p.mode !== 'frames') { status(`Đang gắn giọng ${p.voice}…`); await addVoice(p.voice); }
   status('Đang điền prompt…');
