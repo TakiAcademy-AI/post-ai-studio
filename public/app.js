@@ -1124,7 +1124,8 @@ async function loadAuto(fill = false) {
     $('#ap-scenes').value = t.sceneCount;
     $('#ap-voice').innerHTML = '<option value="">Không cố định</option>' + (window.voiceOpts ? window.voiceOpts(t.voice) : '');
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
-    for (const k of ['character', 'setting', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
+    for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
+    $('#ap-varylook').checked = ch.varyLook !== false;
     $('#ap-topics').value = ch.topics.join('\n');
   }
   const pf = ch.profile;
@@ -1145,7 +1146,7 @@ async function loadAuto(fill = false) {
       <div class="when">${vnTime(slot)}</div>
       <div class="grow">${p ? `<span class="badge ${ST[p.status] || ''}">${esc(p.status)}${p.step ? ` · ${esc(p.step)}` : ''}</span> ${esc(p.topic || '')}
         ${p.score != null ? ` · <b>${p.score}/100</b>` : ''}${p.attempts?.length > 1 ? ` <small class="muted" style="display:inline">(${p.attempts.map((a) => a.score).join(' → ')})</small>` : ''}
-        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
+        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.look ? `<div class="muted" style="font-size:12px">👔 ${esc(p.look.outfit)} · 🏠 ${esc(p.look.setting)}</div>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
       <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${p?.status === 'nháp' ? `<a class="small" href="https://business.facebook.com/latest/posts/draft_posts?asset_id=${encodeURIComponent(ch.page?.id || '')}" target="_blank" rel="noopener">Mở Bản nháp trên Business Suite</a><button class="small primary" data-ap-approve="${slot}" data-draft="1">Hẹn đăng ${future ? 'theo khung giờ' : 'sớm nhất'}</button>` : ''}${future && p && ['chờ duyệt', 'nháp', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
@@ -1164,7 +1165,8 @@ function apForm() {
     autoReview: $('#ap-review').checked, minScore: $('#ap-minscore').value, maxRedo: $('#ap-maxredo').value, fallbackScore: $('#ap-fallback').value,
     channel: $('#ap-channel').value,
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
-      ...Object.fromEntries(['character', 'setting', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
+      ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
+    varyLook: $('#ap-varylook').checked,
   };
 }
 $('#view-auto').addEventListener('click', async (e) => {

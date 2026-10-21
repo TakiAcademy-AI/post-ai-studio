@@ -181,8 +181,10 @@
           <div class="grid-form" style="margin-top:12px">
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
             <label>Giọng đọc<select id="ap-voice"></select></label>
-            <label class="full">Nhân vật / DNA (trang phục…)<input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
-            <label class="full">Bối cảnh & góc quay <small class="muted" style="display:inline">(mọi video, mọi cảnh)</small><textarea id="ap-setting" rows="2" placeholder="VD: Ngồi trong phòng đọc sách, chiếm 80% khung hình, ánh sáng đều mặt, đối diện camera; mọi cảnh chung 1 góc quay."></textarea></label>
+            <label class="full" style="flex-direction:row;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="ap-varylook" style="width:auto"> Mỗi video đổi trang phục &amp; bối cảnh <small class="muted" style="display:inline;font-weight:400">(Claude chọn bộ mới, khác các video gần đây; các cảnh trong 1 video vẫn giống hệt nhau)</small></label>
+            <label class="full">Nhân vật / DNA (trang phục…) <small class="muted" style="display:inline">(khi đổi mỗi video: chỉ là gợi ý phong cách)</small><input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
+            <label class="full">Bối cảnh <small class="muted" style="display:inline">(khi đổi mỗi video: chỉ là gợi ý)</small><textarea id="ap-setting" rows="2" placeholder="VD: phòng đọc sách, kệ sách gỗ phía sau"></textarea></label>
+            <label class="full">Góc quay <small class="muted" style="display:inline">(giữ nguyên mọi video, mọi cảnh)</small><textarea id="ap-camera" rows="2" placeholder="VD: ngồi đối diện camera, chiếm 80% khung hình, ánh sáng đều mặt; mọi cảnh chung 1 góc quay."></textarea></label>
             <label>Đối tượng xem<input id="ap-audience"></label>
             <label>Tông giọng<input id="ap-tone"></label>
             <label>CTA <small class="muted" style="display:inline">(trống = không có)</small><input id="ap-cta"></label>

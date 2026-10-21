@@ -58,6 +58,8 @@ lỗi thì ghi lại và sang khung kế tiếp. Bật **Cần tôi duyệt** th
 
 **Quét kênh để định vị:** khi kênh được bật hoặc vừa chọn Page, web sẽ đọc các bài Page đã đăng trong Business Suite trước khi làm video đầu tiên. Từ caption và số liệu, Claude viết lại các ô **Định vị kênh**, **Khán giả**, **Giọng** và **Tránh**, đồng thời thay toàn bộ hàng đợi chủ đề bằng chủ đề đúng kênh. Khi đọc, web bỏ qua bài do chính web làm và bài cập nhật ảnh. Bấm **🔍 Quét lại kênh** để quét lại bất cứ lúc nào. Nhân vật/DNA, bối cảnh, CTA và số cảnh giữ nguyên.
 
+**Mỗi video đổi trang phục & bối cảnh** (bật sẵn cho mọi kênh): trước khi viết kịch bản, Claude chọn 1 bộ áo trơn mới và 1 bối cảnh mới hợp chủ đề, khác 12 video gần nhất. Mọi cảnh trong cùng 1 video vẫn dùng chung bộ áo và bối cảnh đó. Ô **Góc quay** thì giữ nguyên cho mọi video. Khi bật chế độ này, ô Nhân vật/DNA và ô Bối cảnh chỉ là gợi ý phong cách. Bộ đã dùng hiện dưới mỗi dòng kế hoạch (👔 · 🏠).
+
 **Cách đăng** (mỗi kênh chọn riêng):
 - **Hẹn giờ đăng trực tiếp** (mặc định): video được hẹn giờ đăng đúng khung giờ trên Business Suite.
 - **Đăng nháp để tôi duyệt lại**: video lưu vào Business Suite → Nội dung → **Bản nháp** của Page, dòng kế hoạch hiện "nháp". Anh xem rồi tự đăng / hẹn giờ ngay trong Business Suite, hoặc bấm **Hẹn đăng** trên web. Lưu ý: nút này tải video lên lại thành bài hẹn giờ mới, còn bản nháp cũ vẫn nằm đó, cần xoá tay để không bị trùng.
