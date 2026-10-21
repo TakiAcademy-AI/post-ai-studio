@@ -1127,6 +1127,14 @@ async function loadAuto(fill = false) {
     for (const k of ['character', 'setting', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-topics').value = ch.topics.join('\n');
   }
+  const pf = ch.profile;
+  $('#ap-profile').innerHTML = ch.profiling ? '⏳ Đang quét Page để định vị lại kênh (~1–3 phút)…'
+    : !ch.page?.id ? 'Chọn Page rồi Lưu — web sẽ quét Page để tự định vị kênh.'
+    : !pf || pf.pageId !== ch.page.id ? 'Chưa quét Page này — web sẽ tự quét trước khi làm video đầu tiên.'
+    : pf.error ? `⚠ Quét lỗi (${new Date(pf.at).toLocaleString('vi-VN')}): ${esc(pf.error)}`
+    : `✓ Đã quét ${pf.posts} bài của Page lúc ${new Date(pf.at).toLocaleString('vi-VN')}: ${esc(pf.summary || '')}`;
+  $('#ap-profile-btn').disabled = Boolean(ch.profiling) || !ch.page?.id;
+  if (ch.profiling) setTimeout(() => { if (apCh()?.id === ch.id) loadAuto(true).catch(() => {}); }, 15000);
   const planBySlot = new Map(ch.plan.map((p) => [p.slot, p]));
   const rows = [...new Set([...ch.upcoming, ...ch.plan.slice(0, 15).map((p) => p.slot)])].sort().reverse().slice(0, 18);
   const ST = { 'đang làm': 'running', 'chờ duyệt': 'stale', 'nháp': 'scheduled', 'đã hẹn': 'done', 'lỗi': 'error', 'bỏ qua': 'draft', 'không đạt': 'error' };
@@ -1170,6 +1178,12 @@ $('#view-auto').addEventListener('click', async (e) => {
     if (t.dataset.slotDel != null) { const s = [...$('#ap-slots').querySelectorAll('input')].map((i) => i.value); s.splice(Number(t.dataset.slotDel), 1); return renderSlots(s); }
     if (t.id === 'ap-save') { t.disabled = true; t.textContent = 'Đang lưu…'; await api(chUrl(), { method: 'POST', body: apForm() }); toast('Đã lưu cài đặt kênh'); t.disabled = false; t.textContent = 'Lưu cài đặt'; return loadAuto(true); }
     if (t.id === 'ap-topics-save') { await api(chUrl(), { method: 'POST', body: { topics: $('#ap-topics').value.split('\n') } }); toast('Đã lưu chủ đề'); return loadAuto(true); }
+    if (t.id === 'ap-profile-btn') {
+      if (!confirm('Quét lại Page này? Claude sẽ viết lại Định vị kênh, Khán giả, Giọng, Tránh và THAY hàng đợi chủ đề (các ô khác giữ nguyên).')) return;
+      t.disabled = true; t.textContent = 'Đang quét Page…';
+      try { await api(chUrl('/profile'), { method: 'POST' }); toast('Đã định vị lại kênh'); } finally { t.textContent = '🔍 Quét lại kênh'; }
+      return loadAuto(true);
+    }
     if (t.id === 'ap-ideate') { t.disabled = true; t.textContent = 'Claude đang nghĩ…'; await api(chUrl('/ideate'), { method: 'POST' }); return loadAuto(true); }
     if (t.id === 'ap-run') { if (!confirm('Làm ngay 1 video cho khung giờ sớm nhất đang trống (trong các kênh đang bật; tốn credit Flow)?')) return; await api(chUrl(), { method: 'POST', body: apForm() }); await api('/api/autopilot/run', { method: 'POST' }); toast('Đã bắt đầu'); return setTimeout(() => loadAuto(false), 1500); }
     if (t.dataset.apApprove) {

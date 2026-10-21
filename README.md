@@ -56,6 +56,8 @@ Khi **Bật**, cứ 5 phút web xem khung giờ nào trong ~20 giờ tới chưa
 ghép → Chrome Facebook **hẹn giờ đăng** đúng khung giờ (còn thời gian xem / huỷ trong Lịch đăng hoặc Business Suite). Mỗi lúc 1 video;
 lỗi thì ghi lại và sang khung kế tiếp. Bật **Cần tôi duyệt** thì video làm xong dừng ở "chờ duyệt", bấm **Duyệt & hẹn đăng** mới đăng.
 
+**Quét kênh để định vị:** khi kênh được bật hoặc vừa chọn Page, web sẽ đọc các bài Page đã đăng trong Business Suite trước khi làm video đầu tiên. Từ caption và số liệu, Claude viết lại các ô **Định vị kênh**, **Khán giả**, **Giọng** và **Tránh**, đồng thời thay toàn bộ hàng đợi chủ đề bằng chủ đề đúng kênh. Khi đọc, web bỏ qua bài do chính web làm và bài cập nhật ảnh. Bấm **🔍 Quét lại kênh** để quét lại bất cứ lúc nào. Nhân vật/DNA, bối cảnh, CTA và số cảnh giữ nguyên.
+
 **Cách đăng** (mỗi kênh chọn riêng):
 - **Hẹn giờ đăng trực tiếp** (mặc định): video được hẹn giờ đăng đúng khung giờ trên Business Suite.
 - **Đăng nháp để tôi duyệt lại**: video lưu vào Business Suite → Nội dung → **Bản nháp** của Page, dòng kế hoạch hiện "nháp". Anh xem rồi tự đăng / hẹn giờ ngay trong Business Suite, hoặc bấm **Hẹn đăng** trên web. Lưu ý: nút này tải video lên lại thành bài hẹn giờ mới, còn bản nháp cũ vẫn nằm đó, cần xoá tay để không bị trùng.

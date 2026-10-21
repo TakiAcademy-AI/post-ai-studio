@@ -279,10 +279,14 @@ app.post('/api/autopilot/channels/:cid', wrap(async (req, res) => {
   const b = req.body || {};
   // Đổi Page theo tên → Business Suite đọc mã Page (không đổi Page mặc định của web).
   if (b.pageName && b.pageName !== AP.readAutopilot(req.params.cid).page?.name) b.page = await FBB.selectPage(String(b.pageName), { save: false });
-  AP.saveSettings(req.params.cid, b);
-  if (b.enabled) AP.tick().catch(() => {});
+  const before = AP.readAutopilot(req.params.cid).page?.id;
+  const ch = AP.saveSettings(req.params.cid, b);
+  if (ch.enabled) AP.tick().catch(() => {});
+  else if (ch.page?.id && ch.page.id !== before) AP.profile(req.params.cid).catch(() => {}); // vừa chọn Page → quét định vị kênh ngay
+
   res.json({ ok: true });
 }));
+app.post('/api/autopilot/channels/:cid/profile', wrap(async (req, res) => { await AP.profile(req.params.cid); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/ideate', wrap(async (req, res) => { await AP.ideate(req.params.cid); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/approve', wrap(async (req, res) => { await AP.approve(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/skip', wrap(async (req, res) => { AP.skip(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));

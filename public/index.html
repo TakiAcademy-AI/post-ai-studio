@@ -172,7 +172,11 @@
             </div>
           </div>
           <small class="muted">Giờ Việt Nam. Web làm trước video cho các khung giờ trong ~20 giờ tới (mỗi video ~10–25 phút), mỗi lúc 1 video.</small>
-          <h2 style="margin-top:18px">Định vị kênh</h2>
+          <div class="row" style="margin-top:18px;justify-content:space-between;align-items:center">
+            <h2 style="margin:0">Định vị kênh</h2>
+            <button class="small" id="ap-profile-btn" title="Đọc các bài Page đã đăng → Claude viết lại định vị, khán giả, giọng, điều tránh và hàng đợi chủ đề">🔍 Quét lại kênh</button>
+          </div>
+          <div id="ap-profile" class="muted" style="font-size:13px;margin:6px 0"></div>
           <textarea id="ap-channel" rows="3" placeholder="VD: Kênh chia sẻ chuyện hôn nhân – gia đình cho phụ nữ 25–45 tuổi: mẹ chồng nàng dâu, chồng nhu nhược, tiền bạc vợ chồng. Giọng chân thành, sâu sắc, không phán xét."></textarea>
           <div class="grid-form" style="margin-top:12px">
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
