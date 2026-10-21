@@ -1104,7 +1104,7 @@ async function loadAuto(fill = false) {
   const next = (c) => { const p = new Map(c.plan.map((x) => [x.slot, x])); const s = c.upcoming.find((x) => !p.has(x)); return s ? vnTime(s) : '—'; };
   $('#ap-chans').innerHTML = d.channels.map((c) => `<button class="ap-chan ${c.id === apCid ? 'on' : ''}" data-ch="${c.id}">
       <span class="dot ${c.enabled ? 'ok' : ''}"></span><b>${esc(c.name)}</b>
-      <small>${esc(c.page?.name || 'chưa chọn Page')} · ${c.slots.length} video/ngày · tới: ${next(c)}</small></button>`).join('')
+      <small>${esc(c.page?.name || 'chưa chọn Page')} · ${c.slots.length} video/ngày · ${c.postMode === 'draft' ? 'đăng nháp' : 'hẹn giờ'} · tới: ${next(c)}</small></button>`).join('')
     + '<button class="ap-chan add" id="ap-add">＋ Thêm kênh</button>';
   const ch = apCh();
   if (!ch) { $('#ap-plan').innerHTML = '<div class="muted">Chưa có kênh — bấm "＋ Thêm kênh".</div>'; return; }
@@ -1116,6 +1116,7 @@ async function loadAuto(fill = false) {
     $('#ap-page').innerHTML = (ch.page ? '' : '<option value="">— chọn Page —</option>') + names.map((n) => `<option ${n === ch.page?.name ? 'selected' : ''}>${esc(n)}</option>`).join('');
     renderSlots(ch.slots);
     $('#ap-approval').checked = ch.requireApproval;
+    for (const r of document.querySelectorAll('input[name=ap-postmode]')) r.checked = r.value === (ch.postMode || 'schedule');
     $('#ap-review').checked = ch.autoReview && !ch.requireApproval;
     $('#ap-minscore').value = ch.minScore; $('#ap-maxredo').value = ch.maxRedo; $('#ap-fallback').value = ch.fallbackScore;
     $('#ap-channel').value = ch.channel || '';
@@ -1128,7 +1129,7 @@ async function loadAuto(fill = false) {
   }
   const planBySlot = new Map(ch.plan.map((p) => [p.slot, p]));
   const rows = [...new Set([...ch.upcoming, ...ch.plan.slice(0, 15).map((p) => p.slot)])].sort().reverse().slice(0, 18);
-  const ST = { 'đang làm': 'running', 'chờ duyệt': 'stale', 'đã hẹn': 'done', 'lỗi': 'error', 'bỏ qua': 'draft', 'không đạt': 'error' };
+  const ST = { 'đang làm': 'running', 'chờ duyệt': 'stale', 'nháp': 'scheduled', 'đã hẹn': 'done', 'lỗi': 'error', 'bỏ qua': 'draft', 'không đạt': 'error' };
   $('#ap-plan').innerHTML = rows.length ? rows.map((slot) => {
     const p = planBySlot.get(slot);
     const future = Date.parse(slot) > Date.now();
@@ -1138,7 +1139,7 @@ async function loadAuto(fill = false) {
         ${p.score != null ? ` · <b>${p.score}/100</b>` : ''}${p.attempts?.length > 1 ? ` <small class="muted" style="display:inline">(${p.attempts.map((a) => a.score).join(' → ')})</small>` : ''}
         ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
-      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${future && p && ['chờ duyệt', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
+      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${p?.status === 'nháp' ? `<a class="small" href="https://business.facebook.com/latest/posts/draft_posts?asset_id=${encodeURIComponent(ch.page?.id || '')}" target="_blank" rel="noopener">Mở Bản nháp trên Business Suite</a><button class="small primary" data-ap-approve="${slot}" data-draft="1">Hẹn đăng ${future ? 'theo khung giờ' : 'sớm nhất'}</button>` : ''}${future && p && ['chờ duyệt', 'nháp', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
   }).join('') : '<div class="muted">Chưa có khung giờ nào.</div>';
   $('#ap-log').textContent = (ch.log || []).map((l) => `[${vnTime(l.at)}] ${l.msg}`).join('\n');
@@ -1151,6 +1152,7 @@ function apForm() {
     pageName: $('#ap-page').value || undefined,
     slots: [...$('#ap-slots').querySelectorAll('input[type=time]')].map((i) => i.value).filter(Boolean),
     requireApproval: $('#ap-approval').checked,
+    postMode: document.querySelector('input[name=ap-postmode]:checked')?.value || 'schedule',
     autoReview: $('#ap-review').checked, minScore: $('#ap-minscore').value, maxRedo: $('#ap-maxredo').value, fallbackScore: $('#ap-fallback').value,
     channel: $('#ap-channel').value,
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
@@ -1170,7 +1172,10 @@ $('#view-auto').addEventListener('click', async (e) => {
     if (t.id === 'ap-topics-save') { await api(chUrl(), { method: 'POST', body: { topics: $('#ap-topics').value.split('\n') } }); toast('Đã lưu chủ đề'); return loadAuto(true); }
     if (t.id === 'ap-ideate') { t.disabled = true; t.textContent = 'Claude đang nghĩ…'; await api(chUrl('/ideate'), { method: 'POST' }); return loadAuto(true); }
     if (t.id === 'ap-run') { if (!confirm('Làm ngay 1 video cho khung giờ sớm nhất đang trống (trong các kênh đang bật; tốn credit Flow)?')) return; await api(chUrl(), { method: 'POST', body: apForm() }); await api('/api/autopilot/run', { method: 'POST' }); toast('Đã bắt đầu'); return setTimeout(() => loadAuto(false), 1500); }
-    if (t.dataset.apApprove) { t.disabled = true; await api(chUrl('/approve'), { method: 'POST', body: { slot: t.dataset.apApprove } }); toast('Đã hẹn đăng'); return loadAuto(false); }
+    if (t.dataset.apApprove) {
+      if (t.dataset.draft && !confirm('Hẹn giờ đăng video này từ web? Web tải video lên và hẹn giờ mới; bản nháp cũ trong Business Suite vẫn còn — xoá tay để khỏi trùng.')) return;
+      t.disabled = true; await api(chUrl('/approve'), { method: 'POST', body: { slot: t.dataset.apApprove } }); toast('Đã hẹn đăng'); return loadAuto(false);
+    }
     if (t.dataset.apRedo) {
       const same = Boolean(t.dataset.same);
       if (!confirm(`Làm lại video cho khung ${vnTime(t.dataset.apRedo)}${same ? ' với cùng chủ đề' : ' với chủ đề kế tiếp'}? (tốn credit Flow + lượt Claude; video cũ vẫn giữ trong danh sách Video)`)) return;
@@ -1189,7 +1194,7 @@ $('#ap-enabled').addEventListener('change', async (e) => {
   const on = e.target.checked;
   const f = apForm();
   if (on && !f.pageName) { e.target.checked = false; return toast('Chọn Page để đăng cho kênh này trước'); }
-  if (on && !confirm(`Bật kênh "${f.name}"? Mỗi ngày web sẽ tự làm và hẹn đăng ${f.slots.length} video lên "${f.pageName}" (tốn credit Flow + lượt Claude).`)) { e.target.checked = false; return; }
+  if (on && !confirm(`Bật kênh "${f.name}"? Mỗi ngày web sẽ tự làm và ${f.postMode === 'draft' ? 'LƯU NHÁP' : 'HẸN GIỜ ĐĂNG'} ${f.slots.length} video lên "${f.pageName}" (tốn credit Flow + lượt Claude).`)) { e.target.checked = false; return; }
   await api(chUrl(), { method: 'POST', body: { ...f, enabled: on } }).catch((err) => toast(err.message));
   loadAuto(true);
 });

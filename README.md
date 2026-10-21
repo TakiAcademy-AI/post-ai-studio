@@ -55,6 +55,10 @@ tông giọng, CTA, điều cấm, model) và hàng đợi chủ đề (hết th
 Khi **Bật**, cứ 5 phút web xem khung giờ nào trong ~20 giờ tới chưa có video → làm trọn: kịch bản → Chrome Flow tạo cảnh (kiểm tra áo) →
 ghép → Chrome Facebook **hẹn giờ đăng** đúng khung giờ (còn thời gian xem / huỷ trong Lịch đăng hoặc Business Suite). Mỗi lúc 1 video;
 lỗi thì ghi lại và sang khung kế tiếp. Bật **Cần tôi duyệt** thì video làm xong dừng ở "chờ duyệt", bấm **Duyệt & hẹn đăng** mới đăng.
+
+**Cách đăng** (mỗi kênh chọn riêng):
+- **Hẹn giờ đăng trực tiếp** (mặc định): video được hẹn giờ đăng đúng khung giờ trên Business Suite.
+- **Đăng nháp để tôi duyệt lại**: video lưu vào Business Suite → Nội dung → **Bản nháp** của Page, dòng kế hoạch hiện "nháp". Anh xem rồi tự đăng / hẹn giờ ngay trong Business Suite, hoặc bấm **Hẹn đăng** trên web. Lưu ý: nút này tải video lên lại thành bài hẹn giờ mới, còn bản nháp cũ vẫn nằm đó, cần xoá tay để không bị trùng.
 **Tự chấm & tự đăng** (mặc định bật, thay cho duyệt tay): video ghép xong → Claude xem khung đầu/giữa/cuối từng cảnh + lời thoại + caption,
 chấm 0–100 theo sổ tay số liệu (hook 2 giây đầu, xung đột cụ thể, độ dài, câu kết, lỗi hình: chữ lạ / sai áo / méo mặt / người thừa).
 ≥ ngưỡng (mặc định 70) → sửa chính tả caption rồi tự hẹn đăng. Chưa đạt → kịch bản ổn thì chỉ tạo lại các cảnh lỗi hình (kèm câu VISUAL FIX),
