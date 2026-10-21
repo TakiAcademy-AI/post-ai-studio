@@ -236,6 +236,7 @@ function insightPages() {
   const bp = FBB.browserPage();
   if (bp?.id) pages.set(bp.id, bp.name);
   for (const p of P.listPosts()) if (p.pageId && !pages.has(p.pageId)) pages.set(p.pageId, p.pageName);
+  for (const c of AP.view().channels) if (c.page?.id && !pages.has(c.page.id)) pages.set(c.page.id, c.page.name);
   return [...pages].filter(([id]) => id).map(([pageId, pageName]) => ({ pageId, pageName }));
 }
 async function collectInsights() {
@@ -270,14 +271,23 @@ app.post('/api/playbook/approve', wrap(async (req, res) => res.json(PB.approve(r
 app.post('/api/playbook/enabled', wrap(async (req, res) => res.json(PB.setEnabled(req.body?.on))));
 app.post('/api/playbook/discard', wrap(async (_req, res) => res.json(PB.discardDraft())));
 
-// ---------- Tự nuôi kênh ----------
-app.get('/api/autopilot', (_req, res) => res.json(AP.view()));
-app.post('/api/autopilot', wrap(async (req, res) => { AP.saveSettings(req.body || {}); res.json(AP.view()); }));
+// ---------- Tự nuôi kênh (nhiều kênh) ----------
+app.get('/api/autopilot', (_req, res) => res.json({ ...AP.view(), pagesList: readSettings().fbBrowserPages || [] }));
+app.post('/api/autopilot/channels', wrap(async (req, res) => res.json(AP.addChannel({ name: req.body?.name }))));
+app.delete('/api/autopilot/channels/:cid', wrap(async (req, res) => { AP.removeChannel(req.params.cid); res.json({ ok: true }); }));
+app.post('/api/autopilot/channels/:cid', wrap(async (req, res) => {
+  const b = req.body || {};
+  // Đổi Page theo tên → Business Suite đọc mã Page (không đổi Page mặc định của web).
+  if (b.pageName && b.pageName !== AP.readAutopilot(req.params.cid).page?.name) b.page = await FBB.selectPage(String(b.pageName), { save: false });
+  AP.saveSettings(req.params.cid, b);
+  if (b.enabled) AP.tick().catch(() => {});
+  res.json({ ok: true });
+}));
+app.post('/api/autopilot/channels/:cid/ideate', wrap(async (req, res) => { await AP.ideate(req.params.cid); res.json({ ok: true }); }));
+app.post('/api/autopilot/channels/:cid/approve', wrap(async (req, res) => { await AP.approve(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));
+app.post('/api/autopilot/channels/:cid/skip', wrap(async (req, res) => { AP.skip(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));
+app.post('/api/autopilot/channels/:cid/redo', wrap(async (req, res) => { AP.redo(req.params.cid, String(req.body?.slot || ''), { sameTopic: Boolean(req.body?.sameTopic) }); res.json({ ok: true }); }));
 app.post('/api/autopilot/run', wrap(async (_req, res) => { AP.tick().catch(() => {}); res.json({ ok: true }); }));
-app.post('/api/autopilot/ideate', wrap(async (_req, res) => { await AP.ideate(); res.json(AP.view()); }));
-app.post('/api/autopilot/approve', wrap(async (req, res) => { await AP.approve(String(req.body?.slot || '')); res.json(AP.view()); }));
-app.post('/api/autopilot/redo', wrap(async (req, res) => res.json(AP.redo(String(req.body?.slot || ''), { sameTopic: Boolean(req.body?.sameTopic) }))));
-app.post('/api/autopilot/skip', wrap(async (req, res) => { AP.skip(String(req.body?.slot || '')); res.json(AP.view()); }));
 AP.startLoop();
 
 app.listen(config.port, config.host, () => {

@@ -379,3 +379,14 @@ table.perf th:first-child, table.perf td:first-child { text-align: left; color: 
 .look img, .look-ph { width: 84px; aspect-ratio: 9/16; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); display: block; }
 .look-ph { border: 1.5px dashed var(--line-2); display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; }
 @media (max-width: 900px) { .look { grid-template-columns: minmax(0, 1fr); } }
+
+/* Tự nuôi nhiều kênh */
+.ap-chans { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.ap-chan { display: grid; gap: 2px; text-align: left; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: #fff; font-size: 13.5px; max-width: 280px; position: relative; padding-left: 26px; }
+.ap-chan small { color: var(--muted); font-size: 11.5px; font-weight: 500; }
+.ap-chan.on { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.12); }
+.ap-chan .dot { position: absolute; left: 10px; top: 14px; width: 8px; height: 8px; border-radius: 50%; background: var(--line-2); }
+.ap-chan .dot.ok { background: var(--ok); }
+.ap-chan.add { color: var(--accent); font-weight: 700; padding-left: 12px; align-content: center; }
+.ap-chhead { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+@media (max-width: 900px) { .ap-chhead { grid-template-columns: minmax(0, 1fr); } .ap-chan { max-width: 100%; flex: 1 1 100%; } }

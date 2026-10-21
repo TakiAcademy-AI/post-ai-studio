@@ -39,7 +39,16 @@ Bài đăng KHÔNG đi qua Graph API — web đăng như người đăng tay qua
 
 Không tự đăng hay tự tạo video theo sổ tay — vẫn do bạn bấm. Mốc code trước khi có tính năng này: tag `backup-truoc-feedback-loop`.
 
-## Tự nuôi kênh (mỗi ngày N video, mặc định 3)
+## Tự nuôi kênh — nhiều kênh (mỗi kênh N video/ngày)
+
+**Nhiều kênh**: mỗi kênh = 1 Page với cài đặt riêng (tên, Page để đăng, khung giờ, định vị kênh, khuôn video / DNA / bối cảnh,
+hàng đợi chủ đề, chấm điểm hay duyệt, lịch, nhật ký). Bấm **＋ Thêm kênh** → đặt tên → chọn Page (danh sách lấy từ Business Suite; web đọc mã
+Page khi Lưu, không đổi Page mặc định của web) → chỉnh → **Lưu** → **Bật kênh này**. Các kênh dùng chung 1 dây chuyền (Chrome Flow + Chrome
+Facebook): mỗi lúc 1 video, luôn làm khung giờ sớm nhất trong các kênh đang bật. Chủ đề Claude nghĩ tránh trùng bài cũ **của đúng Page đó**.
+Số liệu của các Page trong kênh cũng được thu tự động (tab Hiệu quả). Dữ liệu cũ (1 kênh) tự chuyển thành kênh thứ nhất.
+Mốc code trước tính năng này: tag `backup-truoc-nhieu-kenh`.
+
+### Cách một kênh chạy
 
 Tab **Tự nuôi kênh**: khung giờ đăng (mặc định 11:30 · 14:30 · 20:30 giờ VN), định vị kênh, khuôn video (số cảnh, giọng, DNA, đối tượng,
 tông giọng, CTA, điều cấm, model) và hàng đợi chủ đề (hết thì Claude tự nghĩ theo định vị kênh + sổ tay đã duyệt, tránh trùng bài cũ).

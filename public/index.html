@@ -139,14 +139,20 @@
       <div class="card">
         <div class="job-head">
           <div class="grow"><h1>Tự nuôi kênh</h1>
-            <div class="muted">Mỗi ngày đăng theo các khung giờ: web tự chọn chủ đề → viết kịch bản → Chrome Flow tạo cảnh → ghép → <b>hẹn giờ đăng</b> lên Page qua Business Suite. Mỗi video tốn credit Flow + lượt Claude.</div>
+            <div class="muted">Mỗi kênh = 1 Page với cài đặt riêng. Theo khung giờ của từng kênh, web tự chọn chủ đề → viết kịch bản → Chrome Flow tạo cảnh → ghép → <b>hẹn giờ đăng</b> lên đúng Page. Các kênh dùng chung 1 dây chuyền (mỗi lúc 1 video, ~5–10 phút/video). Mỗi video tốn credit Flow + lượt Claude.</div>
             <div id="ap-status" style="margin-top:8px;font-size:13px"></div></div>
-          <label class="switch-big"><input type="checkbox" id="ap-enabled"> <span>Bật tự nuôi kênh</span></label>
         </div>
+        <div class="ap-chans" id="ap-chans"></div>
       </div>
       <div class="ap-grid">
         <div class="card">
-          <h2>Lịch đăng mỗi ngày</h2>
+          <div class="ap-chhead">
+            <label>Tên kênh<input id="ap-name"></label>
+            <label>Page để đăng<select id="ap-page"></select></label>
+            <label class="switch-big"><input type="checkbox" id="ap-enabled"> <span>Bật kênh này</span></label>
+          </div>
+          <small class="muted">Danh sách Page lấy từ Business Suite (tab Tài khoản → Chrome Facebook → "Lấy danh sách Page"). Đổi Page: web đọc mã Page khi bấm Lưu (~20 giây).</small>
+          <h2 style="margin-top:16px">Lịch đăng mỗi ngày</h2>
           <div class="row" id="ap-slots" style="margin-top:0"></div>
           <div class="row"><button class="small" id="ap-slot-add">＋ Thêm khung giờ</button>
             <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ap-approval" style="width:auto"> Cần tôi duyệt từng video (tắt tự chấm)</label></div>
@@ -173,7 +179,7 @@
             <label>Model Flow<select id="ap-model"></select></label>
             <label class="full">Điều cấm<input id="ap-avoid"></label>
           </div>
-          <div class="row"><button class="primary" id="ap-save">Lưu cài đặt</button><button id="ap-run">Làm video cho khung giờ kế tiếp ngay</button></div>
+          <div class="row"><button class="primary" id="ap-save">Lưu cài đặt</button><button id="ap-run">Làm video cho khung giờ kế tiếp ngay</button><button class="danger" id="ap-del">Xoá kênh</button></div>
         </div>
         <div class="card">
           <h2>Chủ đề sắp làm <small class="muted" style="display:inline;font-weight:500">· lấy từ trên xuống, hết thì Claude tự nghĩ</small></h2>
