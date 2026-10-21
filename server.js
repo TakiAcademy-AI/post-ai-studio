@@ -281,6 +281,7 @@ app.post('/api/autopilot/channels/:cid', wrap(async (req, res) => {
   if (b.pageName && b.pageName !== AP.readAutopilot(req.params.cid).page?.name) b.page = await FBB.selectPage(String(b.pageName), { save: false });
   const before = AP.readAutopilot(req.params.cid).page?.id;
   const ch = AP.saveSettings(req.params.cid, b);
+  if (ch.retopic) AP.ideate(req.params.cid).catch(() => {}); // vừa đổi định vị → nghĩ lại chủ đề
   if (ch.enabled) AP.tick().catch(() => {});
   else if (ch.page?.id && ch.page.id !== before) AP.profile(req.params.cid).catch(() => {}); // vừa chọn Page → quét định vị kênh ngay
 
