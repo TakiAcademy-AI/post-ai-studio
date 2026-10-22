@@ -203,3 +203,17 @@ Agent giám sát chạy bằng **Grok CLI** chính thức của xAI. Cài bằng
 - **Clone vào hàng đợi:** đưa chủ đề theo khuôn đó lên đầu hàng đợi của kênh, ghi rõ "clone khuôn, không chép lời / tên / hình ảnh".
 - **Boss** nhìn thấy các tín hiệu bùng nổ trong báo cáo và có thể đề xuất `clone_signal`.
 - **Trinh sát ngay trong Tự nuôi kênh:** phần cài đặt mỗi kênh có mục "Trinh sát cho kênh này". Ở đó anh thêm hoặc xoá nguồn, quét nguồn của kênh và xem các video đang bùng nổ. Tuỳ chọn **tự đưa video bùng nổ lên đầu hàng đợi chủ đề** bật sẵn, tối đa 2 chủ đề mỗi ngày. Web chỉ đưa những video đã decode, chưa clone cho kênh đó, và lấy video có hệ số × trung vị cao nhất trước. Mỗi lần web tự clone đều được ghi vào nhật ký kênh.
+
+## Video chuẩn ⭐
+
+Lấy một video viral thật của anh làm **tiêu chuẩn** cho Tự nuôi kênh. Mục này nằm trong phần cài đặt kênh, ngay trên ô Định vị kênh.
+
+- **Thêm video chuẩn:** dán link Reel. Web làm lần lượt các bước sau:
+  - Chrome Facebook mở trang ở chế độ chỉ đọc và **ghi lại đúng video kèm tiếng** (bằng captureStream).
+  - **faster-whisper** chép lời kèm mốc thời gian. Dùng `/usr/bin/python3.12` và model `medium`; đổi bằng biến môi trường `WHISPER_PYTHON` / `WHISPER_MODEL`.
+  - ffmpeg cắt khung hình.
+  - Claude rút ra tiêu chuẩn: vì sao viral, hook, cấu trúc theo giây, nhịp, thủ pháp, giọng, hình ảnh, phụ đề, 5–8 quy tắc viết, điều cần tránh, mẫu chủ đề.
+- **Kênh chọn video chuẩn** thì:
+  - Bước nghĩ chủ đề, viết kịch bản và Boss duyệt video đều bám theo **hình thức** của video chuẩn.
+  - Chủ đề vẫn đi theo định vị kênh. Phần nào trong chuẩn nhắc tới giới tính hay ngách cụ thể chỉ được coi là ví dụ.
+- **Nút tiện:** "Dùng góc quay của video chuẩn" và "Dùng N cảnh (≈ độ dài chuẩn)". Hai nút này điền sẵn ô tương ứng; bấm Lưu thì mới áp dụng.

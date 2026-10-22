@@ -177,6 +177,15 @@
             <button class="small" id="ap-profile-btn" title="Đọc các bài Page đã đăng → Claude viết lại định vị, khán giả, giọng, điều tránh và hàng đợi chủ đề">🔍 Quét lại kênh</button>
           </div>
           <div id="ap-profile" class="muted" style="font-size:13px;margin:6px 0"></div>
+          <div class="bm-box">
+            <div class="row" style="margin-top:0;align-items:center;gap:8px">
+              <b>Video chuẩn</b>
+              <select id="ap-benchmark" style="width:auto;flex:1"><option value="">— không dùng —</option></select>
+            </div>
+            <div class="muted" style="font-size:12.5px">Video viral thật của anh làm tiêu chuẩn: kịch bản, chủ đề và Boss duyệt bám theo hình thức (hook, nhịp, thủ pháp, giọng) — chủ đề vẫn theo định vị kênh.</div>
+            <div class="row" style="flex-wrap:nowrap"><input id="bm-url" placeholder="Dán link Reel viral (vd facebook.com/reel/…)" style="flex:1"><button class="small primary" id="bm-add">＋ Thêm video chuẩn</button></div>
+            <div id="bm-detail"></div>
+          </div>
           <textarea id="ap-channel" rows="3" placeholder="VD: Kênh chia sẻ chuyện hôn nhân – gia đình cho phụ nữ 25–45 tuổi: mẹ chồng nàng dâu, chồng nhu nhược, tiền bạc vợ chồng. Giọng chân thành, sâu sắc, không phán xét."></textarea>
           <div class="grid-form" style="margin-top:12px">
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>

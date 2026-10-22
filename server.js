@@ -18,6 +18,7 @@ import * as PB from './lib/playbook.js';
 import * as AP from './lib/autopilot.js';
 import * as BOSS from './lib/boss.js';
 import * as SC from './lib/scout.js';
+import * as BM from './lib/benchmark.js';
 import { grokStatus } from './lib/grok.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
@@ -319,6 +320,12 @@ app.post('/api/scout/scan', wrap(async (req, res) => res.json(SC.queueScan(Array
 app.post('/api/scout/decode', wrap(async (req, res) => res.json(SC.queueDecode(String(req.body?.sourceId || ''), String(req.body?.key || '')))));
 app.post('/api/scout/clone', wrap(async (req, res) => res.json(SC.clone(String(req.body?.sourceId || ''), String(req.body?.key || ''), { cid: req.body?.cid || null }))));
 SC.startLoop();
+
+// ---------- Video chuẩn ----------
+app.get('/api/benchmarks', (_req, res) => res.json({ items: BM.list(), ...BM.status() }));
+app.post('/api/benchmarks', wrap(async (req, res) => res.json(BM.add(req.body || {}))));
+app.post('/api/benchmarks/:id/retry', wrap(async (req, res) => res.json(BM.retry(req.params.id))));
+app.delete('/api/benchmarks/:id', wrap(async (req, res) => res.json(BM.remove(req.params.id))));
 
 app.listen(config.port, config.host, () => {
   console.log(`Post AI Studio: http://${config.host}:${config.port}`);

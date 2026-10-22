@@ -1129,6 +1129,7 @@ async function loadAuto(fill = false) {
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
     $('#ap-brain').value = ch.brain || 'claude';
+    loadBenchmarks(ch).catch(() => {});
     $('#ap-scoutclone').checked = ch.scoutAutoClone !== false;
     $('#ap-scoutperday').value = ch.scoutClonePerDay ?? 2;
     $('#ap-bossreview').checked = Boolean(ch.bossReview);
@@ -1175,6 +1176,7 @@ function apForm() {
       ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
     varyLook: $('#ap-varylook').checked,
     brain: $('#ap-brain').value,
+    benchmarkId: $('#ap-benchmark').value || null,
     scoutAutoClone: $('#ap-scoutclone').checked,
     scoutClonePerDay: Number($('#ap-scoutperday').value),
     bossReview: $('#ap-bossreview').checked,
@@ -1431,4 +1433,47 @@ $('#view-auto').addEventListener('click', async (e) => {
     if (t.dataset.apscClone) { const [sourceId, key] = t.dataset.apscClone.split('|'); await api('/api/scout/clone', { method: 'POST', body: { sourceId, key, cid: apCid } }); toast('Đã đưa lên đầu hàng đợi'); return loadAuto(true); }
   } catch (err) { toast(err.message); }
   loadChannelScout(apCh());
+}, true);
+
+// ---------- Video chuẩn ----------
+let bmTimer = null;
+async function loadBenchmarks(ch, keep = false) {
+  clearTimeout(bmTimer);
+  const d = await api('/api/benchmarks');
+  if (apCh()?.id !== ch.id) return;
+  const sel = $('#ap-benchmark');
+  const cur = keep ? sel.value : (ch.benchmarkId || '');
+  sel.innerHTML = '<option value="">— không dùng —</option>' + d.items.map((b) => `<option value="${esc(b.id)}" ${b.id === cur ? 'selected' : ''}>${esc((b.transcript?.[0]?.text || b.url).slice(0, 60))}${b.status !== 'xong' ? ` (${esc(b.status)})` : ''}</option>`).join('');
+  sel.value = cur;
+  renderBenchmark(d.items.find((b) => b.id === sel.value), d.items.filter((b) => b.status !== 'xong'));
+  if (d.working) bmTimer = setTimeout(() => { if (apCh()) loadBenchmarks(apCh(), true).catch(() => {}); }, 6000);
+}
+function renderBenchmark(b, pending) {
+  const busy = pending.map((p) => `<div class="muted" style="font-size:12.5px;margin-top:6px">${p.status === 'lỗi' ? `⚠ ${esc(p.url)}: ${esc(p.error || '')} <button class="small" data-bm-retry="${p.id}">Thử lại</button> <button class="small" data-bm-del="${p.id}">Xoá</button>` : `⏳ ${esc(p.url)} — ${esc(p.step || p.status)}`}</div>`).join('');
+  if (!b?.analysis) { $('#bm-detail').innerHTML = busy; return; }
+  const a = b.analysis;
+  $('#bm-detail').innerHTML = `<div class="dec"><b>${Math.round(b.duration)}s</b>${b.stats ? ` · ${esc(b.stats.likes)} thích · ${esc(b.stats.comments)} bình luận · ${esc(b.stats.shares)} chia sẻ` : ''} · <a href="${esc(b.url)}" target="_blank" rel="noopener">mở ↗</a><br>
+    <b>Vì sao viral:</b> ${esc(a.whyViral)}<br><b>Hook:</b> ${esc(a.hookPattern)}<br><b>Nhịp:</b> ${esc(a.pacing)}<br><b>Thủ pháp:</b> ${esc(a.devices.join(' · '))}<br>
+    <b>Quy tắc:</b> ${a.rules.map((r) => `• ${esc(r)}`).join(' ')}<br><b>Hình ảnh:</b> ${esc(a.visualStyle)}${a.subtitleStyle ? `<br><b>Phụ đề:</b> ${esc(a.subtitleStyle)}` : ''}
+    <details><summary>Lời thoại video chuẩn</summary>${b.transcript.map((s) => `<div>[${s.start.toFixed(1)}s] ${esc(s.text)}</div>`).join('')}</details></div>
+    <div class="row" style="gap:6px"><button class="small" data-bm-camera="${esc(a.cameraSuggestion)}">Dùng góc quay của video chuẩn</button>
+    <button class="small" data-bm-scenes="${a.suggestedSceneCount}">Dùng ${a.suggestedSceneCount} cảnh (≈ độ dài chuẩn)</button><button class="small" data-bm-del="${b.id}">Xoá video chuẩn</button></div>${busy}`;
+}
+$('#ap-benchmark').addEventListener('change', () => { if (apCh()) loadBenchmarks(apCh(), true); });
+$('#bm-add').addEventListener('click', async (e) => {
+  e.preventDefault();
+  try { await api('/api/benchmarks', { method: 'POST', body: { url: $('#bm-url').value } }); $('#bm-url').value = ''; toast('Đang ghi + chép lời + phân tích video chuẩn (~2–4 phút)'); } catch (err) { toast(err.message); }
+  if (apCh()) loadBenchmarks(apCh(), true);
+});
+$('#view-auto').addEventListener('click', async (e) => {
+  const t = e.target.closest('button');
+  if (!t || !(t.dataset.bmCamera || t.dataset.bmScenes || t.dataset.bmDel || t.dataset.bmRetry)) return;
+  e.stopPropagation(); e.preventDefault();
+  try {
+    if (t.dataset.bmCamera) { $('#ap-camera').value = t.dataset.bmCamera; toast('Đã điền ô Góc quay — bấm Lưu để áp dụng'); }
+    if (t.dataset.bmScenes) { $('#ap-scenes').value = t.dataset.bmScenes; toast('Đã đổi số cảnh — bấm Lưu để áp dụng'); }
+    if (t.dataset.bmRetry) await api(`/api/benchmarks/${t.dataset.bmRetry}/retry`, { method: 'POST' });
+    if (t.dataset.bmDel) { if (!confirm('Xoá video chuẩn này? Các kênh đang dùng sẽ thôi bám theo nó.')) return; await api(`/api/benchmarks/${t.dataset.bmDel}`, { method: 'DELETE' }); }
+  } catch (err) { toast(err.message); }
+  if (apCh()) loadBenchmarks(apCh(), true);
 }, true);
