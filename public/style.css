@@ -367,6 +367,12 @@ table.perf th:first-child, table.perf td:first-child { text-align: left; color: 
 .slot input { width: auto; padding: 6px 8px; }
 .ap-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
 .boss-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sc-sig { border-top: 1px solid var(--line); padding: 10px 0; font-size: 13.5px; }
+.sc-sig .top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.sc-sig .mult { font-weight: 800; color: var(--accent); font-size: 15px; }
+.sc-sig .dec { margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: var(--bg-soft, rgba(127,127,127,.08)); font-size: 13px; line-height: 1.5; }
+.sc-sig .acts, .sc-src .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.sc-src { border-top: 1px solid var(--line); padding: 8px 0; font-size: 13px; }
 .boss-rep { border-top: 1px solid var(--line); padding: 12px 0; }
 .boss-rep .txt { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; }
 .boss-prop { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }

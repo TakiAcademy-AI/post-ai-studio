@@ -187,3 +187,18 @@ Agent giám sát chạy bằng **Grok CLI** chính thức của xAI. Cài bằng
 - **Chat ra lệnh**: anh nói bằng lời, boss trả lời và chuyển lệnh thành đề xuất để anh bấm Áp dụng.
 - **Boss duyệt video** (bật trong cài đặt kênh): video làm xong được boss xem khung hình, lời thoại và kết quả kiểm tra áo/chữ, rồi đề xuất *đăng / nháp / làm lại*. Video dừng ở trạng thái "chờ duyệt"; anh bấm **Làm theo boss** hoặc tự chọn.
 - **Bộ não viết chủ đề + kịch bản** (cài đặt kênh): chọn Claude hoặc Grok. Chọn Grok thì Grok nghĩ chủ đề, viết kịch bản, chọn trang phục/bối cảnh và định vị kênh. Phần kiểm tra áo/chữ và rút gọn prompt vẫn do Claude làm.
+
+## Trinh sát 🔭 (tham khảo Scout của taki-agentic-ai)
+
+- **Nguồn quan sát:** dán link kênh TikTok, Facebook, YouTube hoặc Instagram (đối thủ, kênh tham khảo, hoặc kênh của mình) và chọn kênh tự nuôi mà nguồn đó phục vụ.
+- **Quét:** Chrome Facebook mở trang công khai ở chế độ **chỉ đọc** (không thích, không theo dõi, không bình luận), lấy khoảng 30 video gần nhất kèm lượt xem.
+  - Từ đó tính **trung vị kênh**; video ghim không tính vào trung vị.
+  - Video đạt từ ×3 trung vị trở lên là **nổi**. Video đạt từ ×5 trung vị và mới trong 7 ngày là **bùng nổ**. Các ngưỡng này chỉnh được.
+  - TikTok lấy ngày đăng từ ID video. Facebook và YouTube lấy ngày lần đầu thấy video.
+- **Lịch:** tự quét lúc 06:59 mỗi ngày (giờ quét chỉnh được). Sau mỗi lần quét, tự decode tối đa 3 video bùng nổ.
+- **Decode:** mở trang video, chụp màn hình, rồi Claude (hoặc Grok, nếu kênh chọn bộ não Grok) phân tích các mục sau:
+  - hook, kiểu hook, khuôn nội dung, nhịp, vì sao nổ, cảm xúc, insight khán giả;
+  - **góc clone riêng** đúng định vị kênh đích;
+  - lưu ý rủi ro.
+- **Clone vào hàng đợi:** đưa chủ đề theo khuôn đó lên đầu hàng đợi của kênh, ghi rõ "clone khuôn, không chép lời / tên / hình ảnh".
+- **Boss** nhìn thấy các tín hiệu bùng nổ trong báo cáo và có thể đề xuất `clone_signal`.

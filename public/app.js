@@ -29,13 +29,14 @@ function toast(msg, ms = 4000) {
 }
 
 function show(view) {
-  for (const v of ['new', 'job', 'empty', 'posts', 'accounts', 'perf', 'auto', 'boss']) $(`#view-${v}`).hidden = v !== view;
+  for (const v of ['new', 'job', 'empty', 'posts', 'accounts', 'perf', 'auto', 'boss', 'scout']) $(`#view-${v}`).hidden = v !== view;
+  $('#tab-scout').classList.toggle('active', view === 'scout');
   $('#tab-boss').classList.toggle('active', view === 'boss');
   $('#tab-posts').classList.toggle('active', view === 'posts');
   $('#tab-accounts').classList.toggle('active', view === 'accounts');
   $('#tab-perf').classList.toggle('active', view === 'perf');
   $('#tab-auto').classList.toggle('active', view === 'auto');
-  $('#tab-videos').classList.toggle('active', !['posts', 'accounts', 'perf', 'auto', 'boss'].includes(view));
+  $('#tab-videos').classList.toggle('active', !['posts', 'accounts', 'perf', 'auto', 'boss', 'scout'].includes(view));
   document.body.dataset.view = view;
   $('.side').classList.remove('open'); // mobile: mở video xong thì gấp danh sách lại
   if (typeof sideLabel === 'function') sideLabel();
@@ -1306,4 +1307,81 @@ $('#view-boss').addEventListener('click', async (e) => {
     if (t.dataset.bossDismiss) await api(`/api/boss/proposals/${t.dataset.bossDismiss}/dismiss`, { method: 'POST' });
   } catch (err) { toast(err.message); }
   loadBoss();
+});
+
+// ---------- Trinh sát ----------
+const PLAT = { tiktok: 'TikTok', facebook: 'Facebook', youtube: 'YouTube', instagram: 'Instagram' };
+const fmtNum = (n) => (n == null ? '—' : n >= 1e6 ? `${(n / 1e6).toFixed(1).replace('.0', '')}Tr` : n >= 1e3 ? `${(n / 1e3).toFixed(1).replace('.0', '')}N` : String(n));
+let scTimer = null;
+let scFilled = false;
+async function loadScout() {
+  clearTimeout(scTimer);
+  const cid = $('#sc-filter-ch').value;
+  const d = await api(`/api/scout${cid ? `?cid=${encodeURIComponent(cid)}` : ''}`);
+  const opts = d.channels.map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  if (!scFilled) {
+    $('#sc-filter-ch').innerHTML = `<option value="">Mọi kênh</option>${opts}`;
+    $('#sc-cid').innerHTML = opts;
+    const s = d.settings;
+    $('#sc-times').value = s.scanTimes.join(', '); $('#sc-hot').value = s.hotMultiple; $('#sc-boom').value = s.boomMultiple;
+    $('#sc-days').value = s.boomDays; $('#sc-autodecode').checked = s.autoDecode; $('#sc-maxdecode').value = s.maxDecodePerScan;
+    scFilled = true;
+  }
+  $('#sc-boom-x').textContent = d.settings.boomMultiple;
+  $('#sc-status').innerHTML = d.busy ? `<span class="badge running">Đang ${esc(d.busy)}${d.queued ? ` · còn ${d.queued} việc` : ''}</span>`
+    : `<span class="muted">${d.lastScan ? `Quét gần nhất: ${vnTime(d.lastScan)}` : 'Chưa quét lần nào'} · tự quét lúc ${esc(d.settings.scanTimes.join(', ') || '(tắt)')}</span>`;
+  $('#sc-top-formats').innerHTML = d.topFormats.length ? `Khuôn đang thắng: ${d.topFormats.map(([f, n]) => `<b>${esc(f)}</b> (${n})`).join(' · ')}` : '';
+  const list = $('#sc-boom-only').checked ? d.boom : d.hot;
+  $('#sc-signals').innerHTML = list.length ? list.map((v) => {
+    const x = v.decode;
+    const chName = d.channels.find((c) => c.id === v.source.cid)?.name || '';
+    return `<div class="sc-sig"><div class="top"><span class="mult">×${v.multiple}</span><b>${fmtNum(v.views)}</b> lượt xem
+      <span class="badge">${esc(PLAT[v.source.platform] || v.source.platform)} · ${esc(v.source.name)}</span>
+      <span class="muted">trung vị ${fmtNum(v.source.median)} · ${v.postedAt ? `đăng ${vnTime(v.postedAt)}` : `thấy ${vnTime(v.firstSeenAt)}`}${v.isNew ? ' · mới' : ''} · cho ${esc(chName)}</span></div>
+      <div>${esc(v.title || '(không có tiêu đề)')} <a href="${esc(v.url)}" target="_blank" rel="noopener">mở ↗</a></div>
+      ${x ? `<div class="dec"><b>Hook:</b> ${esc(x.hookText)} <span class="muted">(${esc(x.hookType)})</span><br><b>Khuôn:</b> ${esc(x.format)} · <b>Nhịp:</b> ${esc(x.structure.join(' → '))}<br>
+        <b>Vì sao nổ:</b> ${esc(x.whyItWorks)}<br><b>Clone cho kênh:</b> ${esc(x.cloneTitle)} — ${esc(x.cloneIdea)}${x.cautions ? `<br><span class="muted">Lưu ý: ${esc(x.cautions)}</span>` : ''}</div>`
+        : v.decodeError ? `<div class="over" style="font-size:12px">Decode lỗi: ${esc(v.decodeError)}</div>` : ''}
+      <div class="acts">${x ? `<button class="small primary" data-sc-clone="${esc(v.sourceId)}|${esc(v.key)}">${(v.clonedTo || []).length ? '✓ Đã clone · clone thêm' : 'Clone vào hàng đợi'} ${esc(chName)}</button>` : ''}
+        <button class="small" data-sc-decode="${esc(v.sourceId)}|${esc(v.key)}">${x ? 'Decode lại' : 'Decode'}</button></div></div>`;
+  }).join('') : `<div class="muted" style="margin-top:10px">${d.sources.length ? 'Chưa có video vượt ngưỡng.' : 'Thêm nguồn quan sát ở bên phải để bắt đầu.'}</div>`;
+  $('#sc-sources').innerHTML = d.sources.length ? d.sources.map((s) => `<div class="sc-src"><b>${esc(s.name)}</b> <span class="badge">${esc(PLAT[s.platform])}</span> ${s.owner === 'mine' ? '<span class="badge done">kênh của tôi</span>' : ''}
+      <span class="muted">→ ${esc(s.channelName)}</span>${s.enabled ? '' : ' <span class="badge draft">tắt</span>'}
+      <div class="muted">${s.scanning ? '⏳ đang quét…' : s.lastScanAt ? `Quét ${vnTime(s.lastScanAt)} · ${s.lastCount ?? s.videoCount} video · trung vị ${fmtNum(s.median)}${s.followers ? ` · ${fmtNum(s.followers)} theo dõi` : ''}` : 'chưa quét'}</div>
+      ${s.lastError ? `<div class="over" style="font-size:12px">${esc(s.lastError)}</div>` : ''}
+      <div class="acts"><button class="small" data-sc-scan="${s.id}">Quét</button><button class="small" data-sc-toggle="${s.id}" data-on="${s.enabled ? 0 : 1}">${s.enabled ? 'Tắt' : 'Bật'}</button>
+        <a class="small" href="${esc(s.url)}" target="_blank" rel="noopener">Mở</a><button class="small" data-sc-del="${s.id}">Xoá</button></div></div>`).join('')
+    : '<div class="muted">Chưa có nguồn.</div>';
+  if (!$('#view-scout').hidden) scTimer = setTimeout(() => loadScout().catch(() => {}), d.busy || d.queued ? 5000 : 30000);
+}
+$('#tab-scout').addEventListener('click', async () => { currentId = null; stopPoll(); show('scout'); await loadScout(); });
+$('#sc-filter-ch').addEventListener('change', loadScout);
+$('#sc-boom-only').addEventListener('change', loadScout);
+$('#sc-add').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await api('/api/scout/sources', { method: 'POST', body: { url: $('#sc-url').value, cid: $('#sc-cid').value, owner: $('#sc-owner').value, name: $('#sc-name').value } });
+    $('#sc-url').value = ''; $('#sc-name').value = '';
+    toast('Đã thêm nguồn — đang quét');
+  } catch (err) { toast(err.message); }
+  loadScout();
+});
+$('#sc-scan-all').addEventListener('click', async () => { await api('/api/scout/scan', { method: 'POST', body: {} }); toast('Đã xếp quét mọi nguồn'); loadScout(); });
+$('#sc-save').addEventListener('click', async () => {
+  await api('/api/scout/settings', { method: 'POST', body: { scanTimes: $('#sc-times').value.split(',').map((x) => x.trim()).filter(Boolean),
+    hotMultiple: Number($('#sc-hot').value), boomMultiple: Number($('#sc-boom').value), boomDays: Number($('#sc-days').value),
+    autoDecode: $('#sc-autodecode').checked, maxDecodePerScan: Number($('#sc-maxdecode').value) } });
+  scFilled = false; toast('Đã lưu cài đặt'); loadScout();
+});
+$('#view-scout').addEventListener('click', async (e) => {
+  const t = e.target.closest('button');
+  if (!t || t.form) return;
+  try {
+    if (t.dataset.scScan) { await api('/api/scout/scan', { method: 'POST', body: { ids: [t.dataset.scScan] } }); toast('Đã xếp quét'); }
+    if (t.dataset.scToggle) await api(`/api/scout/sources/${t.dataset.scToggle}`, { method: 'POST', body: { enabled: t.dataset.on === '1' } });
+    if (t.dataset.scDel) { if (!confirm('Xoá nguồn này và số liệu đã quét?')) return; await api(`/api/scout/sources/${t.dataset.scDel}`, { method: 'DELETE' }); }
+    if (t.dataset.scDecode) { const [sourceId, key] = t.dataset.scDecode.split('|'); await api('/api/scout/decode', { method: 'POST', body: { sourceId, key } }); toast('Đang decode…'); }
+    if (t.dataset.scClone) { const [sourceId, key] = t.dataset.scClone.split('|'); const r = await api('/api/scout/clone', { method: 'POST', body: { sourceId, key } }); toast('Đã đưa lên đầu hàng đợi chủ đề'); console.log(r.topic); }
+  } catch (err) { toast(err.message); }
+  loadScout();
 });

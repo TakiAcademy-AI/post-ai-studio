@@ -17,6 +17,7 @@ import * as FI from './lib/fb-insights.js';
 import * as PB from './lib/playbook.js';
 import * as AP from './lib/autopilot.js';
 import * as BOSS from './lib/boss.js';
+import * as SC from './lib/scout.js';
 import { grokStatus } from './lib/grok.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
@@ -307,6 +308,17 @@ app.post('/api/boss/settings', wrap(async (req, res) => res.json(BOSS.saveSettin
 app.post('/api/boss/proposals/:id/apply', wrap(async (req, res) => res.json(await BOSS.applyProposal(req.params.id))));
 app.post('/api/boss/proposals/:id/dismiss', wrap(async (req, res) => res.json(BOSS.dismissProposal(req.params.id))));
 BOSS.startLoop();
+
+// ---------- Trinh sát (Scout) ----------
+app.get('/api/scout', (req, res) => res.json(SC.overview({ cid: req.query.cid || null, days: Number(req.query.days) || 30 })));
+app.post('/api/scout/settings', wrap(async (req, res) => res.json(SC.saveSettings(req.body || {}))));
+app.post('/api/scout/sources', wrap(async (req, res) => { const s = SC.addSource(req.body || {}); SC.queueScan([s.id], 'mới thêm'); res.json(s); }));
+app.post('/api/scout/sources/:id', wrap(async (req, res) => res.json(SC.updateSource(req.params.id, req.body || {}))));
+app.delete('/api/scout/sources/:id', wrap(async (req, res) => res.json(SC.removeSource(req.params.id))));
+app.post('/api/scout/scan', wrap(async (req, res) => res.json(SC.queueScan(Array.isArray(req.body?.ids) ? req.body.ids : null))));
+app.post('/api/scout/decode', wrap(async (req, res) => res.json(SC.queueDecode(String(req.body?.sourceId || ''), String(req.body?.key || '')))));
+app.post('/api/scout/clone', wrap(async (req, res) => res.json(SC.clone(String(req.body?.sourceId || ''), String(req.body?.key || ''), { cid: req.body?.cid || null }))));
+SC.startLoop();
 
 app.listen(config.port, config.host, () => {
   console.log(`Post AI Studio: http://${config.host}:${config.port}`);

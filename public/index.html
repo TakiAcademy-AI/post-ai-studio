@@ -16,7 +16,7 @@
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.95 2.55L22.5 17.5l-2.55.95L19 21l-.95-2.55L15.5 17.5l2.55-.95z"/></svg></span>
     <span>Post AI <b>Studio</b></span>
   </div>
-  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-auto" class="tab">Tự nuôi kênh</button><button id="tab-boss" class="tab">Boss</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
+  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-auto" class="tab">Tự nuôi kênh</button><button id="tab-scout" class="tab">Trinh sát</button><button id="tab-boss" class="tab">Boss</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
   <div id="status-pills" class="pills"></div>
 </header>
 
@@ -202,6 +202,52 @@
           <h2 style="margin-top:18px">Khung giờ sắp tới & đã làm</h2>
           <div id="ap-plan"></div>
           <details style="margin-top:10px"><summary>Nhật ký tự nuôi kênh</summary><div id="ap-log" class="log"></div></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-scout" hidden>
+      <div class="card">
+        <div class="job-head">
+          <div class="grow"><h1>Trinh sát 🔭</h1>
+            <div class="muted">Theo dõi kênh đối thủ / kênh tham khảo (TikTok, Facebook, YouTube, Instagram) cho từng kênh tự nuôi. Chrome Facebook mở trang <b>công khai, chỉ đọc</b>, lấy ~30 video gần nhất + lượt xem → trung vị kênh. Video vượt <b>×<span id="sc-boom-x">5</span> trung vị</b> là <b>bùng nổ</b> → decode khuôn (hook, cấu trúc, vì sao nổ) → <b>Clone vào hàng đợi</b> chủ đề của kênh (giữ khuôn, không chép nội dung).</div>
+            <div id="sc-status" style="margin-top:8px;font-size:13px"></div></div>
+          <div class="row" style="margin:0"><button class="primary small" id="sc-scan-all">Quét tất cả</button></div>
+        </div>
+      </div>
+      <div class="boss-grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+            <h2 style="margin:0">Tín hiệu</h2>
+            <div class="row" style="margin:0;gap:8px">
+              <select id="sc-filter-ch" style="width:auto"><option value="">Mọi kênh</option></select>
+              <label style="font-weight:400;display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="sc-boom-only" checked style="width:auto"> Chỉ bùng nổ</label>
+            </div>
+          </div>
+          <div id="sc-top-formats" class="muted" style="font-size:13px;margin-top:6px"></div>
+          <div id="sc-signals"></div>
+        </div>
+        <div class="card">
+          <h2 style="margin-top:0">Nguồn quan sát</h2>
+          <form id="sc-add" class="grid-form">
+            <label class="full">Link kênh<input id="sc-url" placeholder="tiktok.com/@abc · facebook.com/tenpage · youtube.com/@abc · instagram.com/abc"></label>
+            <label>Phục vụ kênh<select id="sc-cid"></select></label>
+            <label>Loại<select id="sc-owner"><option value="competitor">Đối thủ / tham khảo</option><option value="mine">Kênh của tôi</option></select></label>
+            <label class="full">Tên (tuỳ chọn)<input id="sc-name"></label>
+            <div class="full"><button class="primary small" id="sc-add-btn">＋ Thêm & quét</button></div>
+          </form>
+          <div id="sc-sources" style="margin-top:12px"></div>
+          <details style="margin-top:14px"><summary>Cài đặt trinh sát</summary>
+            <div class="grid-form" style="margin-top:10px">
+              <label>Giờ tự quét (giờ VN, cách nhau dấu phẩy)<input id="sc-times" placeholder="06:59, 18:00"></label>
+              <label>Nổi khi ≥ × trung vị<input type="number" step="0.5" id="sc-hot"></label>
+              <label>Bùng nổ khi ≥ × trung vị<input type="number" step="0.5" id="sc-boom"></label>
+              <label>…và mới trong (ngày)<input type="number" id="sc-days"></label>
+              <label style="flex-direction:row;gap:8px;align-items:center"><input type="checkbox" id="sc-autodecode" style="width:auto"> Tự decode video bùng nổ</label>
+              <label>Tối đa decode mỗi lần quét<input type="number" id="sc-maxdecode"></label>
+              <div class="full"><button class="small" id="sc-save">Lưu cài đặt</button></div>
+            </div>
+          </details>
         </div>
       </div>
     </section>
