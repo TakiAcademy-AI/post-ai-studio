@@ -366,6 +366,19 @@ table.perf th:first-child, table.perf td:first-child { text-align: left; color: 
 .slot { display: inline-flex; gap: 4px; align-items: center; }
 .slot input { width: auto; padding: 6px 8px; }
 .ap-row { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 10px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.boss-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.boss-rep { border-top: 1px solid var(--line); padding: 12px 0; }
+.boss-rep .txt { white-space: pre-wrap; font-size: 13.5px; line-height: 1.55; }
+.boss-prop { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 8px 10px; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; font-size: 13px; }
+.boss-prop .what { font-weight: 600; }
+.boss-prop .why { grid-column: 1; color: var(--muted); }
+.boss-prop .acts { grid-row: 1 / span 2; grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.boss-chat { max-height: 520px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.boss-msg { padding: 8px 12px; border-radius: 12px; font-size: 13.5px; white-space: pre-wrap; max-width: 92%; }
+.boss-msg.user { align-self: flex-end; background: var(--accent); color: #fff; }
+.boss-msg.boss { align-self: flex-start; background: var(--bg-soft, rgba(127,127,127,.1)); }
+.boss-verdict { font-size: 12.5px; margin-top: 4px; }
+@media (max-width: 900px) { .boss-grid { grid-template-columns: minmax(0, 1fr); } .boss-prop { grid-template-columns: minmax(0, 1fr); } .boss-prop .acts { grid-row: auto; grid-column: 1; justify-content: flex-start; } }
 .ap-row .when { font-weight: 700; color: var(--accent); }
 .ap-row .acts { grid-column: 2; display: flex; gap: 6px; flex-wrap: wrap; }
 .ap-row .acts:empty { display: none; }

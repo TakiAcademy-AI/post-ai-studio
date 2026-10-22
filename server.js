@@ -16,6 +16,8 @@ import * as FBB from './lib/fb-browser.js';
 import * as FI from './lib/fb-insights.js';
 import * as PB from './lib/playbook.js';
 import * as AP from './lib/autopilot.js';
+import * as BOSS from './lib/boss.js';
+import { grokStatus } from './lib/grok.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
@@ -289,11 +291,22 @@ app.post('/api/autopilot/channels/:cid', wrap(async (req, res) => {
 }));
 app.post('/api/autopilot/channels/:cid/profile', wrap(async (req, res) => { await AP.profile(req.params.cid); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/ideate', wrap(async (req, res) => { await AP.ideate(req.params.cid); res.json({ ok: true }); }));
-app.post('/api/autopilot/channels/:cid/approve', wrap(async (req, res) => { await AP.approve(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));
+app.post('/api/autopilot/channels/:cid/approve', wrap(async (req, res) => { const m = req.body?.mode; await AP.approve(req.params.cid, String(req.body?.slot || ''), { mode: m === 'draft' || m === 'schedule' ? m : null }); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/skip', wrap(async (req, res) => { AP.skip(req.params.cid, String(req.body?.slot || '')); res.json({ ok: true }); }));
 app.post('/api/autopilot/channels/:cid/redo', wrap(async (req, res) => { AP.redo(req.params.cid, String(req.body?.slot || ''), { sameTopic: Boolean(req.body?.sameTopic) }); res.json({ ok: true }); }));
 app.post('/api/autopilot/run', wrap(async (_req, res) => { AP.tick().catch(() => {}); res.json({ ok: true }); }));
 AP.startLoop();
+
+// ---------- Agent boss (Grok CLI) ----------
+let grokCache = null;
+app.get('/api/boss', (_req, res) => res.json({ ...BOSS.view(), grok: grokCache }));
+app.post('/api/boss/grok-check', wrap(async (_req, res) => { grokCache = { ...(await grokStatus()), at: new Date().toISOString() }; res.json(grokCache); }));
+app.post('/api/boss/report', wrap(async (_req, res) => res.json(await BOSS.supervise())));
+app.post('/api/boss/chat', wrap(async (req, res) => res.json(await BOSS.chat(req.body?.message))));
+app.post('/api/boss/settings', wrap(async (req, res) => res.json(BOSS.saveSettings(req.body || {}))));
+app.post('/api/boss/proposals/:id/apply', wrap(async (req, res) => res.json(await BOSS.applyProposal(req.params.id))));
+app.post('/api/boss/proposals/:id/dismiss', wrap(async (req, res) => res.json(BOSS.dismissProposal(req.params.id))));
+BOSS.startLoop();
 
 app.listen(config.port, config.host, () => {
   console.log(`Post AI Studio: http://${config.host}:${config.port}`);

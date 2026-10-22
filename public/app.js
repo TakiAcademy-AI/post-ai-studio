@@ -29,12 +29,13 @@ function toast(msg, ms = 4000) {
 }
 
 function show(view) {
-  for (const v of ['new', 'job', 'empty', 'posts', 'accounts', 'perf', 'auto']) $(`#view-${v}`).hidden = v !== view;
+  for (const v of ['new', 'job', 'empty', 'posts', 'accounts', 'perf', 'auto', 'boss']) $(`#view-${v}`).hidden = v !== view;
+  $('#tab-boss').classList.toggle('active', view === 'boss');
   $('#tab-posts').classList.toggle('active', view === 'posts');
   $('#tab-accounts').classList.toggle('active', view === 'accounts');
   $('#tab-perf').classList.toggle('active', view === 'perf');
   $('#tab-auto').classList.toggle('active', view === 'auto');
-  $('#tab-videos').classList.toggle('active', !['posts', 'accounts', 'perf', 'auto'].includes(view));
+  $('#tab-videos').classList.toggle('active', !['posts', 'accounts', 'perf', 'auto', 'boss'].includes(view));
   document.body.dataset.view = view;
   $('.side').classList.remove('open'); // mobile: mở video xong thì gấp danh sách lại
   if (typeof sideLabel === 'function') sideLabel();
@@ -1126,6 +1127,8 @@ async function loadAuto(fill = false) {
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
+    $('#ap-brain').value = ch.brain || 'claude';
+    $('#ap-bossreview').checked = Boolean(ch.bossReview);
     $('#ap-topics').value = ch.topics.join('\n');
   }
   const pf = ch.profile;
@@ -1146,9 +1149,9 @@ async function loadAuto(fill = false) {
       <div class="when">${vnTime(slot)}</div>
       <div class="grow">${p ? `<span class="badge ${ST[p.status] || ''}">${esc(p.status)}${p.step ? ` · ${esc(p.step)}` : ''}</span> ${esc(p.topic || '')}
         ${p.score != null ? ` · <b>${p.score}/100</b>` : ''}${p.attempts?.length > 1 ? ` <small class="muted" style="display:inline">(${p.attempts.map((a) => a.score).join(' → ')})</small>` : ''}
-        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.look ? `<div class="muted" style="font-size:12px">👔 ${esc(p.look.outfit)} · 🏠 ${esc(p.look.setting)}</div>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
+        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.look ? `<div class="muted" style="font-size:12px">👔 ${esc(p.look.outfit)} · 🏠 ${esc(p.look.setting)}</div>` : ''}${p.boss ? `<div class="boss-verdict">🧠 Boss: <b>${esc(p.boss.verdict)}</b> (${p.boss.score}/100) — ${esc(p.boss.reason)}${p.boss.fixes ? ` <span class="muted">Sửa: ${esc(p.boss.fixes)}</span>` : ''}</div>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
-      <div class="acts">${p?.status === 'chờ duyệt' ? `<button class="small primary" data-ap-approve="${slot}">Duyệt & hẹn đăng</button>` : ''}${p?.status === 'nháp' ? `<a class="small" href="https://business.facebook.com/latest/posts/draft_posts?asset_id=${encodeURIComponent(ch.page?.id || '')}" target="_blank" rel="noopener">Mở Bản nháp trên Business Suite</a><button class="small primary" data-ap-approve="${slot}" data-draft="1">Hẹn đăng ${future ? 'theo khung giờ' : 'sớm nhất'}</button>` : ''}${future && p && ['chờ duyệt', 'nháp', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
+      <div class="acts">${p?.status === 'chờ duyệt' && p.boss ? `<button class="small primary" data-ap-boss="${slot}" data-verdict="${esc(p.boss.verdict)}">Làm theo boss: ${esc(p.boss.verdict)}</button>` : ''}${p?.status === 'chờ duyệt' ? `<button class="small${p.boss ? '' : ' primary'}" data-ap-approve="${slot}">Duyệt & ${ch.postMode === 'draft' ? 'lưu nháp' : 'hẹn đăng'}</button>` : ''}${p?.status === 'nháp' ? `<a class="small" href="https://business.facebook.com/latest/posts/draft_posts?asset_id=${encodeURIComponent(ch.page?.id || '')}" target="_blank" rel="noopener">Mở Bản nháp trên Business Suite</a><button class="small primary" data-ap-approve="${slot}" data-draft="1">Hẹn đăng ${future ? 'theo khung giờ' : 'sớm nhất'}</button>` : ''}${future && p && ['chờ duyệt', 'nháp', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
   }).join('') : '<div class="muted">Chưa có khung giờ nào.</div>';
   $('#ap-log').textContent = (ch.log || []).map((l) => `[${vnTime(l.at)}] ${l.msg}`).join('\n');
@@ -1167,6 +1170,8 @@ function apForm() {
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
       ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
     varyLook: $('#ap-varylook').checked,
+    brain: $('#ap-brain').value,
+    bossReview: $('#ap-bossreview').checked,
   };
 }
 $('#view-auto').addEventListener('click', async (e) => {
@@ -1188,6 +1193,13 @@ $('#view-auto').addEventListener('click', async (e) => {
     }
     if (t.id === 'ap-ideate') { t.disabled = true; t.textContent = 'Claude đang nghĩ…'; await api(chUrl('/ideate'), { method: 'POST' }); return loadAuto(true); }
     if (t.id === 'ap-run') { if (!confirm('Làm ngay 1 video cho khung giờ sớm nhất đang trống (trong các kênh đang bật; tốn credit Flow)?')) return; await api(chUrl(), { method: 'POST', body: apForm() }); await api('/api/autopilot/run', { method: 'POST' }); toast('Đã bắt đầu'); return setTimeout(() => loadAuto(false), 1500); }
+    if (t.dataset.apBoss) {
+      const v = t.dataset.verdict; const slot = t.dataset.apBoss;
+      t.disabled = true;
+      if (v === 'làm lại') { await api(chUrl('/redo'), { method: 'POST', body: { slot, sameTopic: true } }); toast('Đang làm lại cùng chủ đề'); }
+      else { await api(chUrl('/approve'), { method: 'POST', body: { slot, mode: v === 'nháp' ? 'draft' : 'schedule' } }); toast(v === 'nháp' ? 'Đã lưu nháp' : 'Đã hẹn đăng'); }
+      return loadAuto(false);
+    }
     if (t.dataset.apApprove) {
       if (t.dataset.draft && !confirm('Hẹn giờ đăng video này từ web? Web tải video lên và hẹn giờ mới; bản nháp cũ trong Business Suite vẫn còn — xoá tay để khỏi trùng.')) return;
       t.disabled = true; await api(chUrl('/approve'), { method: 'POST', body: { slot: t.dataset.apApprove } }); toast('Đã hẹn đăng'); return loadAuto(false);
@@ -1213,4 +1225,85 @@ $('#ap-enabled').addEventListener('change', async (e) => {
   if (on && !confirm(`Bật kênh "${f.name}"? Mỗi ngày web sẽ tự làm và ${f.postMode === 'draft' ? 'LƯU NHÁP' : 'HẸN GIỜ ĐĂNG'} ${f.slots.length} video lên "${f.pageName}" (tốn credit Flow + lượt Claude).`)) { e.target.checked = false; return; }
   await api(chUrl(), { method: 'POST', body: { ...f, enabled: on } }).catch((err) => toast(err.message));
   loadAuto(true);
+});
+
+// ---------- Boss (Grok) ----------
+const ACTION_LABEL = {
+  set_field: (p) => `Đổi "${{ channel: 'Định vị kênh', audience: 'Khán giả', tone: 'Giọng', avoid: 'Tránh', character: 'DNA trang phục', setting: 'Bối cảnh', camera: 'Góc quay', cta: 'CTA' }[p.field] || p.field}" → ${p.value}`,
+  add_topics: (p) => `Thêm ${p.list.length} chủ đề: ${p.list.join(' · ')}`,
+  replace_topics: (p) => `Thay hàng đợi bằng ${p.list.length} chủ đề: ${p.list.join(' · ')}`,
+  set_slots: (p) => `Khung giờ đăng: ${p.list.join(', ')}`,
+  set_enabled: (p) => (/^(true|1|bật|on|yes)$/i.test(p.value) ? 'Bật kênh' : 'Tắt kênh'),
+  set_post_mode: (p) => (p.value === 'draft' ? 'Chuyển sang đăng nháp' : 'Chuyển sang hẹn giờ đăng'),
+  set_scene_count: (p) => `Số cảnh mỗi video: ${p.value}`,
+  redo_slot: (p) => `Làm lại khung ${p.slot ? vnTime(p.slot) : '?'} (${p.value === 'same' ? 'cùng chủ đề' : 'chủ đề mới'})`,
+  skip_slot: (p) => `Bỏ qua khung ${p.slot ? vnTime(p.slot) : '?'}`,
+  approve_slot: (p) => `Duyệt khung ${p.slot ? vnTime(p.slot) : '?'} → ${p.value === 'draft' ? 'lưu nháp' : 'hẹn đăng'}`,
+  rescan_channel: () => 'Quét lại Page để định vị kênh',
+};
+let bossTimer = null;
+let bossChannels = [];
+function propHtml(p) {
+  const ch = bossChannels.find((c) => c.id === p.cid);
+  const what = (ACTION_LABEL[p.action] || (() => p.action))(p);
+  const st = { 'mới': '', 'đang làm': 'running', 'đã áp dụng': 'done', 'bỏ qua': 'draft', 'lỗi': 'error' }[p.status] ?? '';
+  return `<div class="boss-prop"><div class="what"><span class="badge">${esc(ch?.name || p.cid)}</span> ${esc(what)}</div>
+    <div class="why">${esc(p.reason)}${p.error ? ` <span class="over">${esc(p.error)}</span>` : ''}</div>
+    <div class="acts">${p.status === 'mới' || p.status === 'lỗi' ? `<button class="small primary" data-boss-apply="${p.id}">Áp dụng</button><button class="small" data-boss-dismiss="${p.id}">Bỏ</button>` : `<span class="badge ${st}">${esc(p.status)}</span>`}</div></div>`;
+}
+async function loadBoss() {
+  clearTimeout(bossTimer);
+  const [d, ap] = await Promise.all([api('/api/boss'), api('/api/autopilot')]);
+  bossChannels = ap.channels;
+  const g = d.grok;
+  $('#boss-grok').innerHTML = !g ? '<span class="muted">Chưa kiểm tra kết nối Grok — bấm "Kiểm tra Grok".</span>'
+    : g.ok ? '<span class="badge done">Grok sẵn sàng</span>'
+    : !g.installed ? '<span class="badge error">Chưa cài Grok CLI</span>'
+    : `<span class="badge error">Grok chưa dùng được</span> <span class="muted">${esc(g.error || '')}</span>`;
+  $('#boss-daily').checked = d.daily; $('#boss-daily-at').value = d.dailyAt;
+  $('#boss-report').disabled = d.reporting; $('#boss-report').textContent = d.reporting ? 'Boss đang xem…' : 'Báo cáo ngay';
+  $('#boss-reports').innerHTML = (d.lastError ? `<div class="over" style="font-size:13px;margin-top:8px">Lần báo cáo gần nhất lỗi: ${esc(d.lastError)}</div>` : '')
+    + (d.reports.length ? d.reports.map((r) => `<div class="boss-rep"><div class="muted" style="font-size:12px">${vnTime(r.at)}${r.costUsd ? ` · $${r.costUsd.toFixed(3)}` : ''}</div>
+      <div class="txt">${esc(r.text)}</div>${r.proposals.map(propHtml).join('')}</div>`).join('') : '<div class="muted" style="margin-top:10px">Chưa có báo cáo.</div>');
+  const box = $('#boss-chat');
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+  box.innerHTML = d.chat.length ? d.chat.map((m) => `<div class="boss-msg ${m.role}">${esc(m.text)}${(m.proposals || []).map(propHtml).join('')}</div>`).join('')
+    + (d.chatting ? '<div class="boss-msg boss muted">Boss đang trả lời…</div>' : '') : '<div class="muted">Hỏi boss về các kênh, hoặc ra lệnh bằng lời.</div>';
+  if (atBottom) box.scrollTop = box.scrollHeight;
+  $('#boss-send').disabled = d.chatting;
+  if (!$('#view-boss').hidden) bossTimer = setTimeout(() => loadBoss().catch(() => {}), d.reporting || d.chatting ? 4000 : 30000);
+}
+$('#tab-boss').addEventListener('click', async () => {
+  currentId = null; stopPoll(); show('boss');
+  await loadBoss();
+  if (!(await api('/api/boss')).grok) api('/api/boss/grok-check', { method: 'POST' }).then(loadBoss).catch(() => {});
+});
+$('#boss-check').addEventListener('click', async (e) => {
+  e.target.disabled = true; e.target.textContent = 'Đang thử Grok…';
+  try { await api('/api/boss/grok-check', { method: 'POST' }); } finally { e.target.disabled = false; e.target.textContent = 'Kiểm tra Grok'; }
+  loadBoss();
+});
+$('#boss-report').addEventListener('click', async (e) => {
+  e.target.disabled = true; e.target.textContent = 'Boss đang xem…';
+  api('/api/boss/report', { method: 'POST' }).then(() => toast('Boss đã báo cáo')).catch((err) => toast(err.message)).finally(loadBoss);
+  setTimeout(loadBoss, 1500);
+});
+for (const id of ['#boss-daily', '#boss-daily-at']) $(id).addEventListener('change', () => api('/api/boss/settings', { method: 'POST', body: { daily: $('#boss-daily').checked, dailyAt: $('#boss-daily-at').value } }).then(() => toast('Đã lưu')));
+$('#boss-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const message = $('#boss-msg').value.trim();
+  if (!message) return;
+  $('#boss-msg').value = '';
+  api('/api/boss/chat', { method: 'POST', body: { message } }).catch((err) => toast(err.message)).finally(loadBoss);
+  setTimeout(loadBoss, 800);
+});
+$('#boss-msg').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#boss-form').requestSubmit(); } });
+$('#view-boss').addEventListener('click', async (e) => {
+  const t = e.target.closest('button');
+  if (!t) return;
+  try {
+    if (t.dataset.bossApply) { t.disabled = true; t.textContent = 'Đang làm…'; await api(`/api/boss/proposals/${t.dataset.bossApply}/apply`, { method: 'POST' }); toast('Đã áp dụng'); }
+    if (t.dataset.bossDismiss) await api(`/api/boss/proposals/${t.dataset.bossDismiss}/dismiss`, { method: 'POST' });
+  } catch (err) { toast(err.message); }
+  loadBoss();
 });

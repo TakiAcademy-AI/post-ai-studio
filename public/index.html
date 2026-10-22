@@ -16,7 +16,7 @@
     <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2l1.9 5.6L19.5 9.5l-5.6 1.9L12 17l-1.9-5.6L4.5 9.5l5.6-1.9zM19 14l.95 2.55L22.5 17.5l-2.55.95L19 21l-.95-2.55L15.5 17.5l2.55-.95z"/></svg></span>
     <span>Post AI <b>Studio</b></span>
   </div>
-  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-auto" class="tab">Tự nuôi kênh</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
+  <nav class="tabs"><button id="tab-videos" class="tab active">Video</button><button id="tab-posts" class="tab">Lịch đăng</button><button id="tab-perf" class="tab">Hiệu quả</button><button id="tab-auto" class="tab">Tự nuôi kênh</button><button id="tab-boss" class="tab">Boss</button><button id="tab-accounts" class="tab">Tài khoản</button></nav>
   <div id="status-pills" class="pills"></div>
 </header>
 
@@ -181,6 +181,8 @@
           <div class="grid-form" style="margin-top:12px">
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
             <label>Giọng đọc<select id="ap-voice"></select></label>
+            <label>Bộ não viết chủ đề + kịch bản<select id="ap-brain"><option value="claude">Claude</option><option value="grok">Grok (Grok CLI)</option></select></label>
+            <label style="flex-direction:row;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="ap-bossreview" style="width:auto"> Boss Grok duyệt video trước khi đăng <small class="muted" style="display:inline;font-weight:400">(đề xuất đăng / nháp / làm lại, anh bấm quyết)</small></label>
             <label class="full" style="flex-direction:row;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="ap-varylook" style="width:auto"> Mỗi video đổi trang phục &amp; bối cảnh <small class="muted" style="display:inline;font-weight:400">(Claude chọn bộ mới, khác các video gần đây; các cảnh trong 1 video vẫn giống hệt nhau)</small></label>
             <label class="full">Nhân vật / DNA (trang phục…) <small class="muted" style="display:inline">(khi đổi mỗi video: chỉ là gợi ý phong cách)</small><input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
             <label class="full">Bối cảnh <small class="muted" style="display:inline">(khi đổi mỗi video: chỉ là gợi ý)</small><textarea id="ap-setting" rows="2" placeholder="VD: phòng đọc sách, kệ sách gỗ phía sau"></textarea></label>
@@ -200,6 +202,38 @@
           <h2 style="margin-top:18px">Khung giờ sắp tới & đã làm</h2>
           <div id="ap-plan"></div>
           <details style="margin-top:10px"><summary>Nhật ký tự nuôi kênh</summary><div id="ap-log" class="log"></div></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-boss" hidden>
+      <div class="card">
+        <div class="job-head">
+          <div class="grow"><h1>Boss 🧠 <small class="muted" style="font-size:14px;font-weight:500">bộ não Grok</small></h1>
+            <div class="muted">Agent giám sát mọi kênh Tự nuôi kênh: đọc cài đặt, kế hoạch, nhật ký, số liệu Page → báo cáo + <b>đề xuất</b>. Boss không tự làm gì — mỗi đề xuất chờ anh bấm <b>Áp dụng</b>. Chạy bằng Grok CLI (đăng nhập: <code>grok login</code> trong terminal).</div>
+            <div id="boss-grok" style="margin-top:8px;font-size:13px"></div></div>
+          <div class="row" style="margin:0"><button class="small" id="boss-check">Kiểm tra Grok</button></div>
+        </div>
+      </div>
+      <div class="boss-grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+            <h2 style="margin:0">Báo cáo giám sát</h2>
+            <button class="primary small" id="boss-report">Báo cáo ngay</button>
+          </div>
+          <div class="row" style="font-size:13px">
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="boss-daily" style="width:auto"> Tự báo cáo mỗi ngày lúc</label>
+            <input type="time" id="boss-daily-at" style="width:120px">
+          </div>
+          <div id="boss-reports"></div>
+        </div>
+        <div class="card boss-chat-card">
+          <h2 style="margin-top:0">Chat ra lệnh</h2>
+          <div id="boss-chat" class="boss-chat"></div>
+          <form id="boss-form" class="row" style="flex-wrap:nowrap">
+            <textarea id="boss-msg" rows="2" placeholder="VD: Kênh Taki Talks thêm khung 21:00, chuyển sang đăng nháp, và nghĩ 5 chủ đề về đàm phán" style="flex:1"></textarea>
+            <button class="primary" id="boss-send">Gửi</button>
+          </form>
         </div>
       </div>
     </section>

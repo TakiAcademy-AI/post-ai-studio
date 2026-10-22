@@ -177,3 +177,13 @@ Veo vẽ chữ tiếng Việt có dấu sai và hay tự thêm chữ lạ, nên:
 - Mỗi lần chỉ tạo 1 clip (Flow chạy qua 1 Chrome profile), các job khác xếp hàng.
 - Dữ liệu từng job: `data/jobs/<id>/` (job.json, clip từng cảnh, khung cuối, video ghép).
 - Skill dùng làm system prompt: `skill/SKILL.md` — sửa file này để đổi cách viết kịch bản.
+
+
+## Boss 🧠 (bộ não Grok)
+
+Agent giám sát chạy bằng **Grok CLI** chính thức của xAI. Cài bằng `curl -fsSL https://x.ai/cli/install.sh | bash`, sau đó tự đăng nhập bằng `grok login` (cần gói SuperGrok hoặc X Premium+, hoặc đặt `XAI_API_KEY`). Boss **chỉ đề xuất**: mỗi việc đều chờ anh bấm **Áp dụng**.
+
+- **Báo cáo giám sát** (tab Boss): mặc định tự báo cáo mỗi ngày lúc 07:30, hoặc bấm "Báo cáo ngay". Boss đọc cài đặt, kế hoạch, nhật ký và số liệu Page của mọi kênh, rồi nhận định và đưa ra đề xuất: đổi định vị / khán giả / giọng / DNA / bối cảnh, thêm hoặc thay chủ đề, đổi khung giờ, bật/tắt kênh, đổi cách đăng, số cảnh, làm lại hoặc bỏ qua một khung, duyệt video, quét lại kênh.
+- **Chat ra lệnh**: anh nói bằng lời, boss trả lời và chuyển lệnh thành đề xuất để anh bấm Áp dụng.
+- **Boss duyệt video** (bật trong cài đặt kênh): video làm xong được boss xem khung hình, lời thoại và kết quả kiểm tra áo/chữ, rồi đề xuất *đăng / nháp / làm lại*. Video dừng ở trạng thái "chờ duyệt"; anh bấm **Làm theo boss** hoặc tự chọn.
+- **Bộ não viết chủ đề + kịch bản** (cài đặt kênh): chọn Claude hoặc Grok. Chọn Grok thì Grok nghĩ chủ đề, viết kịch bản, chọn trang phục/bối cảnh và định vị kênh. Phần kiểm tra áo/chữ và rút gọn prompt vẫn do Claude làm.
