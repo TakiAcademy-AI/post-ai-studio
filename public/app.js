@@ -546,6 +546,7 @@ function openAccounts() {
   loadFb();
   loadChromeFlow();
   loadChromeBox('fb');
+  loadBrain();
 }
 $('#tab-accounts').addEventListener('click', openAccounts);
 
@@ -1128,7 +1129,7 @@ async function loadAuto(fill = false) {
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
-    $('#ap-brain').value = ch.brain || 'claude';
+    $('#ap-brain').value = ['claude', 'grok'].includes(ch.brain) ? ch.brain : 'auto';
     loadBenchmarks(ch).catch(() => {});
     $('#ap-scoutclone').checked = ch.scoutAutoClone !== false;
     $('#ap-scoutperday').value = ch.scoutClonePerDay ?? 2;
@@ -1477,3 +1478,18 @@ $('#view-auto').addEventListener('click', async (e) => {
   } catch (err) { toast(err.message); }
   if (apCh()) loadBenchmarks(apCh(), true);
 }, true);
+
+// ---------- Bộ não AI (tab Tài khoản) ----------
+async function loadBrain(check = false) {
+  if (check) { $('#brain-status').innerHTML = '<span class="muted">Đang thử Grok…</span>'; await api('/api/boss/grok-check', { method: 'POST' }).catch(() => {}); }
+  const d = await api('/api/brain');
+  for (const r of document.querySelectorAll('input[name=brain]')) r.checked = r.value === d.brain;
+  const g = d.grok;
+  const gs = !g ? '<span class="muted">chưa kiểm tra</span>' : g.ok ? '<span class="badge done">sẵn sàng</span>' : `<span class="badge error">chưa dùng được</span> <span class="muted">${esc(g.error || '')}</span>`;
+  $('#brain-status').innerHTML = `Đang dùng: <b>${d.brain === 'grok' ? 'Grok' : 'Claude'}</b> · Grok: ${gs} <button class="small" id="brain-check">Kiểm tra Grok</button>`;
+  $('#brain-check').onclick = () => loadBrain(true);
+}
+for (const r of document.querySelectorAll('input[name=brain]')) r.addEventListener('change', async () => {
+  try { await api('/api/brain', { method: 'POST', body: { brain: r.value } }); toast(`Bộ não: ${r.value === 'grok' ? 'Grok' : 'Claude'}`); } catch (err) { toast(err.message); }
+  loadBrain(r.value === 'grok');
+});

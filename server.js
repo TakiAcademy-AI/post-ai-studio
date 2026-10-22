@@ -19,7 +19,7 @@ import * as AP from './lib/autopilot.js';
 import * as BOSS from './lib/boss.js';
 import * as SC from './lib/scout.js';
 import * as BM from './lib/benchmark.js';
-import { grokStatus } from './lib/grok.js';
+import { grokStatus, defaultBrain } from './lib/grok.js';
 import { FLOW_MODELS } from './lib/flow-auto.js';
 import * as J from './lib/jobs.js';
 
@@ -301,6 +301,8 @@ AP.startLoop();
 
 // ---------- Agent boss (Grok CLI) ----------
 let grokCache = null;
+app.get('/api/brain', (_req, res) => res.json({ brain: defaultBrain(), grok: grokCache }));
+app.post('/api/brain', wrap(async (req, res) => { const b = req.body?.brain; if (b !== 'claude' && b !== 'grok') throw new Error('Chọn claude hoặc grok'); writeSettings({ brain: b }); res.json({ brain: defaultBrain() }); }));
 app.get('/api/boss', (_req, res) => res.json({ ...BOSS.view(), grok: grokCache }));
 app.post('/api/boss/grok-check', wrap(async (_req, res) => { grokCache = { ...(await grokStatus()), at: new Date().toISOString() }; res.json(grokCache); }));
 app.post('/api/boss/report', wrap(async (_req, res) => res.json(await BOSS.supervise())));

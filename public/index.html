@@ -190,7 +190,7 @@
           <div class="grid-form" style="margin-top:12px">
             <label>Số cảnh mỗi video<input type="number" id="ap-scenes" min="2" max="11"></label>
             <label>Giọng đọc<select id="ap-voice"></select></label>
-            <label>Bộ não viết chủ đề + kịch bản<select id="ap-brain"><option value="claude">Claude</option><option value="grok">Grok (Grok CLI)</option></select></label>
+            <label>Bộ não viết chủ đề + kịch bản<select id="ap-brain"><option value="auto">Theo Tài khoản</option><option value="claude">Claude</option><option value="grok">Grok (Grok CLI)</option></select></label>
             <label style="flex-direction:row;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="ap-bossreview" style="width:auto"> Boss Grok duyệt video trước khi đăng <small class="muted" style="display:inline;font-weight:400">(đề xuất đăng / nháp / làm lại, anh bấm quyết)</small></label>
             <label class="full" style="flex-direction:row;gap:8px;align-items:center;font-weight:600"><input type="checkbox" id="ap-varylook" style="width:auto"> Mỗi video đổi trang phục &amp; bối cảnh <small class="muted" style="display:inline;font-weight:400">(Claude chọn bộ mới, khác các video gần đây; các cảnh trong 1 video vẫn giống hệt nhau)</small></label>
             <label class="full">Nhân vật / DNA (trang phục…) <small class="muted" style="display:inline">(khi đổi mỗi video: chỉ là gợi ý phong cách)</small><input id="ap-character" placeholder="VD: áo sơ mi trắng trơn, xắn tay"></label>
@@ -313,9 +313,18 @@
       <div class="card hero-card">
         <span class="eyebrow">✦ Kết nối</span>
         <h1>Tài khoản</h1>
-        <p class="muted" style="margin:0">Tài khoản Claude để viết kịch bản, Chrome Facebook để đăng bài, Chrome Flow để tạo video.</p>
+        <p class="muted" style="margin:0">Bộ não AI (Claude hoặc Grok) để nghĩ chủ đề + viết kịch bản, Chrome Facebook để đăng bài, Chrome Flow để tạo video.</p>
       </div>
       <div class="acc-grid">
+        <div class="card acc-card" style="grid-column:1/-1">
+          <div class="acc-head"><span class="acc-icon cl">🧠</span><div><h2 style="margin:0">Bộ não AI</h2><div class="muted" style="font-size:13px">Ai nghĩ chủ đề, viết kịch bản, chọn trang phục / bối cảnh, định vị kênh, decode video đối thủ</div></div></div>
+          <div class="row" style="gap:18px">
+            <label style="font-weight:600;display:flex;gap:8px;align-items:center"><input type="radio" name="brain" value="claude" style="width:auto"> Claude <span class="muted" style="font-weight:400">(Claude Code CLI — tài khoản bên dưới)</span></label>
+            <label style="font-weight:600;display:flex;gap:8px;align-items:center"><input type="radio" name="brain" value="grok" style="width:auto"> Grok <span class="muted" style="font-weight:400">(Grok CLI — đăng nhập: <code>grok login</code>)</span></label>
+          </div>
+          <div id="brain-status" style="font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"></div>
+          <p class="acc-note">Áp dụng cho tab Video và mọi kênh Tự nuôi kênh để "Theo Tài khoản" (kênh vẫn chọn riêng được). Kiểm tra áo / chữ sau mỗi cảnh, rút gọn prompt và phân tích video chuẩn luôn dùng Claude; Boss luôn dùng Grok.</p>
+        </div>
         <div class="card acc-card">
           <div class="acc-head"><span class="acc-icon cl">✦</span><div><h2 style="margin:0">Claude</h2><div class="muted" style="font-size:13px">Viết kịch bản, rút gọn prompt, đọc ảnh nhân vật</div></div></div>
           <div id="cl-box" class="acc-body muted">Đang kiểm tra…</div>

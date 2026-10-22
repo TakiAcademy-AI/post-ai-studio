@@ -217,3 +217,5 @@ Lấy một video viral thật của anh làm **tiêu chuẩn** cho Tự nuôi k
   - Bước nghĩ chủ đề, viết kịch bản và Boss duyệt video đều bám theo **hình thức** của video chuẩn.
   - Chủ đề vẫn đi theo định vị kênh. Phần nào trong chuẩn nhắc tới giới tính hay ngách cụ thể chỉ được coi là ví dụ.
 - **Nút tiện:** "Dùng góc quay của video chuẩn" và "Dùng N cảnh (≈ độ dài chuẩn)". Hai nút này điền sẵn ô tương ứng; bấm Lưu thì mới áp dụng.
+
+**Bộ não AI** (tab Tài khoản): chọn **Claude** hoặc **Grok** để nghĩ chủ đề, viết kịch bản, chọn trang phục / bối cảnh, quét định vị kênh và decode video đối thủ. Lựa chọn này áp dụng cho tab Video và cho mọi kênh tự nuôi đang để "Theo Tài khoản"; từng kênh vẫn chọn riêng được. Các phần sau luôn dùng Claude: kiểm tra áo / chữ, rút gọn prompt, phân tích video chuẩn. Boss luôn dùng Grok.
