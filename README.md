@@ -202,3 +202,4 @@ Agent giám sát chạy bằng **Grok CLI** chính thức của xAI. Cài bằng
   - lưu ý rủi ro.
 - **Clone vào hàng đợi:** đưa chủ đề theo khuôn đó lên đầu hàng đợi của kênh, ghi rõ "clone khuôn, không chép lời / tên / hình ảnh".
 - **Boss** nhìn thấy các tín hiệu bùng nổ trong báo cáo và có thể đề xuất `clone_signal`.
+- **Trinh sát ngay trong Tự nuôi kênh:** phần cài đặt mỗi kênh có mục "Trinh sát cho kênh này". Ở đó anh thêm hoặc xoá nguồn, quét nguồn của kênh và xem các video đang bùng nổ. Tuỳ chọn **tự đưa video bùng nổ lên đầu hàng đợi chủ đề** bật sẵn, tối đa 2 chủ đề mỗi ngày. Web chỉ đưa những video đã decode, chưa clone cho kênh đó, và lấy video có hệ số × trung vị cao nhất trước. Mỗi lần web tự clone đều được ghi vào nhật ký kênh.

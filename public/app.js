@@ -1129,9 +1129,12 @@ async function loadAuto(fill = false) {
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
     $('#ap-brain').value = ch.brain || 'claude';
+    $('#ap-scoutclone').checked = ch.scoutAutoClone !== false;
+    $('#ap-scoutperday').value = ch.scoutClonePerDay ?? 2;
     $('#ap-bossreview').checked = Boolean(ch.bossReview);
     $('#ap-topics').value = ch.topics.join('\n');
   }
+  loadChannelScout(ch).catch(() => {});
   const pf = ch.profile;
   $('#ap-profile').innerHTML = ch.profiling ? '⏳ Đang quét Page để định vị lại kênh (~1–3 phút)…'
     : !ch.page?.id ? 'Chọn Page rồi Lưu — web sẽ quét Page để tự định vị kênh.'
@@ -1172,6 +1175,8 @@ function apForm() {
       ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
     varyLook: $('#ap-varylook').checked,
     brain: $('#ap-brain').value,
+    scoutAutoClone: $('#ap-scoutclone').checked,
+    scoutClonePerDay: Number($('#ap-scoutperday').value),
     bossReview: $('#ap-bossreview').checked,
   };
 }
@@ -1385,3 +1390,45 @@ $('#view-scout').addEventListener('click', async (e) => {
   } catch (err) { toast(err.message); }
   loadScout();
 });
+
+// ---------- Trinh sát trong Tự nuôi kênh (theo kênh đang chọn) ----------
+async function loadChannelScout(ch) {
+  const d = await api(`/api/scout?cid=${encodeURIComponent(ch.id)}`);
+  if (apCh()?.id !== ch.id) return;
+  $('#apsc-scan').disabled = !d.sources.length;
+  $('#apsc-sources').innerHTML = d.sources.length ? d.sources.map((s) => `<div class="sc-src"><b>${esc(s.name)}</b> <span class="badge">${esc(PLAT[s.platform])}</span>${s.owner === 'mine' ? ' <span class="badge done">kênh của tôi</span>' : ''}
+      <span class="muted">${s.scanning ? '⏳ đang quét…' : s.lastScanAt ? `· quét ${vnTime(s.lastScanAt)} · ${s.lastCount ?? s.videoCount} video · trung vị ${fmtNum(s.median)}` : '· chưa quét'}</span>
+      ${s.lastError ? `<div class="over" style="font-size:12px">${esc(s.lastError)}</div>` : ''}
+      <span class="acts" style="display:inline-flex;margin:0 0 0 6px"><a class="small" href="${esc(s.url)}" target="_blank" rel="noopener">Mở</a><button class="small" data-apsc-del="${s.id}">Xoá</button></span></div>`).join('')
+    : '<div class="muted" style="font-size:13px">Chưa có nguồn nào cho kênh này.</div>';
+  const sig = d.boom.slice(0, 5);
+  $('#apsc-signals').innerHTML = sig.length ? `<div style="margin-top:8px;font-weight:600;font-size:13px">Video đang bùng nổ ${d.busy ? `<span class="badge running">${esc(d.busy)}</span>` : ''}</div>` + sig.map((v) => `<div class="sc-sig">
+      <div class="top"><span class="mult">×${v.multiple}</span><b>${fmtNum(v.views)}</b> <span class="muted">${esc(v.source.name)}</span> <a href="${esc(v.url)}" target="_blank" rel="noopener">mở ↗</a></div>
+      <div>${v.decode ? `<b>Clone:</b> ${esc(v.decode.cloneTitle)} <span class="muted">(khuôn: ${esc(v.decode.format)})</span>` : esc((v.title || '').slice(0, 160))}</div>
+      <div class="acts">${(v.clonedTo || []).includes(ch.id) ? '<span class="badge done">đã vào hàng đợi</span>' : v.decode ? `<button class="small primary" data-apsc-clone="${esc(v.sourceId)}|${esc(v.key)}">Đưa vào hàng đợi</button>` : `<button class="small" data-apsc-decode="${esc(v.sourceId)}|${esc(v.key)}">Decode</button>`}</div></div>`).join('') : '';
+}
+$('#apsc-add').addEventListener('click', async (e) => {
+  e.preventDefault();
+  try {
+    await api('/api/scout/sources', { method: 'POST', body: { url: $('#apsc-url').value, cid: apCid, owner: $('#apsc-owner').value } });
+    $('#apsc-url').value = ''; toast('Đã thêm nguồn — đang quét (1–2 phút)');
+  } catch (err) { toast(err.message); }
+  loadChannelScout(apCh());
+});
+$('#apsc-scan').addEventListener('click', async (e) => {
+  e.preventDefault();
+  const d = await api(`/api/scout?cid=${encodeURIComponent(apCid)}`);
+  await api('/api/scout/scan', { method: 'POST', body: { ids: d.sources.map((s) => s.id) } });
+  toast('Đã xếp quét nguồn của kênh'); loadChannelScout(apCh());
+});
+$('#view-auto').addEventListener('click', async (e) => {
+  const t = e.target.closest('button');
+  if (!t || !(t.dataset.apscDel || t.dataset.apscClone || t.dataset.apscDecode)) return;
+  e.stopPropagation();
+  try {
+    if (t.dataset.apscDel) { if (!confirm('Xoá nguồn này?')) return; await api(`/api/scout/sources/${t.dataset.apscDel}`, { method: 'DELETE' }); }
+    if (t.dataset.apscDecode) { const [sourceId, key] = t.dataset.apscDecode.split('|'); await api('/api/scout/decode', { method: 'POST', body: { sourceId, key } }); toast('Đang decode…'); }
+    if (t.dataset.apscClone) { const [sourceId, key] = t.dataset.apscClone.split('|'); await api('/api/scout/clone', { method: 'POST', body: { sourceId, key, cid: apCid } }); toast('Đã đưa lên đầu hàng đợi'); return loadAuto(true); }
+  } catch (err) { toast(err.message); }
+  loadChannelScout(apCh());
+}, true);

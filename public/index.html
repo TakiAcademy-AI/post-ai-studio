@@ -196,7 +196,23 @@
           <div class="row"><button class="primary" id="ap-save">Lưu cài đặt</button><button id="ap-run">Làm video cho khung giờ kế tiếp ngay</button><button class="danger" id="ap-del">Xoá kênh</button></div>
         </div>
         <div class="card">
-          <h2>Chủ đề sắp làm <small class="muted" style="display:inline;font-weight:500">· lấy từ trên xuống, hết thì Claude tự nghĩ</small></h2>
+          <div class="row" style="justify-content:space-between;align-items:center;margin-top:0">
+            <h2 style="margin:0">Trinh sát cho kênh này 🔭</h2>
+            <button class="small" id="apsc-scan">Quét nguồn của kênh</button>
+          </div>
+          <div class="muted" style="font-size:13px">Kênh đối thủ / tham khảo của kênh này. Video vượt trung vị của họ được decode khuôn → làm chủ đề cho kênh (giữ khuôn, không chép nội dung). Xem đầy đủ ở tab Trinh sát.</div>
+          <div class="row" style="flex-wrap:nowrap">
+            <input id="apsc-url" placeholder="Dán link kênh TikTok / Facebook / YouTube / Instagram" style="flex:1">
+            <select id="apsc-owner" style="width:auto"><option value="competitor">Đối thủ</option><option value="mine">Kênh của tôi</option></select>
+            <button class="small primary" id="apsc-add">＋ Thêm</button>
+          </div>
+          <div class="row" style="font-size:13px">
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="ap-scoutclone" style="width:auto"> Tự đưa video bùng nổ lên đầu hàng đợi chủ đề, tối đa</label>
+            <input type="number" id="ap-scoutperday" min="0" max="6" style="width:64px"> <span>chủ đề / ngày</span>
+          </div>
+          <div id="apsc-sources"></div>
+          <div id="apsc-signals"></div>
+          <h2 style="margin-top:18px">Chủ đề sắp làm <small class="muted" style="display:inline;font-weight:500">· lấy từ trên xuống, hết thì Claude tự nghĩ</small></h2>
           <textarea id="ap-topics" rows="10" placeholder="Mỗi dòng 1 chủ đề"></textarea>
           <div class="row"><button class="small" id="ap-topics-save">Lưu danh sách</button><button class="small" id="ap-ideate">✦ Claude gợi ý thêm</button></div>
           <h2 style="margin-top:18px">Khung giờ sắp tới & đã làm</h2>
