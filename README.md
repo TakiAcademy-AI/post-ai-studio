@@ -219,3 +219,12 @@ Lấy một video viral thật của anh làm **tiêu chuẩn** cho Tự nuôi k
 - **Nút tiện:** "Dùng góc quay của video chuẩn" và "Dùng N cảnh (≈ độ dài chuẩn)". Hai nút này điền sẵn ô tương ứng; bấm Lưu thì mới áp dụng.
 
 **Bộ não AI** (tab Tài khoản): chọn **Claude** hoặc **Grok** để nghĩ chủ đề, viết kịch bản, chọn trang phục / bối cảnh, quét định vị kênh và decode video đối thủ. Lựa chọn này áp dụng cho tab Video và cho mọi kênh tự nuôi đang để "Theo Tài khoản"; từng kênh vẫn chọn riêng được. Các phần sau luôn dùng Claude: kiểm tra áo / chữ, rút gọn prompt, phân tích video chuẩn. Boss luôn dùng Grok.
+
+## Việt sub & ảnh bìa
+
+- **Việt sub karaoke** (bật sẵn; tắt bằng ô "Việt sub" ở bước ghép, hoặc trong cài đặt kênh): giống video chuẩn, mỗi lần 1–3 chữ IN HOA (font Noto Sans ExtraCondensed ExtraBold), chữ trắng viền đen, từ đang đọc màu vàng, đặt ngang ngực.
+  - Chữ lấy **đúng lời thoại kịch bản** nên không sai chính tả. faster-whisper chỉ dùng để căn mốc thời gian từng từ (lib/subs.py).
+  - ffmpeg + libass vẽ phụ đề vào video. Video gốc không phụ đề vẫn được giữ (`final.raw`).
+- **Ảnh bìa (thumbnail):** lấy khung hình ở giây 1,2 của video không phụ đề, thêm câu hook chữ lớn (dòng cuối màu vàng).
+  - Câu hook do kịch bản viết (`thumbnailText`), sửa được rồi bấm "Tạo lại ảnh bìa".
+  - Khi đăng, web bấm "Hình thu nhỏ → Tải hình ảnh lên" trong trình soạn Reel của Business Suite. Nếu bước này lỗi thì vẫn đăng, Facebook tự chọn khung.

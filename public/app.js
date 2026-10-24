@@ -286,14 +286,18 @@ function renderJob(job) {
       <div class="final">
         <div class="player">
           ${job.final ? `<video src="${fileUrl(job.final.file)}" controls preload="metadata" playsinline></video>
-                         <div class="row"><a href="${fileUrl(job.final.file)}" download>Tải MP4</a> · ${job.final.duration.toFixed(1)}s</div>`
+                         <div class="row"><a href="${fileUrl(job.final.file)}" download>Tải MP4</a> · ${job.final.duration.toFixed(1)}s${job.final.subs ? ' · có Việt sub' : ''}</div>
+                         <div class="thumb-box"><div class="muted" style="font-size:12.5px;margin:8px 0 4px">Ảnh bìa (tự tải lên khi đăng)</div>
+                           ${job.thumbnail?.file ? `<img src="${fileUrl(job.thumbnail.file)}?t=${encodeURIComponent(job.thumbnail.at || '')}" alt="Ảnh bìa" style="width:140px;border-radius:10px;display:block">` : '<div class="muted" style="font-size:12.5px">Chưa có</div>'}
+                           <div class="row" style="flex-wrap:nowrap;gap:6px"><input id="thumb-text" value="${esc(job.thumbnail?.text || job.thumbnailText || '')}" placeholder="Chữ trên ảnh bìa (3–7 từ)" style="flex:1"><button class="small" data-act="thumb">Tạo lại ảnh bìa</button></div></div>`
                       : `<div class="ph">Chưa ghép</div>`}
         </div>
         <div>
-          <p class="muted" style="margin-top:0">Độ dài dự kiến ≈ ${total.toFixed(1)}s (Reel cho phép 3–90s). Ghép sẽ xoá watermark "Veo", cắt đầu/cuối theo từng cảnh, chèn chữ (nếu bật), xuất 1080×1920.</p>
+          <p class="muted" style="margin-top:0">Độ dài dự kiến ≈ ${total.toFixed(1)}s (Reel cho phép 3–90s). Ghép sẽ xoá watermark "Veo", cắt đầu/cuối theo từng cảnh, thêm Việt sub karaoke (nếu bật, +~1 phút), chèn chữ (nếu bật), xuất 1080×1920.</p>
           <div class="row">
             <button data-act="stitch" class="${job.final ? '' : 'primary'}" ${busy || !allClips ? 'disabled' : ''}>${job.final ? 'Ghép lại' : 'Ghép video'}</button>
             <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="wm" checked style="width:auto"> Xoá watermark Veo</label>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center" title="Phụ đề karaoke theo video chuẩn: 1–3 chữ in hoa, từ đang đọc màu vàng; chữ lấy đúng lời thoại kịch bản"><input type="checkbox" id="subs-on" ${job.subs?.enabled === false || job.input?.subs === false ? '' : 'checked'} style="width:auto"> Việt sub</label>
             <label style="font-weight:400;display:flex;gap:6px;align-items:center"><input type="checkbox" id="txt-on" ${job.text?.enabled === true ? 'checked' : ''} style="width:auto"> Chèn chữ</label>
             <select id="txt-style" style="width:auto" ${job.text?.enabled === true ? '' : 'disabled'}>
               ${[['brand', 'Khung gradient tím-xanh'], ['dark', 'Khung nền tối'], ['light', 'Khung nền sáng']].map(([v, l]) => `<option value="${v}" ${(job.text?.style || 'brand') === v ? 'selected' : ''}>${l}</option>`).join('')}
@@ -906,6 +910,11 @@ $('#view-job').addEventListener('click', async (e) => {
       case 'stitch':
         await api(`/api/jobs/${id}/stitch`, { method: 'POST', body: { removeWatermark: $('#wm').checked } });
         break;
+      case 'thumb':
+        b.disabled = true;
+        await api(`/api/jobs/${id}/thumbnail`, { method: 'POST', body: { text: $('#thumb-text').value } });
+        toast('Đã tạo lại ảnh bìa');
+        break;
       case 'facebook': {
         const mode = $('#fb-mode').value;
         const page = fbc.page?.name || 'Page';
@@ -946,6 +955,11 @@ $('#view-job').addEventListener('input', (e) => {
 $('#view-job').addEventListener('change', async (e) => {
   const el = e.target;
   if (!currentJob) return;
+  if (el.id === 'subs-on') {
+    await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { subs: { enabled: el.checked } } }).catch((err) => toast(err.message));
+    if (currentJob.scenes.every((x) => x.clip)) toast('Đã đổi Việt sub — bấm "Ghép video" để áp dụng', 4000);
+    return refresh(true);
+  }
   if (el.id === 'txt-on' || el.id === 'txt-style') {
     await api(`/api/jobs/${currentJob.id}`, { method: 'PATCH', body: { text: el.id === 'txt-on' ? { enabled: el.checked } : { style: el.value } } }).catch((err) => toast(err.message));
     if (currentJob.scenes.every((x) => x.clip)) toast('Đã đổi phần chữ — bấm "Ghép video" để áp dụng', 4000);
@@ -1126,6 +1140,7 @@ async function loadAuto(fill = false) {
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
+    $('#ap-subtitles').checked = ch.subtitles !== false;
     $('#ap-brain').value = ['claude', 'grok'].includes(ch.brain) ? ch.brain : 'auto';
     loadBenchmarks(ch).catch(() => {});
     $('#ap-scoutclone').checked = ch.scoutAutoClone !== false;
@@ -1173,6 +1188,7 @@ function apForm() {
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
       ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
     varyLook: $('#ap-varylook').checked,
+    subtitles: $('#ap-subtitles').checked,
     brain: $('#ap-brain').value,
     benchmarkId: $('#ap-benchmark').value || null,
     scoutAutoClone: $('#ap-scoutclone').checked,

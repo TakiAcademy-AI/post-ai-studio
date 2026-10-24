@@ -213,6 +213,7 @@ app.post('/api/fbchrome/check', wrap(async (_req, res) => {
 app.post('/api/fbchrome/close', wrap(async (_req, res) => { await FBC.close(); res.json({ ok: true }); }));
 
 app.post('/api/jobs/:id/cancel', action((job) => J.cancelGenerate(job)));
+app.post('/api/jobs/:id/thumbnail', wrap(async (req, res) => { const job = J.getJob(req.params.id); if (!job) throw new Error('Không có video này'); if (typeof req.body?.text === 'string') J.updateJob(job, { thumbnailText: req.body.text }); res.json(await J.makeJobThumbnail(job)); }));
 app.post('/api/jobs/:id/stitch', action((job, b) => J.startStitch(job, { removeWatermark: b.removeWatermark !== false })));
 app.post('/api/jobs/:id/facebook', action((job, b) => J.startFacebook(job, { mode: b.mode, scheduledAt: b.scheduledAt })));
 
