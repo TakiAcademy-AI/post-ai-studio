@@ -1139,8 +1139,10 @@ async function loadAuto(fill = false) {
     $('#ap-voice').innerHTML = '<option value="">Không cố định</option>' + (window.voiceOpts ? window.voiceOpts(t.voice) : '');
     $('#ap-model').innerHTML = (cfg.flowModels || []).map((m) => `<option ${m === t.flowModel ? 'selected' : ''}>${esc(m)}</option>`).join('');
     for (const k of ['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid']) $(`#ap-${k}`).value = t[k] || '';
+    $('#ap-walkcamera').value = t.walkCamera || '';
     $('#ap-varylook').checked = ch.varyLook !== false;
     $('#ap-subtitles').checked = ch.subtitles !== false;
+    $('#ap-walkratio').value = ch.walkRatio ?? 40;
     $('#ap-brain').value = ['claude', 'grok'].includes(ch.brain) ? ch.brain : 'auto';
     loadBenchmarks(ch).catch(() => {});
     $('#ap-scoutclone').checked = ch.scoutAutoClone !== false;
@@ -1167,7 +1169,7 @@ async function loadAuto(fill = false) {
       <div class="when">${vnTime(slot)}</div>
       <div class="grow">${p ? `<span class="badge ${ST[p.status] || ''}">${esc(p.status)}${p.step ? ` · ${esc(p.step)}` : ''}</span> ${esc(p.topic || '')}
         ${p.score != null ? ` · <b>${p.score}/100</b>` : ''}${p.attempts?.length > 1 ? ` <small class="muted" style="display:inline">(${p.attempts.map((a) => a.score).join(' → ')})</small>` : ''}
-        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.look ? `<div class="muted" style="font-size:12px">👔 ${esc(p.look.outfit)} · 🏠 ${esc(p.look.setting)}</div>` : ''}${p.boss ? `<div class="boss-verdict">🧠 Boss: <b>${esc(p.boss.verdict)}</b> (${p.boss.score}/100) — ${esc(p.boss.reason)}${p.boss.fixes ? ` <span class="muted">Sửa: ${esc(p.boss.fixes)}</span>` : ''}</div>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
+        ${p.jobId ? ` · <a href="#" data-open-job="${esc(p.jobId)}">xem video</a>` : ''}${p.look ? `<div class="muted" style="font-size:12px">${p.look.walk ? '🚶 vừa đi vừa nói' : '🪑 ngồi nói'} · 👔 ${esc(p.look.outfit)} · ${p.look.walk ? '🛤' : '🏠'} ${esc(p.look.setting)}</div>` : ''}${p.boss ? `<div class="boss-verdict">🧠 Boss: <b>${esc(p.boss.verdict)}</b> (${p.boss.score}/100) — ${esc(p.boss.reason)}${p.boss.fixes ? ` <span class="muted">Sửa: ${esc(p.boss.fixes)}</span>` : ''}</div>` : ''}${p.error ? `<div class="over" style="font-size:12px">${esc(p.error)}</div>` : ''}`
         : `<span class="muted">${future ? 'chưa làm' : 'đã qua'}</span>`}</div>
       <div class="acts">${p?.status === 'chờ duyệt' && p.boss ? `<button class="small primary" data-ap-boss="${slot}" data-verdict="${esc(p.boss.verdict)}">Làm theo boss: ${esc(p.boss.verdict)}</button>` : ''}${p?.status === 'chờ duyệt' ? `<button class="small${p.boss ? '' : ' primary'}" data-ap-approve="${slot}">Duyệt & ${ch.postMode === 'draft' ? 'lưu nháp' : 'hẹn đăng'}</button>` : ''}${p?.status === 'nháp' ? `<a class="small" href="https://business.facebook.com/latest/posts/draft_posts?asset_id=${encodeURIComponent(ch.page?.id || '')}" target="_blank" rel="noopener">Mở Bản nháp trên Business Suite</a><button class="small primary" data-ap-approve="${slot}" data-draft="1">Hẹn đăng ${future ? 'theo khung giờ' : 'sớm nhất'}</button>` : ''}${future && p && ['chờ duyệt', 'nháp', 'bỏ qua', 'lỗi', 'không đạt'].includes(p.status) ? `<button class="small" data-ap-redo="${slot}">↻ Làm lại (chủ đề mới)</button>${p.topic ? `<button class="small" data-ap-redo="${slot}" data-same="1">↻ Làm lại cùng chủ đề</button>` : ''}` : ''}${future && (!p || ['lỗi', 'chờ duyệt'].includes(p.status)) ? `<button class="small" data-ap-skip="${slot}">Bỏ qua</button>` : ''}</div>
     </div>`;
@@ -1186,9 +1188,10 @@ function apForm() {
     autoReview: $('#ap-review').checked, minScore: $('#ap-minscore').value, maxRedo: $('#ap-maxredo').value, fallbackScore: $('#ap-fallback').value,
     channel: $('#ap-channel').value,
     template: { sceneCount: $('#ap-scenes').value, voice: $('#ap-voice').value, flowModel: $('#ap-model').value,
-      ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])) },
+      ...Object.fromEntries(['character', 'setting', 'camera', 'audience', 'tone', 'cta', 'avoid'].map((k) => [k, $(`#ap-${k}`).value])), walkCamera: $('#ap-walkcamera').value },
     varyLook: $('#ap-varylook').checked,
     subtitles: $('#ap-subtitles').checked,
+    walkRatio: Number($('#ap-walkratio').value),
     brain: $('#ap-brain').value,
     benchmarkId: $('#ap-benchmark').value || null,
     scoutAutoClone: $('#ap-scoutclone').checked,

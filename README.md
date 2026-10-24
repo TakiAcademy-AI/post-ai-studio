@@ -228,3 +228,5 @@ Lấy một video viral thật của anh làm **tiêu chuẩn** cho Tự nuôi k
 - **Ảnh bìa (thumbnail):** Claude chọn khung đẹp nhất trong 8 khung của video không phụ đề (mắt mở, nét, đúng người). Ảnh cắt cận cho mặt to, nửa dưới tối dần, chữ hook rất to: dòng trên chữ trắng viền đen, dòng cuối chữ đen trên nền vàng.
   - Câu hook do kịch bản viết (`thumbnailText`), sửa được rồi bấm "Tạo lại ảnh bìa".
   - Khi đăng, web bấm "Hình thu nhỏ → Tải hình ảnh lên" trong trình soạn Reel của Business Suite. Nếu bước này lỗi thì vẫn đăng, Facebook tự chọn khung.
+
+**Vừa đi vừa nói:** mỗi video, web bốc ngẫu nhiên kiểu quay theo "Tỉ lệ video vừa đi vừa nói" (mặc định 40%). Kiểu này là selfie cầm tay, đi chậm ngoài trời giống video chuẩn, dùng ô "Góc quay vừa đi vừa nói"; phần còn lại là ngồi nói, dùng ô Góc quay. Với kiểu vừa đi vừa nói, bối cảnh được chọn là con đường / lối đi ngoài trời (không ghế, bàn hay phòng), và mọi cảnh đi tiếp cùng một con đường. Dòng kế hoạch ghi rõ kiểu quay của từng video (🚶 / 🪑). Người dẫn được mô tả qua biến môi trường `PRESENTER` để chọn trang phục đúng người.
