@@ -503,10 +503,7 @@ async function openPosts(sync = false) {
 function renderPosts(posts) {
   const hide = $('#posts-hide-done').checked;
   const list = posts.filter((p) => !hide || !['published', 'deleted'].includes(p.state))
-    .sort((a, b) => {
-      const rank = (p) => ({ scheduled: 0, draft: 1, published: 2, deleted: 3 }[p.state] ?? 4);
-      return rank(a) - rank(b) || (a.scheduledAt || a.createdAt).localeCompare(b.scheduledAt || b.createdAt) * (a.state === 'scheduled' ? 1 : -1);
-    });
+    .sort((a, b) => (b.scheduledAt || b.createdAt).localeCompare(a.scheduledAt || a.createdAt)); // mới nhất (giờ đăng / giờ tạo) lên trên
   if (!list.length) {
     $('#posts-list').innerHTML = '<div class="card muted">Chưa có bài nào. Ghép video xong → chọn "Hẹn giờ đăng" ở cuối trang video.</div>';
     return;
@@ -515,10 +512,10 @@ function renderPosts(posts) {
     const when = p.scheduledAt ? new Date(p.scheduledAt) : null;
     const editable = p.state === 'scheduled' || p.state === 'draft';
     return `<div class="card post" data-post="${esc(p.id)}">
-      <div class="when">${when ? when.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '—'}
-        <small><br>${when ? when.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' }) : 'chưa đặt giờ'}</small></div>
+      <div class="when">${(when || new Date(p.createdAt)).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+        <small><br>${(when || new Date(p.createdAt)).toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit' })}${when ? '' : '<br>tạo lúc (chưa hẹn giờ)'}</small></div>
       <div>
-        <div><span class="badge ${p.state}">${POST_STATE[p.state] || p.state}</span> <b>${esc(p.pageName || 'Page')}</b></div>
+        <div><span class="badge ${p.state}">${p.state === 'scheduled' && when && when < new Date() ? 'Đã tới giờ đăng' : POST_STATE[p.state] || p.state}</span> <b>${esc(p.pageName || 'Page')}</b></div>
         <div style="margin:4px 0"><a href="#" data-open-job="${esc(p.jobId)}">${esc((p.topic || '').slice(0, 90))}</a></div>
         <div class="muted" style="font-size:13px">${esc((p.caption || '').slice(0, 140))}</div>
         <div class="muted" style="font-size:12px;margin-top:4px">video_id ${esc(p.id)}${p.fbStatus ? ` · Facebook: ${esc(p.fbStatus)}${p.publishStatus ? ' / ' + esc(p.publishStatus) : ''}` : ''}${p.checkedAt ? ` · kiểm lúc ${new Date(p.checkedAt).toLocaleTimeString('vi-VN')}` : ''}</div>
