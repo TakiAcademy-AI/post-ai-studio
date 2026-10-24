@@ -71,18 +71,42 @@ kịch bản yếu thì viết lại cùng chủ đề theo nhận xét; tối �
 Cần sẵn: Chrome Flow, Chrome Facebook (đã đăng nhập) và Page để đăng. Mỗi video tốn credit Flow + lượt Claude.
 Mốc code trước tính năng này: tag `backup-truoc-tu-nuoi-kenh`.
 
-## Chạy
+## Chạy (Windows · macOS · Linux)
 
-```bash
-cd ~/Downloads/post-ai-studio
-npm install        # lần đầu
-npm start          # mở http://127.0.0.1:3200
-```
+**Mở web:**
+- **Windows:** bấm đúp `start-windows.cmd` (tự `npm install` lần đầu và mở trình duyệt). Đóng cửa sổ đen = tắt web.
+- **macOS:** bấm đúp `start-mac.command`. Lần đầu macOS có thể chặn → chuột phải → Mở. Đóng Terminal = tắt web.
+- **Linux:** `./start-linux.sh` (chạy nền, log ở `data/server.log`).
+- Hoặc với mọi máy: `npm install` rồi `npm start` → mở http://127.0.0.1:3200
 
-Yêu cầu trên máy:
-- `claude` CLI đã đăng nhập (dùng gói đăng ký, không cần API key).
-- Google Chrome (`/usr/bin/google-chrome`) cho Chrome Flow và Chrome Facebook.
-- `ffmpeg` / `ffprobe`.
+**Cần cài trên máy:**
+
+| Thành phần | Windows | macOS | Linux |
+|---|---|---|---|
+| Node.js 20+ | https://nodejs.org | `brew install node` | theo distro |
+| Google Chrome | bản thường | bản thường | `google-chrome` |
+| ffmpeg + ffprobe (cần libass để vẽ Việt sub) | `winget install Gyan.FFmpeg` | `brew install ffmpeg` | `sudo apt install ffmpeg` |
+| Python 3.10+ (Việt sub, video chuẩn, chèn chữ) | `winget install Python.Python.3.12` | `brew install python` | có sẵn |
+| Thư viện Python | `py -m pip install faster-whisper pillow` | `python3 -m pip install faster-whisper pillow` | `python3 -m pip install --user faster-whisper pillow` |
+| Claude Code CLI (bộ não Claude) | `npm i -g @anthropic-ai/claude-code` hoặc bản cài native | như Windows | như Windows |
+| Grok CLI (bộ não Grok, Boss) | `irm https://x.ai/cli/install.ps1 \| iex` | `curl -fsSL https://x.ai/cli/install.sh \| bash` | như macOS |
+
+Sau khi cài, tự đăng nhập một lần: tab Tài khoản (Claude), và `grok login` trong terminal (Grok).
+
+**Khác biệt giữa các máy:** web tự xử lý các điểm sau, phần lớn không cần chỉnh.
+- **Chrome:** web tự tìm Chrome và thư mục profile.
+  - Windows: `%LOCALAPPDATA%\Google\Chrome\User Data`
+  - macOS: `~/Library/Application Support/Google/Chrome`
+  - Linux: `~/.config/google-chrome`
+  - Nếu không thấy, đặt `CHROME_BIN` / `CHROME_USER_DATA` trong `.env`.
+  - Trên Windows / macOS, Chrome có thể không mang theo phiên đăng nhập khi chép profile (do cách mã hoá cookie). Khi đó bấm "Hiện cửa sổ" ở tab Tài khoản rồi đăng nhập tay một lần trong cửa sổ Chrome đó.
+- **Lệnh `claude`, `grok`, `ffmpeg`:** web tự tìm trong PATH.
+  - Trên Windows, web nhận cả `.exe` lẫn lệnh npm dạng `.cmd`.
+  - Nếu không tìm thấy, đặt `CLAUDE_BIN`, `GROK_BIN`, `FFMPEG_BIN`, `FFPROBE_BIN` (đường dẫn đầy đủ) trong `.env`.
+- **Python:**
+  - Windows dùng `py -3`, macOS dùng `python3`. Linux ưu tiên `/usr/bin/python3.12`.
+  - Đổi bằng `WHISPER_PYTHON` trong `.env`.
+- **Font Việt sub / ảnh bìa / chèn chữ:** đã kèm sẵn trong `assets/fonts` (Noto Sans, giấy phép OFL), nên mọi máy ra cùng một kiểu chữ.
 
 Cấu hình nằm trong `.env` (xem `.env.example`).
 

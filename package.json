@@ -1,7 +1,7 @@
 {
   "name": "post-ai-studio",
   "version": "1.0.0",
-  "description": "Post AI Studio — skill Video AI → kịch bản Claude → Google Flow (extension) → ghép + chữ → đăng Reel Facebook",
+  "description": "Post AI Studio — kịch bản (Claude/Grok) → Google Flow tạo cảnh → ghép + Việt sub → đăng Reel Facebook qua Business Suite. Chạy trên Windows, macOS, Linux.",
   "main": "server.js",
   "directories": {
     "lib": "lib"
@@ -17,5 +17,8 @@
     "playwright-core": "^1.64.0"
   },
   "type": "module",
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
 }
