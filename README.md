@@ -225,6 +225,6 @@ Lấy một video viral thật của anh làm **tiêu chuẩn** cho Tự nuôi k
 - **Việt sub karaoke** (bật sẵn; tắt bằng ô "Việt sub" ở bước ghép, hoặc trong cài đặt kênh): giống video chuẩn, mỗi lần 1–3 chữ IN HOA (font Noto Sans ExtraCondensed ExtraBold), chữ trắng viền đen, từ đang đọc màu vàng, đặt ngang ngực.
   - Chữ lấy **đúng lời thoại kịch bản** nên không sai chính tả. faster-whisper chỉ dùng để căn mốc thời gian từng từ (lib/subs.py).
   - ffmpeg + libass vẽ phụ đề vào video. Video gốc không phụ đề vẫn được giữ (`final.raw`).
-- **Ảnh bìa (thumbnail):** lấy khung hình ở giây 1,2 của video không phụ đề, thêm câu hook chữ lớn (dòng cuối màu vàng).
+- **Ảnh bìa (thumbnail):** Claude chọn khung đẹp nhất trong 8 khung của video không phụ đề (mắt mở, nét, đúng người). Ảnh cắt cận cho mặt to, nửa dưới tối dần, chữ hook rất to: dòng trên chữ trắng viền đen, dòng cuối chữ đen trên nền vàng.
   - Câu hook do kịch bản viết (`thumbnailText`), sửa được rồi bấm "Tạo lại ảnh bìa".
   - Khi đăng, web bấm "Hình thu nhỏ → Tải hình ảnh lên" trong trình soạn Reel của Business Suite. Nếu bước này lỗi thì vẫn đăng, Facebook tự chọn khung.
